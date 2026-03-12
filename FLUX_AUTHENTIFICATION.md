@@ -1,0 +1,427 @@
+# Flux d'Authentification Mobile - Diagrammes Détaillés
+
+## 🚀 Flux Principal d'Authentification
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    APP DÉMARRE                              │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+        ┌────────────────────────────────┐
+        │  AuthProvider injecte le       │
+        │  contexte d'authentification   │
+        └────────────┬───────────────────┘
+                     │
+                     ▼
+        ┌────────────────────────────────┐
+        │  RootLayout vérifie userToken  │
+        └────────────┬───────────────────┘
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+    ┌──────────┐          ┌──────────┐
+    │ userToken│          │userToken │
+    │ =null?   │          │ !=null?  │
+    └────┬─────┘          └────┬─────┘
+         │                     │
+         ▼                     ▼
+    ┌──────────┐          ┌──────────┐
+    │  AUTH    │          │   TABS   │
+    │ STACK    │          │  STACK   │
+    └──┬───┬───┘          └────┬─────┘
+       │   │                   │
+       │   └─────┬─────────┐   │
+       │         ▼         ▼   │
+    ┌──┴──┐  ┌ ────┐  ┌ ────┐ │
+    │Login│  │Reg. │  │Prof.│ │
+    └─────┘  └─────┘  └─────┘ │
+       │                       │
+       └───────────────────────┘
+```
+
+## 🔐 Flux de Connexion Détaillé
+
+```
+┌────────────────────────────────────┐
+│     Page de Connexion              │
+│  (/(auth)/login)                   │
+└────────────┬───────────────────────┘
+             │
+      ①      ▼
+   Utilisateur enter email & password
+             │
+      ②      ▼
+   ┌─────────────────────────┐
+   │  Validation locale      │
+   │  - Email requis?        │
+   │  - Email valide?        │
+   │  - Password requis?     │
+   └────────┬────────────────┘
+            │
+     ③ ◄────► ║ Erreur?
+            │
+      NON   │
+            ▼
+   ┌─────────────────────────┐
+   │  Appel signIn()         │
+   │  - Désactiver inputs    │
+   │  - Afficher spinner     │
+   └────────┬────────────────┘
+            │
+     ④      ▼
+   ┌─────────────────────────┐
+   │  useAuth Hook           │
+   │  - Validation input     │
+   │  - Appel API simulé     │
+   │  - Attendre 1.5s        │
+   └────────┬────────────────┘
+            │
+      ⑤ ◄───► ║ Succès?
+            │
+      OUI   │
+            ▼
+   ┌─────────────────────────┐
+   │  Créer Token & User     │
+   │  - Générer token       │
+   │  - Stocker en contexte  │
+   └────────┬────────────────┘
+            │
+      ⑥     ▼
+   ┌─────────────────────────┐
+   │  AuthContext Updated    │
+   │  - userToken = "token"  │
+   │  - user = {...}         │
+   └────────┬────────────────┘
+            │
+      ⑦     ▼
+   ┌─────────────────────────┐
+   │  RootLayout Re-render   │
+   │  - Détecte changement   │
+   │  - userToken != null    │
+   └────────┬────────────────┘
+            │
+      ⑧     ▼
+   ┌─────────────────────────┐
+   │  Afficher (tabs) Stack  │
+   │  - Redirection auto     │
+   │  - Afficher onglets     │
+   └────────┬────────────────┘
+            │
+      ⑨     ▼
+   ┌─────────────────────────┐
+   │  Page d'Accueil         │
+   │  - Utilisateur connecté │
+   │  - Données affichées    │
+   └─────────────────────────┘
+```
+
+## 📋 Flux d'Inscription Détaillé
+
+```
+┌────────────────────────────────────┐
+│   Page d'Inscription               │
+│   (/(auth)/register)               │
+└────────────┬───────────────────────┘
+             │
+      ①      ▼
+   Utilisateur enter tous les champs
+   - Name
+   - Email
+   - Password
+   - Confirm Password
+             │
+      ②      ▼
+   ┌─────────────────────────┐
+   │  validateForm()         │
+   │  - Tous requis?         │
+   │  - Email valide?        │
+   │  - Pass >= 6 chars?     │
+   │  - Confirm == Pass?     │
+   └────────┬────────────────┘
+            │
+     ③ ◄────► ║ Erreurs?
+            │  Afficher rouge
+     NON    │
+            ▼
+   ┌─────────────────────────┐
+   │  Appel signUp()         │
+   │  - Désactiver inputs    │
+   │  - Afficher spinner     │
+   │  - Label change         │
+   └────────┬────────────────┘
+            │
+      ④     ▼
+   ┌─────────────────────────┐
+   │  useAuth Hook           │
+   │  - Validation complexe  │
+   │  - Appel API simulé     │
+   │  - Attendre 1.5s        │
+   └────────┬────────────────┘
+            │
+      ⑤ ◄───► ║ Succès?
+            │
+      OUI   │
+            ▼
+   ┌─────────────────────────┐
+   │  Créer User & Token     │
+   │  - ID généré            │
+   │  - Token créé           │
+   │  - Contexte updated     │
+   └────────┬────────────────┘
+            │
+      ⑥     ▼
+   ┌─────────────────────────┐
+   │  RootLayout Détecte     │
+   │  - userToken != null    │
+   └────────┬────────────────┘
+            │
+      ⑦     ▼
+   ┌─────────────────────────┐
+   │  Auto-Redirection       │
+   │  à (tabs)               │
+   │  - Utilisateur connecté │
+   └─────────────────────────┘
+```
+
+## 🚪 Flux de Déconnexion
+
+```
+┌────────────────────────────────────┐
+│   Page de Profil                   │
+│   (/(tabs)/profile)                │
+│                                    │
+│   ┌──────────────────────────┐     │
+│   │  Bouton "Déconnecter"    │     │
+│   └────────┬─────────────────┘     │
+└────────────┼───────────────────────┘
+             │
+      ①      ▼
+   ┌─────────────────────────┐
+   │  handleLogout()         │
+   │  - Afficher Alert       │
+   │  - Demander confirmation│
+   └────────┬────────────────┘
+            │
+     ②      ▼
+   ┌─────────────────────────┐
+   │  Utilisateur clique ok? │
+   └────────┬────────────────┘
+            │
+      OUI   ▼
+   ┌─────────────────────────┐
+   │  signOut()              │
+   │  - Afficher spinner     │
+   │  - Désactiver bouton    │
+   └────────┬────────────────┘
+            │
+     ③      ▼
+   ┌─────────────────────────┐
+   │  useAuth Hook           │
+   │  - API call simulé      │
+   │  - Attendre 0.5s        │
+   └────────┬────────────────┘
+            │
+      ④     ▼
+   ┌─────────────────────────┐
+   │  Clear Auth State       │
+   │  - userToken = null     │
+   │  - user = null          │
+   │  - isSignout = true     │
+   └────────┬────────────────┘
+            │
+      ⑤     ▼
+   ┌─────────────────────────┐
+   │  AuthContext Updated    │
+   │  - Re-render app        │
+   └────────┬────────────────┘
+            │
+      ⑥     ▼
+   ┌─────────────────────────┐
+   │  RootLayout Détecte     │
+   │  - userToken == null    │
+   └────────┬────────────────┘
+            │
+      ⑦     ▼
+   ┌─────────────────────────┐
+   │  Afficher (auth) Stack  │
+   │  - Pop (tabs) Stack     │
+   │  - Afficher Login Page  │
+   └─────────────────────────┘
+```
+
+## 🔄 Cycle de Vie du Composant
+
+```
+┌──────────────────────────────────────┐
+│     AuthProvider Mounts              │
+│  - useAuth() hook initialized       │
+│  - Context created                   │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+        ┌────────────────────┐
+        │  useAuth() Hook    │
+        │  - State initial   │
+        │  - Functions setup  │
+        └────────┬───────────┘
+                 │
+      ┌──────────┴──────────┐
+      │                     │
+      ▼                     ▼
+  ┌────────┐            ┌─────────┐
+  │ signIn │            │ signUp  │
+  └───┬────┘            └────┬────┘
+      │                      │
+      ▼                      ▼
+  ┌──────────┐            ┌──────────┐
+  │ Validation           │ Validation
+  │            │            │          │
+  └────┬───────┘            └────┬─────┘
+       │                         │
+       ├─────────────┬───────────┤
+       │             │           │
+       ▼             ▼           ▼
+    Success      Success      signOut
+       │             │           │
+       └──────┬──────┴───────┬───┘
+              │              │
+              ▼              ▼
+         Token & User     Clear State
+              │              │
+              └──────┬───────┘
+                     │
+                     ▼
+             Context Updated
+                     │
+                     ▼
+             Components Re-render
+```
+
+## 🎯 Validation en Temps Réel
+
+### Connexion
+```
+┌─────────────────────────┐
+│  Email Input            │
+│                         │
+│  [test@example]         │
+│  • Email valide ✓       │
+│                         │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Password Input         │
+│                         │
+│  [•••••••]              │
+│  • Visibilité toggle    │
+│  • Rempli ✓             │
+│                         │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Bouton Se connecter    │
+│                         │
+│  [ACTIF - prêt]         │
+│                         │
+└─────────────────────────┘
+```
+
+### Inscription
+```
+┌─────────────────────────┐
+│  Input Nom              │
+│  [Jean Dupont] ✓        │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Input Email            │
+│  [jean@example.com] ✓   │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Input Password         │
+│  [••••••••••] ✓         │
+│  - 10 chars (>= 6)      │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Input Confirm          │
+│  [••••••••••] ✓         │
+│  - Correspond ✓         │
+└─────────────────────────┘
+         │
+         ▼
+┌─────────────────────────┐
+│  Critères:             │
+│  ✓ >= 6 caractères     │
+│  ✓ Correspond          │
+│                         │
+│  [ACTIF - S'inscrire]  │
+└─────────────────────────┘
+```
+
+## 🌐 Flux Multi-Écran
+
+```
+App Startup
+    │
+    ├── Vérifier userToken
+    │
+    ├─ OUI → Afficher (tabs)
+    │        ├── Accueil
+    │        ├── Explorer
+    │        └── Profil ◄────┐
+    │                         │
+    │                    Déconnexion
+    │                         │
+    │                    userToken = null
+    │                         │
+    └─ NON → Afficher (auth)  │
+             ├── Login ──┐    │
+             │           │    │
+             │        Connexion réussie
+             │           │    │
+             └── Register┘    │
+                    └─────────┘
+```
+
+## 🔗 Dépendances Composants
+
+```
+RootLayout (app/_layout.tsx)
+  │
+  └── AuthProvider
+      │
+      ├── RootLayoutNav
+      │   │
+      │   └── Stack Navigator
+      │       │
+      │       ├── (auth) Stack
+      │       │   ├── login.tsx
+      │       │   │   └── uses: useAuth()
+      │       │   └── register.tsx
+      │       │       └── uses: useAuth()
+      │       │
+      │       └── (tabs) Stack
+      │           ├── index.tsx
+      │           ├── explore.tsx
+      │           └── profile.tsx
+      │               └── uses: useAuthContext()
+      │
+      └── Context Hooks
+          ├── use-auth.ts
+          ├── auth-context.tsx (AuthProvider + useAuthContext)
+          └── Tous les composants
+              └── peuvent utiliser useAuthContext()
+```
+
+---
+
+**Ce diagramme montre le flux complet d'authentification de votre application mobile!** 🚀
