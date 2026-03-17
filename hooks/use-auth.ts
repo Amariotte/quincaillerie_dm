@@ -55,8 +55,6 @@ export function useAuth(): UseAuthReturn {
       });
 
 
-      console.log("res",response)
-      console.log("ok",response.ok)
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -64,8 +62,11 @@ export function useAuth(): UseAuthReturn {
           errorData.message || 'Erreur lors de la connexion'
         );
       }
+      console.log("s", response)
 
       const data = await response.json();
+      console.log("data",data)
+
       const { token, user } = data;
 
       setState({
@@ -102,7 +103,7 @@ export function useAuth(): UseAuthReturn {
       }
 
       // Call API
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch(getApiUrl(apiConfig.endpoints.register), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +141,7 @@ export function useAuth(): UseAuthReturn {
 
     try {
       // Call API
-      await fetch('http://localhost:3000/api/auth/logout', {
+      await fetch(getApiUrl('/auth/logout'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
