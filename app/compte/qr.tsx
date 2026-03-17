@@ -2,8 +2,9 @@ import { AppHeader } from '@/components/app-header';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style.js';
 
 const qrRows = [
   '111011101110',
@@ -65,62 +66,3 @@ export default function AccountQrScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
-  },
-  heroCard: {
-    borderRadius: 22,
-    padding: 18,
-  },
-  heroLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  heroName: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: 8,
-  },
-  heroEmail: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  qrCard: {
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-  },
-  qrGrid: {
-    width: 216,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    justifyContent: 'center',
-  },
-  qrCell: {
-    width: 14,
-    height: 14,
-    borderRadius: 2,
-  },
-  codeText: {
-    fontSize: 18,
-    fontWeight: '900',
-    marginTop: 22,
-  },
-  helpText: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
-});

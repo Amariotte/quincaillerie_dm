@@ -1,8 +1,9 @@
 import { AppHeader } from '@/components/app-header';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style.js';
 
 export default function ChangePasswordScreen() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -84,43 +85,3 @@ export default function ChangePasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
-  },
-  card: {
-    borderRadius: 22,
-    padding: 18,
-  },
-  label: {
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontSize: 15,
-    marginBottom: 16,
-  },
-  submitButton: {
-    marginTop: 6,
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-});

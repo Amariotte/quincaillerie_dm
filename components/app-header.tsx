@@ -1,3 +1,4 @@
+import COLORS from '@/constants/colors';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -5,13 +6,13 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type AppHeaderProps = {
@@ -62,6 +63,9 @@ export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps)
   const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
   const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
   const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const headerBackgroundColor = COLORS.primaryColor;
+  const headerTextColor = '#ffffff';
+  const headerSubtextColor = '#d1fae5';
   const [menuVisible, setMenuVisible] = useState(false);
 
   const avatarUri = useMemo(() => {
@@ -115,20 +119,20 @@ export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps)
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: headerBackgroundColor }]}> 
         <View style={styles.leftGroup}>
           {showBack ? (
             <TouchableOpacity
               onPress={() => router.back()}
-              style={[styles.backButton, { backgroundColor: cardColor, borderColor }]}
+              style={[styles.backButton, { backgroundColor: '#ffffff1f', borderColor: '#ffffff55' }]}
             >
-              <MaterialIcons name="arrow-back" size={20} color={textColor} />
+              <MaterialIcons name="arrow-back" size={20} color={headerTextColor} />
             </TouchableOpacity>
           ) : null}
           <View style={styles.textBlock}>
-            <Text style={[styles.appName, { color: mutedColor }]}>Quincaillerie DM</Text>
-            <Text style={[styles.pageTitle, { color: textColor }]}>{title}</Text>
-            <Text style={[styles.pageSubtitle, { color: mutedColor }]} numberOfLines={1}>
+            <Text style={[styles.appName, { color: headerSubtextColor }]}>Quincaillerie DM</Text>
+            <Text style={[styles.pageTitle, { color: headerTextColor }]}>{title}</Text>
+            <Text style={[styles.pageSubtitle, { color: headerSubtextColor }]} numberOfLines={1}>
               {subtitle ?? defaultSubtitle}
             </Text>
           </View>
@@ -137,7 +141,7 @@ export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps)
         <TouchableOpacity
           onPress={() => setMenuVisible(true)}
           disabled={isLoading}
-          style={[styles.avatarButton, { borderColor: tintColor }]}
+          style={[styles.avatarButton, { borderColor: '#ffffff' }]}
         >
           <Image source={avatarUri} style={styles.avatarImage} contentFit="cover" />
         </TouchableOpacity>
@@ -188,6 +192,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     marginBottom: 20,
   },
   leftGroup: {

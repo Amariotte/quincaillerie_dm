@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { invoices, type InvoiceStatus } from '@/data/fakeDatas/factures';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ScrollView,
@@ -14,10 +15,26 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const statusFilters: Array<'Toutes' | InvoiceStatus> = ['Toutes', 'Payée', 'En attente', 'Impayée'];
+const clientFilters = ['Tous', ...Array.from(new Set(invoices.map((invoice) => invoice.client)))];
 
 const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
 
+const toComparableDate = (value: string) => {
+  const parts = value.split('/');
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [day, month, year] = parts;
+  if (!day || !month || !year || day.length < 1 || month.length < 1 || year.length !== 4) {
+    return null;
+  }
+
+  return `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+};
+
 export default function FacturesScreen() {
+  const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
@@ -25,15 +42,25 @@ export default function FacturesScreen() {
   const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
   const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
   const [query, setQuery] = useState('');
+  const [startDateQuery, setStartDateQuery] = useState('');
+  const [endDateQuery, setEndDateQuery] = useState('');
+  const [activeClient, setActiveClient] = useState('Tous');
   const [activeStatus, setActiveStatus] = useState<'Toutes' | InvoiceStatus>('Toutes');
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesQuery =
       invoice.reference.toLowerCase().includes(query.toLowerCase()) ||
       invoice.client.toLowerCase().includes(query.toLowerCase());
+    const issueComparable = toComparableDate(invoice.issueDate);
+    const startComparable = startDateQuery.trim().length > 0 ? toComparableDate(startDateQuery.trim()) : null;
+    const endComparable = endDateQuery.trim().length > 0 ? toComparableDate(endDateQuery.trim()) : null;
+    const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
+    const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
+    const matchesDate = afterStart && beforeEnd;
+    const matchesClient = activeClient === 'Tous' || invoice.client === activeClient;
     const matchesStatus = activeStatus === 'Toutes' || invoice.status === activeStatus;
 
-    return matchesQuery && matchesStatus;
+    return matchesQuery && matchesDate && matchesClient && matchesStatus;
   });
 
   const paidCount = invoices.filter((invoice) => invoice.status === 'Payée').length;
@@ -44,7 +71,7 @@ export default function FacturesScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Liste des factures" subtitle="Suivi des encaissements et des échéances" />
+          <AppHeader showBack title="Liste des factures" subtitle="Suivi des factures et des échéances" />
 
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
@@ -71,6 +98,52 @@ export default function FacturesScreen() {
               style={[styles.searchInput, { color: textColor }]}
             />
           </View>
+
+          <View style={styles.periodRow}>
+            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
+              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
+              <TextInput
+                value={startDateQuery}
+                onChangeText={setStartDateQuery}
+                placeholder="Du (JJ/MM/AAAA)"
+                placeholderTextColor={mutedColor}
+                style={[styles.periodInput, { color: textColor }]}
+              />
+            </View>
+
+            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
+              <MaterialIcons name="event" size={18} color={mutedColor} />
+              <TextInput
+                value={endDateQuery}
+                onChangeText={setEndDateQuery}
+                placeholder="Au (JJ/MM/AAAA)"
+                placeholderTextColor={mutedColor}
+                style={[styles.periodInput, { color: textColor }]}
+              />
+            </View>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            {clientFilters.map((client) => {
+              const isActive = client === activeClient;
+
+              return (
+                <TouchableOpacity
+                  key={client}
+                  onPress={() => setActiveClient(client)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: isActive ? tintColor : cardColor,
+                      borderColor: isActive ? tintColor : borderColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{client}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
             {statusFilters.map((status) => {
@@ -128,7 +201,10 @@ export default function FacturesScreen() {
 
                   <View style={styles.invoiceBottomRow}>
                     <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.amount)}</Text>
-                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/factures/${invoice.id}` as never)}
+                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                    >
                       <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
                     </TouchableOpacity>
                   </View>
@@ -218,6 +294,24 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
+  },
+  periodRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  periodInputBox: {
+    flex: 1,
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  periodInput: {
+    flex: 1,
+    fontSize: 14,
   },
   filterRow: {
     gap: 10,
