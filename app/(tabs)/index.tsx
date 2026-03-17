@@ -32,8 +32,53 @@ export default function HomeScreen() {
       return;
     }
 
+    if (itemId === 'proformas') {
+      router.push('/proformas' as never);
+      return;
+    }
+
+    if (itemId === 'bons') {
+      router.push('/bons' as never);
+      return;
+    }
+
+    if (itemId === 'reglements') {
+      router.push('/reglements' as never);
+      return;
+    }
+
     if (itemId === 'produits') {
       router.push('/produits' as never);
+      return;
+    }
+
+    if (itemId === 'achats') {
+      router.push('/achats' as never);
+      return;
+    }
+
+    if (itemId === 'transactions') {
+      router.push('/transactions' as never);
+      return;
+    }
+
+    if (itemId === 'promotions') {
+      router.push('/promotions' as never);
+      return;
+    }
+
+    if (itemId === 'operations') {
+      router.push('/operations' as never);
+      return;
+    }
+
+    if (itemId === 'commissions') {
+      router.push('/commissions' as never);
+      return;
+    }
+
+    if (itemId === 'cartes') {
+      router.push('/cartes' as never);
       return;
     }
 
