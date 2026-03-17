@@ -3,5 +3,5 @@ import { reglementsData } from '@/data/fakeDatas/modules';
 import React from 'react';
 
 export default function ReglementsScreen() {
-  return <ModuleListScreen title="Règlements" subtitle="Historique des règlements" icon="account-balance-wallet" items={reglementsData} />;
+  return <ModuleListScreen title="Règlements" subtitle="Historique des règlements" icon="account-balance-wallet" items={reglementsData} detailBasePath="/reglements" />;
 }

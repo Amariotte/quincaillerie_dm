@@ -3,5 +3,5 @@ import { bonsLivraisonData } from '@/data/fakeDatas/modules';
 import React from 'react';
 
 export default function BonsLivraisonScreen() {
-  return <ModuleListScreen title="Bons de livraison" subtitle="Suivi des livraisons" icon="local-shipping" items={bonsLivraisonData} />;
+  return <ModuleListScreen title="Bons de livraison" subtitle="Suivi des livraisons" icon="local-shipping" items={bonsLivraisonData} detailBasePath="/bons" />;
 }

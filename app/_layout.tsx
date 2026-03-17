@@ -26,15 +26,24 @@ function RootLayoutNav() {
           <Stack.Screen name="factures/index" options={{ headerShown: false }} />
           <Stack.Screen name="factures/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="proformas/index" options={{ headerShown: false }} />
+          <Stack.Screen name="proformas/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="bons/index" options={{ headerShown: false }} />
+          <Stack.Screen name="bons/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="reglements/index" options={{ headerShown: false }} />
+          <Stack.Screen name="reglements/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="produits/index" options={{ headerShown: false }} />
           <Stack.Screen name="achats/index" options={{ headerShown: false }} />
+          <Stack.Screen name="achats/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="transactions/index" options={{ headerShown: false }} />
+          <Stack.Screen name="transactions/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="promotions/index" options={{ headerShown: false }} />
+          <Stack.Screen name="promotions/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="operations/index" options={{ headerShown: false }} />
+          <Stack.Screen name="operations/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="commissions/index" options={{ headerShown: false }} />
+          <Stack.Screen name="commissions/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="cartes/index" options={{ headerShown: false }} />
+          <Stack.Screen name="cartes/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="devis/nouveau" options={{ headerShown: false }} />
           <Stack.Screen name="compte/qr" options={{ headerShown: false }} />
           <Stack.Screen name="compte/mot-de-passe" options={{ headerShown: false }} />

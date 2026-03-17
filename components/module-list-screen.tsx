@@ -1,8 +1,9 @@
 import { AppHeader } from '@/components/app-header';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export type ModuleListItem = {
@@ -19,9 +20,11 @@ type ModuleListScreenProps = {
   subtitle: string;
   icon: keyof typeof MaterialIcons.glyphMap;
   items: ModuleListItem[];
+  detailBasePath: string;
 };
 
-export function ModuleListScreen({ title, subtitle, icon, items }: ModuleListScreenProps) {
+export function ModuleListScreen({ title, subtitle, icon, items, detailBasePath }: ModuleListScreenProps) {
+  const router = useRouter();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
@@ -63,7 +66,11 @@ export function ModuleListScreen({ title, subtitle, icon, items }: ModuleListScr
 
           <View style={styles.listBlock}>
             {filteredItems.map((item) => (
-              <View key={item.id} style={[styles.itemCard, { backgroundColor: cardColor }]}> 
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => router.push(`${detailBasePath}/${item.id}` as never)}
+                style={[styles.itemCard, { backgroundColor: cardColor }]}
+              >
                 <View style={styles.itemTopRow}>
                   <View style={[styles.iconWrap, { backgroundColor: `${tintColor}18` }]}>
                     <MaterialIcons name={icon} size={20} color={tintColor} />
@@ -72,13 +79,14 @@ export function ModuleListScreen({ title, subtitle, icon, items }: ModuleListScr
                     <Text style={[styles.itemTitle, { color: textColor }]}>{item.title}</Text>
                     <Text style={[styles.itemSubtitle, { color: mutedColor }]}>{item.subtitle}</Text>
                   </View>
+                  <MaterialIcons name="chevron-right" size={20} color={mutedColor} />
                 </View>
                 <View style={styles.metaRow}>
                   <Text style={[styles.metaText, { color: mutedColor }]}>{item.date}</Text>
                   <Text style={[styles.metaText, { color: textColor }]}>{item.amount}</Text>
                   <Text style={[styles.statusText, { color: tintColor }]}>{item.status}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
 
             {filteredItems.length === 0 ? (
