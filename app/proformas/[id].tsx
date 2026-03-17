@@ -2,13 +2,38 @@ import { AppHeader } from '@/components/app-header';
 import { proformaProductLines, proformasData } from '@/data/fakeDatas/modules';
 import { products } from '@/data/fakeDatas/produits';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { formatAmount } from '@/Tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
+const computeLinePricing = ({
+  quantity,
+  freeQuantity,
+  unitPrice,
+  discountRate,
+  discountAmount,
+  vatRate,
+}: {
+  quantity: number;
+  freeQuantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountAmount: number;
+  vatRate: number;
+}) => {
+  const billableQuantity = Math.max(0, quantity - freeQuantity);
+  const gross = billableQuantity * unitPrice;
+  const rateDiscount = Math.round((gross * discountRate) / 100);
+  const totalDiscount = Math.min(gross, Math.max(0, discountAmount) + Math.max(0, rateDiscount));
+  const net = Math.max(0, gross - totalDiscount);
+  const vat = Math.round((net * vatRate) / 100);
+  const total = net + vat;
+
+  return { billableQuantity, totalDiscount, net, vat, total };
+};
 
 export default function ProformaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,13 +55,38 @@ export default function ProformaDetailScreen() {
       return {
         product,
         quantity: line.quantity,
-        total: line.quantity * product.price,
+        freeQuantity: line.freeQuantity ?? 0,
+        discountRate: line.discountRate ?? 0,
+        discountAmount: line.discountAmount ?? 0,
+        vatRate: line.vatRate ?? 16,
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
-  const subtotal = detailedLines.reduce((sum, line) => sum + line.total, 0);
-  const tax = Math.round(subtotal * 0.16);
+  const subtotal = detailedLines.reduce((sum, line) => {
+    const pricing = computeLinePricing({
+      quantity: line.quantity,
+      freeQuantity: line.freeQuantity,
+      unitPrice: line.product.price,
+      discountRate: line.discountRate,
+      discountAmount: line.discountAmount,
+      vatRate: line.vatRate,
+    });
+
+    return sum + pricing.net;
+  }, 0);
+  const tax = detailedLines.reduce((sum, line) => {
+    const pricing = computeLinePricing({
+      quantity: line.quantity,
+      freeQuantity: line.freeQuantity,
+      unitPrice: line.product.price,
+      discountRate: line.discountRate,
+      discountAmount: line.discountAmount,
+      vatRate: line.vatRate,
+    });
+
+    return sum + pricing.vat;
+  }, 0);
   const total = subtotal + tax;
 
   if (!item) {
@@ -71,17 +121,28 @@ export default function ProformaDetailScreen() {
           <View style={[styles.productsCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.sectionTitle, { color: textColor }]}>Produits de la proforma</Text>
 
-            {detailedLines.map((line) => (
-              <View key={line.product.id} style={styles.productRow}>
-                <View style={styles.productLeft}>
-                  <Text style={[styles.productName, { color: textColor }]}>{line.product.name}</Text>
-                  <Text style={[styles.productMeta, { color: mutedColor }]}>
-                    {line.quantity} × {formatAmount(line.product.price)}
-                  </Text>
+            {detailedLines.map((line) => {
+              const pricing = computeLinePricing({
+                quantity: line.quantity,
+                freeQuantity: line.freeQuantity,
+                unitPrice: line.product.price,
+                discountRate: line.discountRate,
+                discountAmount: line.discountAmount,
+                vatRate: line.vatRate,
+              });
+
+              return (
+                <View key={line.product.id} style={styles.productRow}>
+                  <View style={styles.productLeft}>
+                    <Text style={[styles.productName, { color: textColor }]}>{line.product.name}</Text>
+                    <Text style={[styles.productMeta, { color: mutedColor }]}>Qté: {line.quantity} · Gratuite: {line.freeQuantity} · Facturée: {pricing.billableQuantity}</Text>
+                    <Text style={[styles.productMeta, { color: mutedColor }]}>PU: {formatAmount(line.product.price)} · Remise: {line.discountRate}% + {formatAmount(line.discountAmount)}</Text>
+                    <Text style={[styles.productMeta, { color: mutedColor }]}>TVA: {line.vatRate}% ({formatAmount(pricing.vat)})</Text>
+                  </View>
+                  <Text style={[styles.productTotal, { color: textColor }]}>{formatAmount(pricing.total)}</Text>
                 </View>
-                <Text style={[styles.productTotal, { color: textColor }]}>{formatAmount(line.total)}</Text>
-              </View>
-            ))}
+              );
+            })}
 
             {detailedLines.length === 0 ? (
               <View style={styles.emptyProducts}>
@@ -97,7 +158,7 @@ export default function ProformaDetailScreen() {
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(subtotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA (16%)</Text>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA (lignes)</Text>
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(tax)}</Text>
             </View>
             <View style={styles.separator} />

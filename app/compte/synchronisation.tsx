@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { sharedComponents, sharedLayout } from '../../styles/shared';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -71,19 +72,16 @@ export default function SyncScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
+    ...sharedLayout.safeArea,
   },
   scrollContent: {
-    paddingBottom: 32,
+    ...sharedLayout.scrollContentBottom32,
   },
   container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
+    ...sharedLayout.containerHorizontal18Top12Gap18,
   },
   summaryCard: {
-    borderRadius: 22,
-    padding: 18,
+    ...sharedComponents.cardRadius22Padding18,
   },
   summaryLabel: {
     fontSize: 12,
@@ -134,8 +132,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   syncButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
+    ...sharedComponents.buttonTextPrimary,
   },
 });

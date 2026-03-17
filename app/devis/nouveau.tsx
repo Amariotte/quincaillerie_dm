@@ -17,9 +17,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 type QuoteLine = {
   productId: string;
   quantity: number;
+  freeQuantity: number;
+  discountRate: number;
+  discountAmount: number;
+  vatRate: number;
 };
 
 const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
+
+const parseNumberInput = (value: string) => {
+  const normalized = value.replace(',', '.').replace(/[^0-9.]/g, '');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getLinePricing = (unitPrice: number, line: QuoteLine) => {
+  const billableQuantity = Math.max(0, line.quantity - line.freeQuantity);
+  const gross = billableQuantity * unitPrice;
+  const rateDiscount = Math.round((gross * line.discountRate) / 100);
+  const totalDiscount = Math.min(gross, Math.max(0, line.discountAmount) + Math.max(0, rateDiscount));
+  const net = Math.max(0, gross - totalDiscount);
+  const vat = Math.round((net * line.vatRate) / 100);
+  const total = net + vat;
+
+  return { billableQuantity, gross, totalDiscount, net, vat, total };
+};
 
 export default function NouveauDevisScreen() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -33,8 +55,8 @@ export default function NouveauDevisScreen() {
   const [validityDays, setValidityDays] = useState('15');
   const [notes, setNotes] = useState('Livraison en deux vagues selon disponibilité du stock.');
   const [lines, setLines] = useState<QuoteLine[]>([
-    { productId: 'prod-1', quantity: 12 },
-    { productId: 'prod-4', quantity: 20 },
+    { productId: 'prod-1', quantity: 12, freeQuantity: 1, discountRate: 5, discountAmount: 0, vatRate: 16 },
+    { productId: 'prod-4', quantity: 20, freeQuantity: 0, discountRate: 0, discountAmount: 1500, vatRate: 16 },
   ]);
 
   const selectedClient = quoteClients.find((client) => client.id === selectedClientId) ?? quoteClients[0];
@@ -49,7 +71,10 @@ export default function NouveauDevisScreen() {
         );
       }
 
-      return [...currentLines, { productId, quantity: 1 }];
+      return [
+        ...currentLines,
+        { productId, quantity: 1, freeQuantity: 0, discountRate: 0, discountAmount: 0, vatRate: 16 },
+      ];
     });
   };
 
@@ -62,17 +87,61 @@ export default function NouveauDevisScreen() {
           }
 
           const nextQuantity = direction === 'increase' ? line.quantity + 1 : line.quantity - 1;
-          return { ...line, quantity: nextQuantity };
+          const nextFree = Math.min(line.freeQuantity, Math.max(0, nextQuantity));
+          return { ...line, quantity: nextQuantity, freeQuantity: nextFree };
         })
         .filter((line) => line.quantity > 0)
     );
   };
 
+  const updateFreeQuantity = (productId: string, direction: 'increase' | 'decrease') => {
+    setLines((currentLines) =>
+      currentLines.map((line) => {
+        if (line.productId !== productId) {
+          return line;
+        }
+
+        const candidate = direction === 'increase' ? line.freeQuantity + 1 : line.freeQuantity - 1;
+        const nextFreeQuantity = Math.max(0, Math.min(line.quantity, candidate));
+        return { ...line, freeQuantity: nextFreeQuantity };
+      })
+    );
+  };
+
+  const updateLineNumberField = (productId: string, field: 'discountRate' | 'discountAmount' | 'vatRate', value: string) => {
+    const parsedValue = parseNumberInput(value);
+
+    setLines((currentLines) =>
+      currentLines.map((line) => {
+        if (line.productId !== productId) {
+          return line;
+        }
+
+        if (field === 'discountRate' || field === 'vatRate') {
+          return { ...line, [field]: Math.max(0, Math.min(100, Math.round(parsedValue))) };
+        }
+
+        return { ...line, discountAmount: Math.max(0, Math.round(parsedValue)) };
+      })
+    );
+  };
+
   const subtotal = lines.reduce((sum, line) => {
     const product = quoteProducts.find((item) => item.id === line.productId);
-    return sum + (product ? product.price * line.quantity : 0);
+    if (!product) {
+      return sum;
+    }
+
+    return sum + getLinePricing(product.price, line).net;
   }, 0);
-  const tax = Math.round(subtotal * 0.16);
+  const tax = lines.reduce((sum, line) => {
+    const product = quoteProducts.find((item) => item.id === line.productId);
+    if (!product) {
+      return sum;
+    }
+
+    return sum + getLinePricing(product.price, line).vat;
+  }, 0);
   const total = subtotal + tax;
 
   const handleSubmit = () => {
@@ -180,13 +249,63 @@ export default function NouveauDevisScreen() {
                   return null;
                 }
 
+                const linePricing = getLinePricing(product.price, line);
+
                 return (
                   <View key={line.productId} style={[styles.lineCard, { backgroundColor: cardColor }]}> 
                     <View style={styles.lineInfo}>
                       <Text style={[styles.lineTitle, { color: textColor }]}>{product.label}</Text>
                       <Text style={[styles.lineMeta, { color: mutedColor }]}>
-                        {formatAmount(product.price)} / {product.unit}
+                        {formatAmount(product.price)} / {product.unit} · Qté facturée: {linePricing.billableQuantity}
                       </Text>
+                      <View style={styles.lineFieldsRow}>
+                        <Text style={[styles.fieldLabel, { color: mutedColor }]}>Qté gratuite</Text>
+                        <View style={[styles.smallStepper, { borderColor }]}> 
+                          <TouchableOpacity onPress={() => updateFreeQuantity(product.id, 'decrease')}>
+                            <MaterialIcons name="remove" size={16} color={textColor} />
+                          </TouchableOpacity>
+                          <Text style={[styles.smallStepperValue, { color: textColor }]}>{line.freeQuantity}</Text>
+                          <TouchableOpacity onPress={() => updateFreeQuantity(product.id, 'increase')}>
+                            <MaterialIcons name="add" size={16} color={textColor} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <View style={styles.lineFieldsRow}>
+                        <View style={styles.inlineField}>
+                          <Text style={[styles.fieldLabel, { color: mutedColor }]}>Remise %</Text>
+                          <TextInput
+                            value={String(line.discountRate)}
+                            onChangeText={(value) => updateLineNumberField(product.id, 'discountRate', value)}
+                            keyboardType="number-pad"
+                            style={[styles.inlineInput, { color: textColor, borderColor }]}
+                            placeholder="0"
+                            placeholderTextColor={mutedColor}
+                          />
+                        </View>
+                        <View style={styles.inlineField}>
+                          <Text style={[styles.fieldLabel, { color: mutedColor }]}>Remise prix</Text>
+                          <TextInput
+                            value={String(line.discountAmount)}
+                            onChangeText={(value) => updateLineNumberField(product.id, 'discountAmount', value)}
+                            keyboardType="number-pad"
+                            style={[styles.inlineInput, { color: textColor, borderColor }]}
+                            placeholder="0"
+                            placeholderTextColor={mutedColor}
+                          />
+                        </View>
+                        <View style={styles.inlineField}>
+                          <Text style={[styles.fieldLabel, { color: mutedColor }]}>TVA %</Text>
+                          <TextInput
+                            value={String(line.vatRate)}
+                            onChangeText={(value) => updateLineNumberField(product.id, 'vatRate', value)}
+                            keyboardType="number-pad"
+                            style={[styles.inlineInput, { color: textColor, borderColor }]}
+                            placeholder="16"
+                            placeholderTextColor={mutedColor}
+                          />
+                        </View>
+                      </View>
+                      <Text style={[styles.lineBreakdown, { color: mutedColor }]}>Remise: {formatAmount(linePricing.totalDiscount)} · TVA ligne: {formatAmount(linePricing.vat)}</Text>
                     </View>
                     <View style={styles.lineRight}>
                       <View style={[styles.quantityBox, { borderColor }]}> 
@@ -198,7 +317,7 @@ export default function NouveauDevisScreen() {
                           <MaterialIcons name="add" size={18} color={textColor} />
                         </TouchableOpacity>
                       </View>
-                      <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(product.price * line.quantity)}</Text>
+                      <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(linePricing.total)}</Text>
                     </View>
                   </View>
                 );
@@ -212,7 +331,7 @@ export default function NouveauDevisScreen() {
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(subtotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA 16%</Text>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA (lignes)</Text>
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(tax)}</Text>
             </View>
             <View style={styles.summaryDivider} />
@@ -392,6 +511,47 @@ const styles = StyleSheet.create({
   lineMeta: {
     fontSize: 12,
     marginTop: 4,
+  },
+  lineFieldsRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  fieldLabel: {
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  smallStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  smallStepperValue: {
+    minWidth: 16,
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  inlineField: {
+    minWidth: 92,
+    flex: 1,
+  },
+  inlineInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+  },
+  lineBreakdown: {
+    marginTop: 6,
+    fontSize: 11,
   },
   lineRight: {
     alignItems: 'flex-end',

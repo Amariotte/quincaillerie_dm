@@ -1,0 +1,5 @@
+export const VARIABLE = {
+  PADDING_HORIZONTAL: 18,
+  PADDING_VERTICAL : 18,
+  GAP : 12
+};

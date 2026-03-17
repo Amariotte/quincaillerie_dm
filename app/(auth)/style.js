@@ -1,12 +1,13 @@
 
 import COLORS from '@/constants/colors';
 import { StyleSheet } from 'react-native';
+import { sharedLayout } from '../../styles/shared';
 
 
 const styles = StyleSheet.create({
 
   safeArea: {
-    flex: 1,
+    ...sharedLayout.safeArea,
     backgroundColor: COLORS.primaryColor,
   },
 

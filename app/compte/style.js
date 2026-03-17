@@ -1,20 +1,18 @@
 import { StyleSheet } from 'react-native';
+import { sharedComponents, sharedLayout } from '../../styles/shared';
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
+    ...sharedLayout.safeArea,
   },
   scrollContent: {
-    paddingBottom: 32,
+    ...sharedLayout.scrollContentBottom32,
   },
   container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
+    ...sharedLayout.containerHorizontal18Top12Gap18,
   },
   card: {
-    borderRadius: 22,
-    padding: 18,
+    ...sharedComponents.cardRadius22Padding18,
   },
   label: {
     fontSize: 12,
@@ -35,15 +33,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
+    ...sharedComponents.buttonTextPrimary,
   },
 
 
   heroCard: {
-    borderRadius: 22,
-    padding: 18,
+    ...sharedComponents.cardRadius22Padding18,
   },
   heroLabel: {
     fontSize: 12,
@@ -87,45 +82,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 20,
   },
-
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
-  },
-  card: {
-    borderRadius: 22,
-    padding: 18,
-  },
-  label: {
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontSize: 15,
-    marginBottom: 16,
-  },
-  submitButton: {
-    marginTop: 6,
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '800',
-  }
 
 });
 

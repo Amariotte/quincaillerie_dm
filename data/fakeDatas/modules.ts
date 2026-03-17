@@ -3,6 +3,10 @@ import { ModuleListItem } from '@/components/module-list-screen';
 export type ProformaProductLine = {
   productId: string;
   quantity: number;
+  freeQuantity?: number;
+  discountRate?: number;
+  discountAmount?: number;
+  vatRate?: number;
 };
 
 export const proformasData: ModuleListItem[] = [
@@ -52,13 +56,13 @@ export const cartesData: ModuleListItem[] = [
 
 export const proformaProductLines: Record<string, ProformaProductLine[]> = {
   'pro-1': [
-    { productId: 'prod-001', quantity: 2 },
-    { productId: 'prod-004', quantity: 5 },
-    { productId: 'prod-007', quantity: 1 },
+    { productId: 'prod-001', quantity: 2, freeQuantity: 0, discountRate: 5, discountAmount: 0, vatRate: 16 },
+    { productId: 'prod-004', quantity: 5, freeQuantity: 1, discountRate: 0, discountAmount: 1200, vatRate: 16 },
+    { productId: 'prod-007', quantity: 1, freeQuantity: 0, discountRate: 0, discountAmount: 0, vatRate: 16 },
   ],
   'pro-2': [
-    { productId: 'prod-002', quantity: 1 },
-    { productId: 'prod-003', quantity: 3 },
-    { productId: 'prod-005', quantity: 4 },
+    { productId: 'prod-002', quantity: 1, freeQuantity: 0, discountRate: 0, discountAmount: 1000, vatRate: 16 },
+    { productId: 'prod-003', quantity: 3, freeQuantity: 0, discountRate: 2, discountAmount: 0, vatRate: 16 },
+    { productId: 'prod-005', quantity: 4, freeQuantity: 1, discountRate: 0, discountAmount: 0, vatRate: 16 },
   ],
 };

@@ -1,22 +1,14 @@
 import { AppHeader } from '@/components/app-header';
-import { invoices } from '@/data/fakeDatas/factures';
+import { fallbackItems, invoices } from '@/data/fakeDatas/factures';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { formatAmount } from '@/Tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style.js';
 
-const fallbackItems = [
-  { id: '1', label: 'Ciment gris 50kg', quantity: 4, unitPrice: 18500 },
-  { id: '2', label: 'Interrupteur double', quantity: 10, unitPrice: 3500 },
-  { id: '3', label: 'Fer à béton 12mm', quantity: 8, unitPrice: 9600 },
-  { id: '4', label: 'Peinture blanche 20L', quantity: 1, unitPrice: 42000 },
-  { id: '5', label: 'Prise murale renforcée', quantity: 6, unitPrice: 4100 },
-  { id: '6', label: 'Vernis satiné 5L', quantity: 2, unitPrice: 19500 },
-];
-
-const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
 
 export default function FactureDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -106,55 +98,3 @@ export default function FactureDetailScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  scrollContent: { paddingBottom: 32 },
-  container: { paddingHorizontal: 18, paddingTop: 12, gap: 16 },
-  headerCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 10,
-  },
-  clientName: { fontSize: 18, fontWeight: '800' },
-  metaRow: { gap: 4 },
-  metaLabel: { fontSize: 13 },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  statusText: { fontSize: 12, fontWeight: '800' },
-  linesCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 12,
-  },
-  sectionTitle: { fontSize: 17, fontWeight: '800' },
-  linesBlock: { gap: 12 },
-  lineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  lineLeft: { flex: 1 },
-  lineLabel: { fontSize: 14, fontWeight: '700' },
-  lineMeta: { fontSize: 12, marginTop: 4 },
-  lineTotal: { fontSize: 14, fontWeight: '800' },
-  summaryCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 10,
-  },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryLabel: { fontSize: 14 },
-  summaryValue: { fontSize: 15, fontWeight: '700' },
-  separator: { height: 1, backgroundColor: '#e5e7eb', marginVertical: 4 },
-  totalLabel: { fontSize: 16, fontWeight: '800' },
-  totalValue: { fontSize: 18, fontWeight: '900' },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyTitle: { fontSize: 17, fontWeight: '800' },
-  emptyText: { fontSize: 13, textAlign: 'center' },
-});

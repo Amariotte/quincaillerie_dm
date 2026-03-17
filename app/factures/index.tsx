@@ -1,23 +1,23 @@
 import { AppHeader } from '@/components/app-header';
 import { invoices, type InvoiceStatus } from '@/data/fakeDatas/factures';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { formatAmount } from '@/Tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style.js';
 
 const statusFilters: Array<'Toutes' | InvoiceStatus> = ['Toutes', 'Payée', 'En attente', 'Impayée'];
 const clientFilters = ['Tous', ...Array.from(new Set(invoices.map((invoice) => invoice.client)))];
 
-const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
 
 const toComparableDate = (value: string) => {
   const parts = value.split('/');
@@ -226,190 +226,3 @@ export default function FacturesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  headerTextBlock: {
-    flex: 1,
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  pageSubtitle: {
-    fontSize: 13,
-    marginTop: 4,
-  },
-  statsRow: {
-    gap: 12,
-  },
-  statCard: {
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  statLabel: {
-    fontSize: 13,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 8,
-  },
-  searchBox: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-  },
-  periodRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  periodInputBox: {
-    flex: 1,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  periodInput: {
-    flex: 1,
-    fontSize: 14,
-  },
-  filterRow: {
-    gap: 10,
-    paddingRight: 10,
-  },
-  filterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-  },
-  filterLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  listBlock: {
-    gap: 12,
-  },
-  invoiceCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 14,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  invoiceTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  invoiceRefBlock: {
-    flex: 1,
-  },
-  invoiceRef: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  invoiceClient: {
-    fontSize: 13,
-    marginTop: 4,
-  },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  invoiceMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  metaLabel: {
-    fontSize: 12,
-  },
-  metaValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  invoiceBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  amountText: {
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  actionButton: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  actionText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
-});
