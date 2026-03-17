@@ -1,19 +1,22 @@
+import { AppHeader } from '@/components/app-header';
+import { AuthButton } from '@/components/auth-button';
+import { useAuthContext } from '@/hooks/auth-context';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { useAuthContext } from '@/hooks/auth-context';
-import { AuthButton } from '@/components/auth-button';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, signOut, isLoading } = useAuthContext();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -56,10 +59,7 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.headerSection}>
-            <Text style={[styles.title, { color: textColor }]}>Profil</Text>
-          </View>
+          <AppHeader title="Profil" subtitle="Informations et préférences du compte" />
 
           {/* User Info Card */}
           <View
@@ -110,6 +110,7 @@ export default function ProfileScreen() {
             </Text>
 
             <TouchableOpacity
+              onPress={() => router.push('/compte/qr')}
               style={[
                 styles.settingItem,
                 {
@@ -126,7 +127,7 @@ export default function ProfileScreen() {
                 />
                 <View>
                   <Text style={[styles.settingLabel, { color: textColor }]}>
-                    Modifier le profil
+                    Mon code QR
                   </Text>
                   <Text
                     style={[
@@ -134,7 +135,7 @@ export default function ProfileScreen() {
                       { color: textColor, opacity: 0.6 },
                     ]}
                   >
-                    Mettre à jour vos informations
+                    Afficher votre identifiant visuel
                   </Text>
                 </View>
               </View>
@@ -147,6 +148,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={() => router.push('/compte/mot-de-passe')}
               style={[
                 styles.settingItem,
                 {
@@ -194,6 +196,7 @@ export default function ProfileScreen() {
             </Text>
 
             <TouchableOpacity
+              onPress={() => router.push('/compte/synchronisation')}
               style={[
                 styles.settingItem,
                 {
@@ -210,7 +213,7 @@ export default function ProfileScreen() {
                 />
                 <View>
                   <Text style={[styles.settingLabel, { color: textColor }]}>
-                    Paramètres
+                    Tout synchroniser
                   </Text>
                   <Text
                     style={[
@@ -218,7 +221,7 @@ export default function ProfileScreen() {
                       { color: textColor, opacity: 0.6 },
                     ]}
                   >
-                    Gérer les préférences
+                    Mettre à jour toutes les données locales
                   </Text>
                 </View>
               </View>

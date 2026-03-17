@@ -1,112 +1,111 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { AppHeader } from '@/components/app-header';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const quickInsights = [
+  { id: '1', title: 'Stock critique', detail: '8 produits à recompléter cette semaine', icon: 'inventory-2' },
+  { id: '2', title: 'Clients à relancer', detail: '4 factures arrivent à échéance sous 48h', icon: 'support-agent' },
+  { id: '3', title: 'Promotions actives', detail: '2 campagnes en cours sur le rayon peinture', icon: 'campaign' },
+];
 
-export default function TabTwoScreen() {
+export default function ExploreScreen() {
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const tintColor = useThemeColor({}, 'tint');
+  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
+  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
+          <AppHeader title="Explorer" subtitle="Vue rapide des points d'attention" />
+
+          <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
+            <Text style={[styles.heroLabel, { color: mutedColor }]}>Vue opérationnelle</Text>
+            <Text style={[styles.heroTitle, { color: textColor }]}>Priorités du jour</Text>
+            <Text style={[styles.heroText, { color: mutedColor }]}>Suivez les éléments à traiter avant la clôture de la journée commerciale.</Text>
+          </View>
+
+          <View style={styles.cardsBlock}>
+            {quickInsights.map((item) => (
+              <View key={item.id} style={[styles.infoCard, { backgroundColor: cardColor }]}> 
+                <View style={[styles.iconWrap, { backgroundColor: `${tintColor}18` }]}>
+                  <MaterialIcons name={item.icon as keyof typeof MaterialIcons.glyphMap} size={20} color={tintColor} />
+                </View>
+                <View style={styles.cardTextBlock}>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>{item.title}</Text>
+                  <Text style={[styles.cardDetail, { color: mutedColor }]}>{item.detail}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  safeArea: {
+    flex: 1,
   },
-  titleContainer: {
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  container: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    gap: 18,
+  },
+  heroCard: {
+    borderRadius: 24,
+    padding: 18,
+  },
+  heroLabel: {
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  heroText: {
+    fontSize: 14,
+    marginTop: 8,
+    lineHeight: 21,
+  },
+  cardsBlock: {
+    gap: 12,
+  },
+  infoCard: {
+    borderRadius: 20,
+    padding: 16,
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
+  },
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTextBlock: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  cardDetail: {
+    fontSize: 13,
+    marginTop: 5,
+    lineHeight: 20,
   },
 });

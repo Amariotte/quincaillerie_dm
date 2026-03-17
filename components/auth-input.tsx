@@ -1,11 +1,11 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TextInputProps,
-    View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
 } from 'react-native';
 
 export interface AuthInputProps extends TextInputProps {

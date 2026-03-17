@@ -23,6 +23,12 @@ function RootLayoutNav() {
       ) : (
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="factures/index" options={{ headerShown: false }} />
+          <Stack.Screen name="produits/index" options={{ headerShown: false }} />
+          <Stack.Screen name="devis/nouveau" options={{ headerShown: false }} />
+          <Stack.Screen name="compte/qr" options={{ headerShown: false }} />
+          <Stack.Screen name="compte/mot-de-passe" options={{ headerShown: false }} />
+          <Stack.Screen name="compte/synchronisation" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{

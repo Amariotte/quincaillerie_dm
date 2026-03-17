@@ -1,240 +1,149 @@
-import { AuthButton } from '@/components/auth-button';
-import { AuthInput } from '@/components/auth-input';
-import { useAuth } from '@/hooks/use-auth';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
+import { useAuthContext } from '@/hooks/auth-context';
+import { DEMO_ACCOUNT } from '@/hooks/use-auth';
+import { Link, useRouter } from 'expo-router';
+import { useState } from 'react';
+import styles from './style.js';
+
 import {
-    Keyboard,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Keyboard,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const router = useRouter();
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { signIn, isLoading, error } = useAuth();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
+  const [validationErrors, setValidationErrors] = useState<{
+    login?: string;
+    password?: string;
+  }>({});
+  const { signIn, signInDemo, isLoading, error } = useAuthContext();
+
+  const validateForm = () => {
+    const errors: {
+      login?: string;
+      password?: string;
+    } = {};
+
+    if (!login.trim()) {
+      errors.login = 'Le login est requis';
+    }
+
+    if (!password.trim()) {
+      errors.password = 'Le mot de passe est requis';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleLogin = async () => {
     Keyboard.dismiss();
+
+    if (!validateForm()) {
+      return;
+    }
+
     try {
-      await signIn(email, password);
-      // Navigation will be handled by the router based on auth state
+      await signIn(login.trim(), password);
+      router.replace('/(tabs)');
     } catch {
-      // Error is already handled by the hook
+      // L'erreur est déjà exposée par le hook.
     }
   };
 
+  const handleDemoLogin = async () => {
+    Keyboard.dismiss();
+    setLogin(DEMO_ACCOUNT.login);
+    setPassword(DEMO_ACCOUNT.password);
+    setValidationErrors({});
+
+    try {
+      await signInDemo();
+      router.replace('/(tabs)');
+    } catch {
+      // L'erreur est déjà exposée par le hook.
+    }
+  };
+
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.headerSection}>
-            <View
-              style={[
-                styles.logoContainer,
-                {
-                  backgroundColor: tintColor,
-                },
-              ]}
-            >
-              <MaterialIcons name="login" size={48} color="white" />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.topSection}>
+        {/* Partie haute (verte) */}
+      </View>
+
+      <View style={styles.bottomSection}>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Connectez-vous</Text>
+
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorMessage}>{error}</Text>
             </View>
-            <Text style={[styles.title, { color: textColor }]}>
-              Bienvenue
+          )}
+
+          <TextInput
+            placeholder="Login"
+            value={login}
+            onChangeText={setLogin}
+            style={styles.input}
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+          {validationErrors.login && (
+            <Text style={styles.fieldError}>{validationErrors.login}</Text>
+          )}
+
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            secureTextEntry
+            editable={!isLoading}
+          />
+          {validationErrors.password && (
+            <Text style={styles.fieldError}>{validationErrors.password}</Text>
+          )}
+
+          <TouchableOpacity
+            style={[styles.buttonCnx, isLoading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Connexion...' : 'Se connecter'}
             </Text>
-            <Text style={[styles.subtitle, { color: textColor }]}>
-              Connectez-vous à votre compte
-            </Text>
-          </View>
+          </TouchableOpacity>
 
-          {/* Form Section */}
-          <View style={styles.formSection}>
-            {error && (
-              <View style={styles.errorContainer}>
-                <MaterialIcons name="error-outline" size={20} color="#ef4444" />
-                <Text style={styles.errorMessage}>{error}</Text>
-              </View>
-            )}
+          <TouchableOpacity
+            style={[styles.demoButton, isLoading && styles.buttonDisabled]}
+            onPress={handleDemoLogin}
+            disabled={isLoading}
+          >
+            <Text style={styles.demoButtonText}>Entrer en mode demo</Text>
+          </TouchableOpacity>
 
-            <AuthInput
-              label="Email"
-              placeholder="votre@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              value={email}
-              onChangeText={setEmail}
-              editable={!isLoading}
-              icon={<MaterialIcons name="email" size={20} color={tintColor} />}
-            />
+          <Text style={styles.demoHint}>
+            Compte demo : {DEMO_ACCOUNT.login} / {DEMO_ACCOUNT.password}
+          </Text>
 
-            <AuthInput
-              label="Mot de passe"
-              placeholder="••••••••"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              value={password}
-              onChangeText={setPassword}
-              editable={!isLoading}
-              icon={<MaterialIcons name="lock" size={20} color={tintColor} />}
-            />
-
-            <TouchableOpacity style={styles.showPasswordButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <MaterialIcons
-                name={showPassword ? 'visibility' : 'visibility-off'}
-                size={18}
-                color={tintColor}
-              />
-              <Text style={[styles.showPasswordText, { color: tintColor }]}>
-                {showPassword ? 'Masquer' : 'Afficher'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Forgot Password Link */}
-            <TouchableOpacity style={styles.forgotPasswordButton}>
-              <Text style={[styles.forgotPasswordText, { color: tintColor }]}>
-                Mot de passe oublié?
-              </Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <AuthButton
-              title={isLoading ? 'Connexion...' : 'Se connecter'}
-              onPress={handleLogin}
-              loading={isLoading}
-              disabled={!email || !password || isLoading}
-            />
-          </View>
-
-          {/* Footer */}
           <View style={styles.footerSection}>
-            <Text style={[styles.footerText, { color: textColor }]}>
-              Vous n&apos;avez pas de compte?{' '}
-            </Text>
+            <Text style={styles.footerText}>Pas encore de compte ?</Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>
-                <Text
-                  style={[
-                    styles.signupLink,
-                    {
-                      color: tintColor,
-                    },
-                  ]}
-                >
-                  S&apos;inscrire
-                </Text>
+                <Text style={styles.footerLink}>Créer un compte</Text>
               </TouchableOpacity>
             </Link>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'space-between',
-  },
-  headerSection: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-    opacity: 0.7,
-    textAlign: 'center',
-  },
-  formSection: {
-    marginVertical: 20,
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fee2e2',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  errorMessage: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 8,
-    flex: 1,
-  },
-  showPasswordButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 16,
-  },
-  showPasswordText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  forgotPasswordButton: {
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  footerSection: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: '400',
-  },
-  signupLink: {
-    fontSize: 14,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
-});

@@ -1,6 +1,34 @@
 import apiConfig, { getApiUrl } from '@/config/api';
 import { useState } from 'react';
 
+const DEMO_DELAY_MS = 700;
+const DEMO_TOKEN = 'demo-token';
+
+export const DEMO_ACCOUNT = {
+  login: 'demo',
+  password: 'demo123',
+  email: 'demo@quincaillerie.dm',
+  name: 'Compte demo',
+};
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function parseResponseBody(response: Response) {
+  const rawBody = await response.text();
+
+  if (!rawBody) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawBody);
+  } catch {
+    return null;
+  }
+}
+
 export interface AuthState {
   isLoading: boolean;
   isSignout: boolean;
@@ -13,7 +41,8 @@ export interface AuthState {
 }
 
 export interface UseAuthReturn extends AuthState {
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (login: string, password: string) => Promise<void>;
+  signInDemo: () => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   error: string | null;
@@ -29,21 +58,59 @@ export function useAuth(): UseAuthReturn {
 
   const [error, setError] = useState<string | null>(null);
 
-  const signIn = async (email: string, password: string) => {
+  const applyAuthenticatedState = (token: string, user: AuthState['user']) => {
+    setState({
+      isLoading: false,
+      isSignout: false,
+      userToken: token,
+      user,
+    });
+  };
+
+  const signInDemo = async () => {
+    setState((prev) => ({ ...prev, isLoading: true }));
+    setError(null);
+
+    try {
+      await wait(DEMO_DELAY_MS);
+
+      applyAuthenticatedState(DEMO_TOKEN, {
+        id: 'demo-user',
+        email: DEMO_ACCOUNT.email,
+        name: DEMO_ACCOUNT.name,
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erreur de connexion en mode demo';
+      setError(errorMessage);
+      setState((prev) => ({ ...prev, isLoading: false }));
+      throw err;
+    }
+  };
+
+  const signIn = async (login: string, password: string) => {
     setState((prev) => ({ ...prev, isLoading: true }));
     setError(null);
 
     try {
       // Validate input
-      if (!email || !password) {
-        throw new Error('Veuillez entrer votre email et mot de passe');
+      if (!login || !password) {
+        throw new Error('Veuillez entrer votre login et mot de passe');
       }
 
-      if (!email.includes('@')) {
-        throw new Error('Veuillez entrer un email valide');
-      }
+      if (
+        login.trim().toLowerCase() === DEMO_ACCOUNT.login &&
+        password === DEMO_ACCOUNT.password
+      ) {
+        await wait(DEMO_DELAY_MS);
 
-       console.log("login URL",getApiUrl(apiConfig.endpoints.login))
+        applyAuthenticatedState(DEMO_TOKEN, {
+          id: 'demo-user',
+          email: DEMO_ACCOUNT.email,
+          name: DEMO_ACCOUNT.name,
+        });
+        return;
+      }
       
       // Call API
       const response = await fetch(getApiUrl(apiConfig.endpoints.login), {
@@ -51,30 +118,24 @@ export function useAuth(): UseAuthReturn {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ login, password }),
       });
 
-
+      const data = await parseResponseBody(response);
 
       if (!response.ok) {
-        const errorData = await response.json();
         throw new Error(
-          errorData.message || 'Erreur lors de la connexion'
+          data?.message || 'Erreur lors de la connexion'
         );
       }
-      console.log("s", response)
 
-      const data = await response.json();
-      console.log("data",data)
+      const { token, user } = data ?? {};
 
-      const { token, user } = data;
+      if (!token || !user) {
+        throw new Error('Réponse invalide du serveur de connexion');
+      }
 
-      setState({
-        isLoading: false,
-        isSignout: false,
-        userToken: token,
-        user,
-      });
+      applyAuthenticatedState(token, user);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erreur de connexion';
@@ -102,6 +163,17 @@ export function useAuth(): UseAuthReturn {
         throw new Error('Le mot de passe doit contenir au moins 6 caractères');
       }
 
+      if (email.trim().toLowerCase() === DEMO_ACCOUNT.email) {
+        await wait(DEMO_DELAY_MS);
+
+        applyAuthenticatedState(DEMO_TOKEN, {
+          id: 'demo-user',
+          email: DEMO_ACCOUNT.email,
+          name: name.trim() || DEMO_ACCOUNT.name,
+        });
+        return;
+      }
+
       // Call API
       const response = await fetch(getApiUrl(apiConfig.endpoints.register), {
         method: 'POST',
@@ -111,22 +183,21 @@ export function useAuth(): UseAuthReturn {
         body: JSON.stringify({ email, password, name }),
       });
 
+      const data = await parseResponseBody(response);
+
       if (!response.ok) {
-        const errorData = await response.json();
         throw new Error(
-          errorData.message || "Erreur lors de l'inscription"
+          data?.message || "Erreur lors de l'inscription"
         );
       }
 
-      const data = await response.json();
-      const { token, user } = data;
+      const { token, user } = data ?? {};
 
-      setState({
-        isLoading: false,
-        isSignout: false,
-        userToken: token,
-        user,
-      });
+      if (!token || !user) {
+        throw new Error("Réponse invalide du serveur d'inscription");
+      }
+
+      applyAuthenticatedState(token, user);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur lors de l'inscription";
@@ -140,8 +211,21 @@ export function useAuth(): UseAuthReturn {
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
+      if (state.userToken === DEMO_TOKEN) {
+        await wait(250);
+
+        setState({
+          isLoading: false,
+          isSignout: true,
+          userToken: null,
+          user: null,
+        });
+        setError(null);
+        return;
+      }
+
       // Call API
-      await fetch(getApiUrl('/auth/logout'), {
+      await fetch(getApiUrl(apiConfig.endpoints.logout), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,6 +253,7 @@ export function useAuth(): UseAuthReturn {
   return {
     ...state,
     signIn,
+    signInDemo,
     signUp,
     signOut,
     error,

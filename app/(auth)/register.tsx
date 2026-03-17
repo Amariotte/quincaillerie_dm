@@ -1,19 +1,19 @@
 import { AuthButton } from '@/components/auth-button';
 import { AuthInput } from '@/components/auth-input';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Keyboard,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -24,7 +24,7 @@ export default function RegisterScreen() {
     [key: string]: string;
   }>({});
 
-  const { signUp, isLoading, error } = useAuth();
+  const { signUp, isLoading, error } = useAuthContext();
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
