@@ -1,5 +1,10 @@
 import { ModuleListItem } from '@/components/module-list-screen';
 
+export type ProformaProductLine = {
+  productId: string;
+  quantity: number;
+};
+
 export const proformasData: ModuleListItem[] = [
   { id: 'pro-1', title: 'PRO-2026-001', subtitle: 'Ets Mavungu Construction', date: '17/03/2026', amount: '95 000 FCFA', status: 'Validée' },
   { id: 'pro-2', title: 'PRO-2026-002', subtitle: 'Société Lumière Services', date: '16/03/2026', amount: '62 500 FCFA', status: 'En attente' },
@@ -44,3 +49,16 @@ export const cartesData: ModuleListItem[] = [
   { id: 'car-1', title: 'Carte fidélité #A102', subtitle: 'Client: Maison Moderne', date: '12/03/2026', amount: '124 pts', status: 'Active' },
   { id: 'car-2', title: 'Carte fidélité #B078', subtitle: 'Client: Atelier Plus', date: '09/03/2026', amount: '92 pts', status: 'Active' },
 ];
+
+export const proformaProductLines: Record<string, ProformaProductLine[]> = {
+  'pro-1': [
+    { productId: 'prod-001', quantity: 2 },
+    { productId: 'prod-004', quantity: 5 },
+    { productId: 'prod-007', quantity: 1 },
+  ],
+  'pro-2': [
+    { productId: 'prod-002', quantity: 1 },
+    { productId: 'prod-003', quantity: 3 },
+    { productId: 'prod-005', quantity: 4 },
+  ],
+};

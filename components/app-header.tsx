@@ -130,7 +130,7 @@ export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps)
             </TouchableOpacity>
           ) : null}
           <View style={styles.textBlock}>
-            <Text style={[styles.appName, { color: headerSubtextColor }]}>Quincaillerie DM</Text>
+            <Text style={[styles.appName, { color: headerSubtextColor }]}>Gediscom</Text>
             <Text style={[styles.pageTitle, { color: headerTextColor }]}>{title}</Text>
             <Text style={[styles.pageSubtitle, { color: headerSubtextColor }]} numberOfLines={1}>
               {subtitle ?? defaultSubtitle}
