@@ -1,4 +1,11 @@
-export type factureStatus = 'Payée' | 'En attente' | 'Impayée';
+export type factureStatus = 'Soldée' | 'Non soldée' | 'Impayée';
+
+export const statusFactureColorMap: Record<factureStatus, string> = {
+  'Soldée': '#16a34a',
+  'Non soldée': '#f59e0b',
+  'Impayée': '#dc2626',
+};
+
 
 export type facture = {
   id: string;
@@ -20,13 +27,18 @@ export type facture = {
 
 export type detailsFacture = {
   id: string;
-  label: string;
-  quantity: number;
-  unitPrice: number;
-  quantityGratuite?: number;
+  codeProduit: string;
+  nomProduit: string;
+  detailsPackage?: string;
+  qteFacturee: number;
+  prixHT?: number;
+  prixTTC: number;
+  qteGratuite?: number;
   tauxRemise?: number;
   prixRemise?: number;
+  remise?: number;
   tauxTVA?: number;
+  montantTVA?: number;
 };
 
 

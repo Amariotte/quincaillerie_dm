@@ -86,7 +86,14 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: '#e5e7eb', marginVertical: 4 },
   totalLabel: { fontSize: 16, fontWeight: '800' },
   totalValue: { fontSize: 18, fontWeight: '900' },
-
+  emptyCard: {
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyTitle: { fontSize: 17, fontWeight: '800' },
+  emptyText: { fontSize: 13, textAlign: 'center' },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -217,6 +224,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  metaModeRow: {
+    marginTop: 2,
+    gap: 4,
+  },
   metaLabel: {
     fontSize: 12,
   },
@@ -234,6 +245,13 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 18,
     fontWeight: '900',
+  },
+  amountBlock: {
+    gap: 4,
+  },
+  paymentModeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   actionButton: {
     borderRadius: 14,

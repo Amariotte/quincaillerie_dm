@@ -1,10 +1,11 @@
 import { AppHeader } from '@/components/app-header';
 import { AuthButton } from '@/components/auth-button';
 import { useAuthContext } from '@/hooks/auth-context';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Alert,
   ScrollView,
@@ -18,11 +19,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, isLoading } = useAuthContext();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+
+  const avatarUri = useMemo(() => {
+    const identity = user?.email ?? user?.nom ?? 'utilisateur';
+    return `https://i.pravatar.cc/240?u=${encodeURIComponent(identity)}`;
+  }, [user?.email, user?.nom]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -61,39 +63,24 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          <AppHeader title="Profil" subtitle="Informations et préférences du compte" />
+          <AppHeader title="Profil" subtitle="Informations et préférences du compte" showBack />
 
-          {/* User Info Card */}
-          <View
-            style={[
-              styles.userCard,
-              {
-                backgroundColor: tintColor + '20',
-                borderColor: tintColor,
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.avatarContainer,
-                {
-                  backgroundColor: tintColor,
-                },
-              ]}
+          <View style={[styles.profileHero, { backgroundColor: cardColor }]}> 
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => Alert.alert('Bientôt disponible', 'La modification de la photo de profil sera ajoutée prochainement.')}
+              style={styles.avatarHeroWrap}
             >
-              <MaterialIcons name="person" size={40} color="white" />
-            </View>
-
-            {user && (
-              <View style={styles.userInfo}>
-                <Text style={[styles.userName, { color: textColor }]}>
-                  {user?.nom ?? user.nom}
-                </Text>
-                <Text style={[styles.userEmail, { color: textColor, opacity: 0.6 }]}>
-                  {user.email}
-                </Text>
+              <Image source={avatarUri} style={styles.avatarHeroImage} contentFit="cover" />
+              <View style={[styles.editBadge, { backgroundColor: tintColor }]}> 
+                <MaterialIcons name="edit" size={16} color="#ffffff" />
               </View>
-            )}
+            </TouchableOpacity>
+
+            <View style={styles.heroTextWrap}>
+              <Text style={[styles.heroName, { color: textColor }]}>{user?.nom ?? 'Utilisateur'}</Text>
+              <Text style={[styles.heroEmail, { color: mutedColor }]}>{user?.email ?? 'Aucun email'}</Text>
+            </View>
           </View>
 
           {/* Fiche détaillée */}
@@ -313,6 +300,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+  },
+  profileHero: {
+    alignItems: 'center',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 18,
+    marginBottom: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  avatarHeroWrap: {
+    position: 'relative',
+    marginBottom: 14,
+  },
+  avatarHeroImage: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+  },
+  editBadge: {
+    position: 'absolute',
+    right: 2,
+    bottom: 2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  heroTextWrap: {
+    alignItems: 'center',
+  },
+  heroName: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  heroEmail: {
+    marginTop: 4,
+    fontSize: 14,
   },
   headerSection: {
     marginBottom: 24,

@@ -1,7 +1,9 @@
 import { AppHeader } from '@/components/app-header';
+import { EmptyResultsCard } from '@/components/empty-results-card';
 import { factures, fallbackItems } from '@/data/fakeDatas/factures.fake';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatAmount } from '@/tools/tools';
+import { statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -12,11 +14,7 @@ import styles from './style.js';
 
 export default function FactureDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
 
   const invoice = factures.find((item) => item.id === id);
 
@@ -26,22 +24,25 @@ export default function FactureDetailScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
             <AppHeader showBack title="Détail facture" subtitle="Document introuvable" />
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
-              <MaterialIcons name="error-outline" size={30} color="#dc2626" />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Facture introuvable</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Cette facture n'existe pas ou a été supprimée.</Text>
-            </View>
+
+            <EmptyResultsCard
+              iconName="error-outline"
+              title="Facture introuvable"
+              subtitle="Cette facture n'existe pas ou a été supprimée."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
-  const statusColor =
-    invoice.status === 'Payée' ? '#16a34a' : invoice.status === 'En attente' ? '#f59e0b' : '#dc2626';
+  const statusColor = statusFactureColorMap[invoice.status];
 
   const invoiceLines = fallbackItems.slice(0, invoice.nbProduits);
-  const computedSubtotal = invoiceLines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
+  const computedSubtotal = invoiceLines.reduce((sum, line) => sum + line.qteFacturee * line.prixTTC, 0);
   const subtotal = computedSubtotal > 0 ? computedSubtotal : invoice.montant;
   const vat = Math.round(subtotal * 0.16);
   const total = subtotal + vat;
@@ -120,10 +121,10 @@ export default function FactureDetailScreen() {
               {invoiceLines.map((line) => (
                 <View key={line.id} style={styles.lineRow}>
                   <View style={styles.lineLeft}>
-                    <Text style={[styles.lineLabel, { color: textColor }]}>{line.label}</Text>
-                    <Text style={[styles.lineMeta, { color: mutedColor }]}>{line.quantity} × {formatAmount(line.unitPrice)}</Text>
+                    <Text style={[styles.lineLabel, { color: textColor }]}>{line.nomProduit}</Text>
+                    <Text style={[styles.lineMeta, { color: mutedColor }]}>{line.qteFacturee} × {formatAmount(line.prixTTC)}</Text>
                   </View>
-                  <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.quantity * line.unitPrice)}</Text>
+                  <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.qteFacturee * line.prixTTC)}</Text>
                 </View>
               ))}
             </View>

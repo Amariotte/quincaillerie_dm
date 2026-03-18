@@ -1,6 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { menuItems } from '@/data/menus';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCacheData } from '@/services/cache-service';
 import { fetchSoldeCompte } from '@/services/soldes-service';
 import { fetchTransactions } from '@/services/transactions-service';
@@ -17,11 +17,7 @@ import styles from './styles.js';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
 
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);

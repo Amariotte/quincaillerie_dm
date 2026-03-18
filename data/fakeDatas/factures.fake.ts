@@ -3,12 +3,12 @@ import { detailsFacture, facture } from "@/types/factures.type";
 
 
 export const fallbackItems: detailsFacture[] = [
-  { id: '1', label: 'Ciment gris 50kg', quantity: 4, unitPrice: 18500, quantityGratuite: 10 },
-  { id: '2', label: 'Interrupteur double', quantity: 10, unitPrice: 3500, tauxTVA: 18 },
-  { id: '3', label: 'Fer à béton 12mm', quantity: 8, unitPrice: 9600, tauxRemise: 10, prixRemise: 960 },
-  { id: '4', label: 'Peinture blanche 20L', quantity: 1, unitPrice: 42000 },
-  { id: '5', label: 'Prise murale renforcée', quantity: 6, unitPrice: 4100 },
-  { id: '6', label: 'Vernis satiné 5L', quantity: 2, unitPrice: 19500 },
+  { id: '1', codeProduit : '001',nomProduit: 'Ciment gris 50kg', qteFacturee: 4, prixTTC: 18500, qteGratuite: 10 },
+  { id: '2', codeProduit : '002',nomProduit: 'Interrupteur double', qteFacturee: 10, prixTTC: 3500, tauxTVA: 18 },
+  { id: '3', codeProduit : '003',nomProduit: 'Fer à béton 12mm', qteFacturee: 8, prixTTC: 9600, tauxRemise: 10, prixRemise: 960 },
+  { id: '4', codeProduit : '004',nomProduit: 'Peinture blanche 20L', qteFacturee: 1, prixTTC: 42000 },
+  { id: '5', codeProduit : '005',nomProduit: 'Prise murale renforcée', qteFacturee: 6, prixTTC: 4100 },
+  { id: '6', codeProduit : '006',nomProduit: 'Vernis satiné 5L', qteFacturee: 2, prixTTC: 19500 },
 ];
 
 export const factures : facture[] = [
@@ -23,7 +23,7 @@ export const factures : facture[] = [
     dateVente: '17/03/2026',
     dateEcheanceVente: '24/03/2026',
     montant: 150000,
-    status: 'Payée',
+    status: 'Soldée',
     nbProduits: 8
   },
   {
@@ -37,7 +37,7 @@ export const factures : facture[] = [
     dateVente: '16/03/2026',
     dateEcheanceVente: '22/03/2026',
     montant: 89000,
-    status: 'En attente',
+    status: 'Non soldée',
     nbProduits: 5,
     fneURL: 'https://factures.example.com/FAC-2026-002',
   },
@@ -67,7 +67,7 @@ export const factures : facture[] = [
     dateVente: '14/03/2026',
     dateEcheanceVente: '21/03/2026',
     montant: 210500,
-    status: 'Payée',
+    status: 'Soldée',
     nbProduits: 11,
     fneURL: 'https://factures.example.com/FAC-2026-004',
   },
@@ -82,7 +82,7 @@ export const factures : facture[] = [
     dateVente: '12/03/2026',
     dateEcheanceVente: '19/03/2026',
     montant: 63500,
-    status: 'En attente',
+    status: 'Non soldée',
     nbProduits: 4,
     fneURL: 'https://factures.example.com/FAC-2026-005',
   },

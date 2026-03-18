@@ -1,6 +1,6 @@
 import { useAuthContext } from '@/hooks/auth-context';
 import { DEMO_ACCOUNT } from '@/hooks/use-auth';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import styles from './style.js';
 
@@ -132,15 +132,6 @@ export default function LoginScreen() {
           <Text style={styles.demoHint}>
             Compte demo : {DEMO_ACCOUNT.login} / {DEMO_ACCOUNT.password}
           </Text>
-
-          <View style={styles.footerSection}>
-            <Text style={styles.footerText}>Pas encore de compte ?</Text>
-            <Link href="/(auth)/register" asChild>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>Créer un compte</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
         </View>
       </View>
     </SafeAreaView>

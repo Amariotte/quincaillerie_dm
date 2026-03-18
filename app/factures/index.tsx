@@ -1,8 +1,9 @@
 import { AppHeader } from '@/components/app-header';
+import { EmptyResultsCard } from '@/components/empty-results-card';
 import { factures } from '@/data/fakeDatas/factures.fake';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { formatAmount } from '@/tools/tools';
-import { factureStatus } from '@/types/factures.type.js';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { formatAmount, toComparableDate } from '@/tools/tools';
+import { factureStatus, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -16,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
-const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Payée', 'En attente', 'Impayée'];
+const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Impayée'];
 const clientFilters = [
   'Tous',
   ...Array.from(
@@ -28,34 +29,17 @@ const clientFilters = [
   ),
 ];
 
-
-const toComparableDate = (value: string) => {
-  const parts = value.split('/');
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const [day, month, year] = parts;
-  if (!day || !month || !year || day.length < 1 || month.length < 1 || year.length !== 4) {
-    return null;
-  }
-
-  return `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
-};
-
 export default function FacturesScreen() {
   const router = useRouter();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeClient, setActiveClient] = useState('Tous');
   const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
+
+  const today = new Date();
+  const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
   const filteredInvoices = factures.filter((facture) => {
     const matchesQuery =
@@ -73,9 +57,18 @@ export default function FacturesScreen() {
     return matchesQuery && matchesDate && matchesClient && matchesStatus;
   });
 
-  const paidCount = filteredInvoices.filter((facture) => facture.status === 'Payée').length;
-  const pendingCount = filteredInvoices.filter((facture) => facture.status !== 'Payée').length;
+  const unsettledInvoices = filteredInvoices.filter((facture) => facture.status !== 'Soldée');
+  const overdueInvoices = unsettledInvoices.filter((facture) => {
+    const dueComparable = facture.dateEcheanceVente ? toComparableDate(facture.dateEcheanceVente) : null;
+    return !!dueComparable && dueComparable < todayComparable;
+  });
+
+  const totalCount = filteredInvoices.length;
   const totalAmount = filteredInvoices.reduce((sum, facture) => sum + facture.montant, 0);
+  const unsettledCount = unsettledInvoices.length;
+  const unsettledAmount = unsettledInvoices.reduce((sum, facture) => sum + facture.montant, 0);
+  const overdueCount = overdueInvoices.length;
+  const overdueAmount = overdueInvoices.reduce((sum, facture) => sum + facture.montant, 0);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
@@ -85,16 +78,19 @@ export default function FacturesScreen() {
 
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Montant total</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les factures</Text>
+              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} facture{totalCount > 1 ? 's' : ''}</Text>
               <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Factures payées</Text>
-              <Text style={[styles.statValue, { color: tintColor }]}>{paidCount}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Factures non soldées</Text>
+              <Text style={[styles.statCount, { color: tintColor }]}>{unsettledCount} facture{unsettledCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>À suivre</Text>
-              <Text style={[styles.statValue, { color: '#f59e0b' }]}>{pendingCount}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Factures échues</Text>
+              <Text style={[styles.statCount, { color: '#dc2626' }]}>{overdueCount} facture{overdueCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statValue, { color: '#dc2626' }]}>{formatAmount(overdueAmount)}</Text>
             </View>
           </View>
 
@@ -179,9 +175,9 @@ export default function FacturesScreen() {
 
           <View style={styles.listBlock}>
             {filteredInvoices.map((invoice) => {
-              const statusColor =
-                invoice.status === 'Payée' ? '#16a34a' : invoice.status === 'En attente' ? '#f59e0b' : '#dc2626';
 
+             const statusColor = statusFactureColorMap[invoice.status];
+              
               return (
                 <View key={invoice.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
                   <View style={styles.invoiceTopRow}>
@@ -222,13 +218,17 @@ export default function FacturesScreen() {
               );
             })}
 
-            {filteredInvoices.length === 0 ? (
-              <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
-                <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
-                <Text style={[styles.emptyTitle, { color: textColor }]}>Aucune facture trouvée</Text>
-                <Text style={[styles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
-              </View>
-            ) : null}
+              {filteredInvoices.length === 0 ? (
+                          <EmptyResultsCard
+                            iconName="inventory-2"
+                            title="Aucune facture trouvée"
+                            subtitle="Essayez une autre recherche ou filtre."
+                            cardColor={cardColor}
+                            titleColor={textColor}
+                            subtitleColor={mutedColor}
+                          />
+                        ) : null}
+           
           </View>
         </View>
       </ScrollView>

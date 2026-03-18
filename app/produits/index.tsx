@@ -1,22 +1,23 @@
 import { AppHeader } from '@/components/app-header';
+import { EmptyResultsCard } from '@/components/empty-results-card';
 import { products } from '@/data/fakeDatas/produits.fake';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { formatAmount } from '@/tools/tools';
+import { ProductImageKey } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const categories = ['Toutes', ...Array.from(new Set(products.map((product) => product.category)))];
+const defaultProductImage = require('../../assets/images/partial-react-logo.png');
 
-const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
+const getProductImage = (imageKey?: ProductImageKey) => (defaultProductImage);
 
 export default function ProduitsScreen() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const router = useRouter();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Toutes');
 
@@ -75,8 +76,14 @@ export default function ProduitsScreen() {
               const stockColor = product.stock < 30 ? '#dc2626' : product.stock < 60 ? '#f59e0b' : '#16a34a';
 
               return (
-                <View key={product.id} style={[styles.productCard, { backgroundColor: cardColor }]}> 
+                <TouchableOpacity
+                  key={product.id}
+                  activeOpacity={0.85}
+                  onPress={() => router.push(`/produits/${product.id}` as never)}
+                  style={[styles.productCard, { backgroundColor: cardColor }]}
+                >
                   <View style={styles.productTopRow}>
+                    <Image source={getProductImage(product.image)} style={styles.productImage} resizeMode="cover" />
                     <View style={styles.productInfo}>
                       <Text style={[styles.productName, { color: textColor }]}>{product.name}</Text>
                       <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.sku}</Text>
@@ -96,16 +103,19 @@ export default function ProduitsScreen() {
                       <Text style={[styles.priceValue, { color: textColor }]}>{formatAmount(product.price)}</Text>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
 
             {filteredProducts.length === 0 ? (
-              <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
-                <MaterialIcons name="inventory-2" size={26} color={mutedColor} />
-                <Text style={[styles.emptyTitle, { color: textColor }]}>Aucun produit trouvé</Text>
-                <Text style={[styles.emptyText, { color: mutedColor }]}>Essayez une autre recherche ou catégorie.</Text>
-              </View>
+              <EmptyResultsCard
+                iconName="inventory-2"
+                title="Aucun produit trouvé"
+                subtitle="Essayez une autre recherche ou catégorie."
+                cardColor={cardColor}
+                titleColor={textColor}
+                subtitleColor={mutedColor}
+              />
             ) : null}
           </View>
         </View>
@@ -174,6 +184,11 @@ const styles = StyleSheet.create({
   productInfo: {
     flex: 1,
   },
+  productImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+  },
   productName: {
     fontSize: 16,
     fontWeight: '800',
@@ -216,19 +231,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     marginTop: 4,
-  },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
   },
 });

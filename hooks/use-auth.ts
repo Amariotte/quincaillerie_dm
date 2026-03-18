@@ -1,6 +1,5 @@
 import { userDataFake } from '@/data/fakeDatas/user.fake';
-import { signInApi, signOutApi, signUpApi } from '@/services/auth-service';
-import { fetchConnectedUser } from '@/services/user-service';
+import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
 import { user } from '@/types/user.type';
 import { useState } from 'react';
 
@@ -26,34 +25,18 @@ export interface AuthState {
 export interface UseAuthReturn extends AuthState {
   signIn: (login: string, password: string) => Promise<void>;
   signInDemo: () => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   error: string | null;
 }
 
-
-function toAuthUser(user: user | null | undefined): AuthState['user'] {
-  if (!user) {
-    return null;
-  }
-
-  const id = user.id ?? '';
-  const email = user.email ?? '';
-  const nom = user.nom ?? '';
-
-  if (!id || !email || !nom) {
-    return null;
-  }
-
-  return { id, email, nom, representantLegal: user.representantLegal ?? '', dateNaissance: user.dateNaissance ?? '', adresse: user.adresse ?? '' };
-}
 export function useAuth(): UseAuthReturn {
   const [state, setState] = useState<AuthState>({
     isLoading: false,
     isSignout: false,
     userToken: null,
-    user: null  });
+    user: null,
+  });
 
   const [error, setError] = useState<string | null>(null);
 
@@ -62,14 +45,14 @@ export function useAuth(): UseAuthReturn {
       isLoading: false,
       isSignout: false,
       userToken: token,
-      user: null,
+      user,
     });
   };
 
   const loadUserProfile = async (token: string) => {
     try {
       const profile = await fetchConnectedUser(token);
-      setState((prev) => ({ ...prev, userProfile: profile }));
+      setState((prev) => ({ ...prev, user: profile }));
     } catch {
       // profil non critique, on ne bloque pas l'appli
     }
@@ -120,8 +103,7 @@ export function useAuth(): UseAuthReturn {
       }
 
       const authRes = await signInApi(login, password);
-      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token);
-      applyAuthenticatedState(authRes.token, baseUser);
+      applyAuthenticatedState(authRes.token, authRes.user);
       await loadUserProfile(authRes.token);
     } catch (err) {
       const errorMessage =
@@ -132,43 +114,6 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
-    setState((prev) => ({ ...prev, isLoading: true }));
-    setError(null);
-
-    try {
-      // Validate input
-      if (!email || !password || !name) {
-        throw new Error('Veuillez remplir tous les champs');
-      }
-
-      if (!email.includes('@')) {
-        throw new Error('Veuillez entrer un email valide');
-      }
-
-      if (password.length < 6) {
-        throw new Error('Le mot de passe doit contenir au moins 6 caractères');
-      }
-
-      if (email.trim().toLowerCase() === userDataFake.email) {
-        await wait(DEMO_DELAY_MS);
-        applyAuthenticatedState(DEMO_TOKEN, userDataFake);
-        await loadUserProfile(DEMO_TOKEN);
-        return;
-      }
-
-      const authRes = await signUpApi(email, password, name);
-      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token);
-      applyAuthenticatedState(authRes.token, baseUser);
-      await loadUserProfile(authRes.token);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Erreur lors de l'inscription";
-      setError(errorMessage);
-      setState((prev) => ({ ...prev, isLoading: false }));
-      throw err;
-    }
-  };
 
   const signOut = async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -181,7 +126,7 @@ export function useAuth(): UseAuthReturn {
           isLoading: false,
           isSignout: true,
           userToken: null,
-          user: null
+          user: null,
         });
         setError(null);
         return;
@@ -212,7 +157,6 @@ export function useAuth(): UseAuthReturn {
     ...state,
     signIn,
     signInDemo,
-    signUp,
     signOut,
     refreshUserProfile,
     error,

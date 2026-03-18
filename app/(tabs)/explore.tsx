@@ -1,5 +1,5 @@
 import { AppHeader } from '@/components/app-header';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -12,11 +12,7 @@ const quickInsights = [
 ];
 
 export default function ExploreScreen() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 

@@ -1,6 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { quoteClients, quoteProducts } from '@/data/fakeDatas/devis.fake';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -44,12 +44,7 @@ const getLinePricing = (unitPrice: number, line: QuoteLine) => {
 };
 
 export default function NouveauDevisScreen() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const [selectedClientId, setSelectedClientId] = useState(quoteClients[0]?.id ?? '');
   const [quoteTitle, setQuoteTitle] = useState('Fournitures chantier résidence Kintambo');
   const [validityDays, setValidityDays] = useState('15');

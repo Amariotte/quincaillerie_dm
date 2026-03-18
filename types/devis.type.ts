@@ -1,12 +1,32 @@
-export type QuoteClient = {
+export type devisStatus = 'Payée' | 'En attente' | 'Impayée';
+
+export type devis = {
   id: string;
-  name: string;
-  sector: string;
+  codeDevis: string;
+  nomSousCompte?: string;
+  nomAgence?: string;
+  operateurSaisie?: string;
+  operateurValidation?: string;
+  dateDevis: string;
+  montant: number;
+  status: devisStatus;
+  nbProduits: number;
 };
 
-export type QuoteProduct = {
+export type detailsDevis = {
   id: string;
-  label: string;
-  unit: string;
-  price: number;
+  codeProduit: string;
+  nomProduit: string;
+  detailsPackage?: string;
+  qteFacturee: number;
+  prixHT: number;
+  prixTTC: number;
+  qteGratuite?: number;
+  tauxRemise?: number;
+  prixRemise?: number;
+  remise?: number;
+  tauxTVA?: number;
+  montantTVA?: number;
 };
+
+

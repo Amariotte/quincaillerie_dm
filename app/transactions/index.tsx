@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { fetchTransactions, getTransactionsFromFakeData } from '@/services/transactions-service';
@@ -19,12 +20,7 @@ import styles from './style';
 
 export default function TransactionsScreen() {
   const router = useRouter();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const offlineBg = useThemeColor({ light: '#fff7ed', dark: '#431407' }, 'background');
   const offlineText = useThemeColor({ light: '#c2410c', dark: '#fb923c' }, 'text');
 

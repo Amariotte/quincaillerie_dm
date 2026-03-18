@@ -1,9 +1,8 @@
 import apiConfig from '@/config/api';
 import { userDataFake } from '@/data/fakeDatas/user.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
-import { user } from '@/types/user.type';
-import { getJsonAuth } from './api-client';
-
+import { AuthResponse, user } from '@/types/user.type';
+import { getJsonAuth, postJson, postJsonAuth } from './api-client';
 
 export async function fetchConnectedUser(userToken: string): Promise<user> {
   if (!userToken) {
@@ -16,5 +15,35 @@ export async function fetchConnectedUser(userToken: string): Promise<user> {
 
   const data = await getJsonAuth<user>(apiConfig.endpoints.currentUser, userToken);
   return data;
+}
 
+export async function signInApi(login: string, password: string): Promise<AuthResponse> {
+  if (isFakeModeEnabled()) {
+    return { token: 'fake-token', user: userDataFake };
+  }
+
+  const data = await postJson<AuthResponse, { login: string; password: string }>(
+    apiConfig.endpoints.login,
+    { login, password }
+  );
+
+  const token = typeof data?.token === 'string' ? data.token : '';
+
+  if (!token) {
+    throw new Error('Réponse invalide du serveur de connexion');
+  }
+
+  return data;
+}
+
+export async function signOutApi(userToken: string): Promise<void> {
+  if (isFakeModeEnabled()) {
+    return;
+  }
+
+  if (!userToken) {
+    throw new Error('Token utilisateur manquant');
+  }
+
+  await postJsonAuth<void>(apiConfig.endpoints.logout, userToken);
 }

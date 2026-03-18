@@ -1,18 +1,13 @@
 import { AppHeader } from '@/components/app-header';
 import COLORS from '@/constants/colors';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAppTheme } from '@/hooks/use-app-theme';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
 export default function ChangePasswordScreen() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
-  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const borderColor = useThemeColor({ light: '#e5e7eb', dark: '#374151' }, 'text');
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const [currentPassword, setCurrentPassword] = useState('');
   const [nextPassword, setNextPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
