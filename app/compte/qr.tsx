@@ -37,7 +37,7 @@ export default function AccountQrScreen() {
 
           <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.heroLabel, { color: mutedColor }]}>Titulaire</Text>
-            <Text style={[styles.heroName, { color: textColor }]}>{user?.name ?? 'Utilisateur'}</Text>
+            <Text style={[styles.heroName, { color: textColor }]}>{user?.nom ?? 'Utilisateur'}</Text>
             <Text style={[styles.heroEmail, { color: mutedColor }]}>{user?.email ?? 'Aucun email'}</Text>
           </View>
 

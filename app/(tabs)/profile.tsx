@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { userProfile, signOut, isLoading } = useAuthContext();
+  const { user, signOut, isLoading } = useAuthContext();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
@@ -84,27 +84,27 @@ export default function ProfileScreen() {
               <MaterialIcons name="person" size={40} color="white" />
             </View>
 
-            {userProfile && (
+            {user && (
               <View style={styles.userInfo}>
                 <Text style={[styles.userName, { color: textColor }]}>
-                  {userProfile?.nom ?? userProfile.nom}
+                  {user?.nom ?? user.nom}
                 </Text>
                 <Text style={[styles.userEmail, { color: textColor, opacity: 0.6 }]}>
-                  {userProfile.email}
+                  {user.email}
                 </Text>
               </View>
             )}
           </View>
 
           {/* Fiche détaillée */}
-          {userProfile && (
+          {user && (
             <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
               <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
               {[
-                { label: 'Représentant légal', value: userProfile.representantLegal, icon: 'badge' as const },
-                { label: 'Date de naissance', value: userProfile.dateNaissance, icon: 'cake' as const },
-                { label: 'Adresse', value: userProfile.adresse, icon: 'place' as const },
-                { label: 'Email', value: userProfile.email, icon: 'email' as const },
+                { label: 'Représentant légal', value: user.representantLegal, icon: 'badge' as const },
+                { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake' as const },
+                { label: 'Adresse', value: user.adresse, icon: 'place' as const },
+                { label: 'Email', value: user.email, icon: 'email' as const },
               ].filter(f => f.value).map((field) => (
                 <View key={field.label} style={[styles.profileRow, { borderBottomColor: mutedColor + '30' }]}>
                   <View style={[styles.profileIconWrap, { backgroundColor: tintColor + '18' }]}>

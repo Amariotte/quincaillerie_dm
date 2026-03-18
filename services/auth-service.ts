@@ -1,12 +1,9 @@
 import apiConfig, { getApiUrl } from '@/config/api';
 import { userDataFake } from '@/data/fakeDatas/user.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
+import { user } from '@/types/user.type';
 
-export type AuthUser = { id: string; email: string; name: string };
-export type AuthResponse = { token: string; user: AuthUser | null };
-
-
-
+export type AuthResponse = { token: string; user: user | null };
 
 async function parseResponseBody(response: Response) {
   const rawBody = await response.text();
@@ -22,7 +19,7 @@ async function parseResponseBody(response: Response) {
   }
 }
 
-function extractUser(data: Record<string, unknown> | null): AuthUser | null {
+function extractUser(data: Record<string, unknown> | null): user | null {
   if (!data) {
     return null;
   }
@@ -31,18 +28,18 @@ function extractUser(data: Record<string, unknown> | null): AuthUser | null {
 
   const id = (rawUser.id ?? rawUser.userId ?? '') as string;
   const email = (rawUser.email ?? '') as string;
-  const name = ((rawUser.name ?? rawUser.nom ?? '') as string);
+  const nom = ((rawUser.nom ?? rawUser.name ?? '') as string);
 
-  if (!id || !email || !name) {
+  if (!id || !email || !nom) {
     return null;
   }
 
-  return { id, email, name };
+  return { id, email, nom, representantLegal: rawUser.representantLegal as string ?? '', dateNaissance: rawUser.dateNaissance as string ?? '', adresse: rawUser.adresse as string ?? '' };
 }
 
 export async function signInApi(login: string, password: string): Promise<AuthResponse> {
   if (isFakeModeEnabled()) {
-    return { token: 'fake-token', user: { id: userDataFake.id, email: userDataFake.email, name: userDataFake.nom } };
+    return { token: 'fake-token', user: userDataFake };
   }
 
   const response = await fetch(getApiUrl(apiConfig.endpoints.login), {

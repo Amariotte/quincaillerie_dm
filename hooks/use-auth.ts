@@ -1,7 +1,7 @@
 import { userDataFake } from '@/data/fakeDatas/user.fake';
 import { signInApi, signOutApi, signUpApi } from '@/services/auth-service';
 import { fetchConnectedUser } from '@/services/user-service';
-import { user, user as UserProfile } from '@/types/user.type';
+import { user } from '@/types/user.type';
 import { useState } from 'react';
 
 const DEMO_DELAY_MS = 700;
@@ -20,12 +20,7 @@ export interface AuthState {
   isLoading: boolean;
   isSignout: boolean;
   userToken: string | null;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  } | null;
-  userProfile: UserProfile | null;
+  user: user | null;
 }
 
 export interface UseAuthReturn extends AuthState {
@@ -51,16 +46,14 @@ function toAuthUser(user: user | null | undefined): AuthState['user'] {
     return null;
   }
 
-  return { id, email, name: nom };
+  return { id, email, nom, representantLegal: user.representantLegal ?? '', dateNaissance: user.dateNaissance ?? '', adresse: user.adresse ?? '' };
 }
 export function useAuth(): UseAuthReturn {
   const [state, setState] = useState<AuthState>({
     isLoading: false,
     isSignout: false,
     userToken: null,
-    user: null,
-    userProfile: null,
-  });
+    user: null  });
 
   const [error, setError] = useState<string | null>(null);
 
@@ -69,8 +62,7 @@ export function useAuth(): UseAuthReturn {
       isLoading: false,
       isSignout: false,
       userToken: token,
-      user,
-      userProfile: null,
+      user: null,
     });
   };
 
@@ -97,11 +89,7 @@ export function useAuth(): UseAuthReturn {
     try {
       await wait(DEMO_DELAY_MS);
 
-      applyAuthenticatedState(DEMO_TOKEN, {
-        id: 'demo-user',
-        email: userDataFake.email,
-        name: userDataFake.nom,
-      });
+      applyAuthenticatedState(DEMO_TOKEN, userDataFake);
       await loadUserProfile(DEMO_TOKEN);
     } catch (err) {
       const errorMessage =
@@ -126,19 +114,13 @@ export function useAuth(): UseAuthReturn {
         password === DEMO_ACCOUNT.password
       ) {
         await wait(DEMO_DELAY_MS);
-        applyAuthenticatedState(DEMO_TOKEN, {
-          id: 'demo-user',
-          email: userDataFake.email,
-          name: userDataFake.nom,
-        });
+        applyAuthenticatedState(DEMO_TOKEN, userDataFake);
         await loadUserProfile(DEMO_TOKEN);
         return;
       }
 
       const authRes = await signInApi(login, password);
-      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token).then(p => ({
-        id: p.id, email: p.email, name: p.nom,
-      }));
+      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token);
       applyAuthenticatedState(authRes.token, baseUser);
       await loadUserProfile(authRes.token);
     } catch (err) {
@@ -170,19 +152,13 @@ export function useAuth(): UseAuthReturn {
 
       if (email.trim().toLowerCase() === userDataFake.email) {
         await wait(DEMO_DELAY_MS);
-        applyAuthenticatedState(DEMO_TOKEN, {
-          id: 'demo-user',
-          email: userDataFake.email,
-          name: name.trim() || userDataFake.nom,
-        });
+        applyAuthenticatedState(DEMO_TOKEN, userDataFake);
         await loadUserProfile(DEMO_TOKEN);
         return;
       }
 
       const authRes = await signUpApi(email, password, name);
-      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token).then(p => ({
-        id: p.id, email: p.email, name: p.nom,
-      }));
+      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token);
       applyAuthenticatedState(authRes.token, baseUser);
       await loadUserProfile(authRes.token);
     } catch (err) {
@@ -205,8 +181,7 @@ export function useAuth(): UseAuthReturn {
           isLoading: false,
           isSignout: true,
           userToken: null,
-          user: null,
-          userProfile: null,
+          user: null
         });
         setError(null);
         return;
@@ -220,7 +195,6 @@ export function useAuth(): UseAuthReturn {
         isSignout: true,
         userToken: null,
         user: null,
-        userProfile: null,
       });
       setError(null);
     } catch (err) {
