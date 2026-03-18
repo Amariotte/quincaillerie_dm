@@ -70,6 +70,12 @@ export function ModuleDetailScreen({ title, subtitle, icon, item }: ModuleDetail
               <Text style={[styles.label, { color: mutedColor }]}>Statut</Text>
               <Text style={[styles.status, { color: tintColor }]}>{item.status}</Text>
             </View>
+            {item.palier ? (
+              <View style={styles.row}>
+                <Text style={[styles.label, { color: mutedColor }]}>Palier</Text>
+                <Text style={[styles.value, { color: textColor }]}>{item.palier}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </ScrollView>

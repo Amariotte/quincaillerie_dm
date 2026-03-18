@@ -1,8 +1,8 @@
 import { AppHeader } from '@/components/app-header';
-import { proformaProductLines, proformasData } from '@/data/fakeDatas/modules';
-import { products } from '@/data/fakeDatas/produits';
+import { proformaProductLines, proformasData } from '@/data/fakeDatas/modules.fake';
+import { products } from '@/data/fakeDatas/produits.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { formatAmount } from '@/Tools/tools';
+import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';

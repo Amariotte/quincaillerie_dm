@@ -1,4 +1,6 @@
 import apiConfig, { getApiUrl } from '@/config/api';
+import { fetchConnectedUser } from '@/services/user-service';
+import { user as UserProfile } from '@/types/user.type';
 import { useState } from 'react';
 
 const DEMO_DELAY_MS = 700;
@@ -38,6 +40,7 @@ export interface AuthState {
     email: string;
     name: string;
   } | null;
+  userProfile: UserProfile | null;
 }
 
 export interface UseAuthReturn extends AuthState {
@@ -45,7 +48,31 @@ export interface UseAuthReturn extends AuthState {
   signInDemo: () => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
   error: string | null;
+}
+
+type RawAuthUser = {
+  id?: string;
+  email?: string;
+  name?: string;
+  nom?: string;
+};
+
+function toAuthUser(user: RawAuthUser | null | undefined): AuthState['user'] {
+  if (!user) {
+    return null;
+  }
+
+  const id = user.id ?? '';
+  const email = user.email ?? '';
+  const name = user.name ?? user.nom ?? '';
+
+  if (!id || !email || !name) {
+    return null;
+  }
+
+  return { id, email, name };
 }
 
 export function useAuth(): UseAuthReturn {
@@ -54,6 +81,7 @@ export function useAuth(): UseAuthReturn {
     isSignout: false,
     userToken: null,
     user: null,
+    userProfile: null,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +92,24 @@ export function useAuth(): UseAuthReturn {
       isSignout: false,
       userToken: token,
       user,
+      userProfile: null,
     });
+  };
+
+  const loadUserProfile = async (token: string) => {
+    try {
+      const profile = await fetchConnectedUser(token);
+      setState((prev) => ({ ...prev, userProfile: profile }));
+    } catch {
+      // profil non critique, on ne bloque pas l'appli
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (!state.userToken) {
+      return;
+    }
+    await loadUserProfile(state.userToken);
   };
 
   const signInDemo = async () => {
@@ -79,6 +124,7 @@ export function useAuth(): UseAuthReturn {
         email: DEMO_ACCOUNT.email,
         name: DEMO_ACCOUNT.name,
       });
+      await loadUserProfile(DEMO_TOKEN);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erreur de connexion en mode demo';
@@ -109,6 +155,7 @@ export function useAuth(): UseAuthReturn {
           email: DEMO_ACCOUNT.email,
           name: DEMO_ACCOUNT.name,
         });
+        await loadUserProfile(DEMO_TOKEN);
         return;
       }
       
@@ -131,11 +178,23 @@ export function useAuth(): UseAuthReturn {
 
       const { token, user } = data ?? {};
 
-      if (!token || !user) {
+      if (!token) {
         throw new Error('Réponse invalide du serveur de connexion');
       }
 
-      applyAuthenticatedState(token, user);
+      const normalizedApiUser = toAuthUser(user);
+
+      if (normalizedApiUser) {
+        applyAuthenticatedState(token, normalizedApiUser);
+      } else {
+        const connectedUser = await fetchConnectedUser(token);
+        applyAuthenticatedState(token, {
+          id: connectedUser.id,
+          email: connectedUser.email,
+          name: connectedUser.nom,
+        });
+      }
+      await loadUserProfile(token);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erreur de connexion';
@@ -171,6 +230,7 @@ export function useAuth(): UseAuthReturn {
           email: DEMO_ACCOUNT.email,
           name: name.trim() || DEMO_ACCOUNT.name,
         });
+        await loadUserProfile(DEMO_TOKEN);
         return;
       }
 
@@ -193,11 +253,23 @@ export function useAuth(): UseAuthReturn {
 
       const { token, user } = data ?? {};
 
-      if (!token || !user) {
+      if (!token) {
         throw new Error("Réponse invalide du serveur d'inscription");
       }
 
-      applyAuthenticatedState(token, user);
+      const normalizedApiUser = toAuthUser(user);
+
+      if (normalizedApiUser) {
+        applyAuthenticatedState(token, normalizedApiUser);
+      } else {
+        const connectedUser = await fetchConnectedUser(token);
+        applyAuthenticatedState(token, {
+          id: connectedUser.id,
+          email: connectedUser.email,
+          name: connectedUser.nom,
+        });
+      }
+      await loadUserProfile(token);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur lors de l'inscription";
@@ -219,6 +291,7 @@ export function useAuth(): UseAuthReturn {
           isSignout: true,
           userToken: null,
           user: null,
+          userProfile: null,
         });
         setError(null);
         return;
@@ -237,6 +310,7 @@ export function useAuth(): UseAuthReturn {
         isSignout: true,
         userToken: null,
         user: null,
+        userProfile: null,
       });
       setError(null);
     } catch (err) {
@@ -256,6 +330,7 @@ export function useAuth(): UseAuthReturn {
     signInDemo,
     signUp,
     signOut,
+    refreshUserProfile,
     error,
   };
 }

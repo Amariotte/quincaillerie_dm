@@ -1,11 +1,11 @@
 import { AppHeader } from '@/components/app-header';
-import { fallbackItems, invoices } from '@/data/fakeDatas/factures';
+import { factures, fallbackItems } from '@/data/fakeDatas/factures.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { formatAmount } from '@/Tools/tools';
+import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
@@ -18,7 +18,7 @@ export default function FactureDetailScreen() {
   const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
   const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
 
-  const invoice = invoices.find((item) => item.id === id);
+  const invoice = factures.find((item) => item.id === id);
 
   if (!invoice) {
     return (
@@ -40,31 +40,82 @@ export default function FactureDetailScreen() {
   const statusColor =
     invoice.status === 'Payée' ? '#16a34a' : invoice.status === 'En attente' ? '#f59e0b' : '#dc2626';
 
-  const invoiceLines = fallbackItems.slice(0, invoice.itemsCount);
+  const invoiceLines = fallbackItems.slice(0, invoice.nbProduits);
   const computedSubtotal = invoiceLines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
-  const subtotal = computedSubtotal > 0 ? computedSubtotal : invoice.amount;
+  const subtotal = computedSubtotal > 0 ? computedSubtotal : invoice.montant;
   const vat = Math.round(subtotal * 0.16);
   const total = subtotal + vat;
+  const hasFneUrl = Boolean(invoice.fneURL && invoice.fneURL.trim().length > 0);
+
+  const openNormalizedInvoice = async () => {
+    if (!hasFneUrl || !invoice.fneURL) {
+      return;
+    }
+
+    await Linking.openURL(invoice.fneURL);
+  };
+
+  const openTicket = async () => {
+    if (!hasFneUrl || !invoice.fneURL) {
+      return;
+    }
+
+    await Linking.openURL(invoice.fneURL);
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail facture" subtitle={invoice.reference} />
+          <AppHeader showBack title="Détail facture" subtitle={invoice.codeVente} />
 
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.clientName, { color: textColor }]}>{invoice.client}</Text>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {invoice.issueDate}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dueDate}</Text>
+            <View style={styles.headerTopRow}>
+              <Text style={[styles.clientName, { color: textColor }]}>{invoice.nomSousCompte}</Text>
+              {hasFneUrl ? (
+                <View style={styles.headerActionsRow}>
+                  <TouchableOpacity
+                    onPress={openNormalizedInvoice}
+                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                  >
+                    <MaterialIcons name="visibility" size={16} color={tintColor} />
+                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={styles.infoBubbleText}>i</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={openTicket}
+                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                  >
+                    <MaterialIcons name="receipt-long" size={16} color={tintColor} />
+                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={styles.infoBubbleText}>i</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
+            
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {invoice.dateVente}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEcheanceVente}</Text>
+            </View>
+             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
             </View>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {invoice.nomAgence ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Caisse : {invoice.nomCaisse ?? '—'}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur saisie : {invoice.operateurSaisie ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur validation : {invoice.operateurValidation ?? '—'}</Text>
+            </View>
+           
           </View>
 
           <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles ({invoice.itemsCount})</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles ({invoice.nbProduits})</Text>
             <View style={styles.linesBlock}>
               {invoiceLines.map((line) => (
                 <View key={line.id} style={styles.lineRow}>

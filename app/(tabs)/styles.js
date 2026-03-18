@@ -82,6 +82,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
+  offlineBadge: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   depositButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   menuCard: {
-    width: '31%',
+    width: '23.5%',
     minHeight: 106,
     borderRadius: 16,
     paddingHorizontal: 10,
@@ -152,10 +166,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   transactionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   transactionTitle: {
     marginBottom: 0,
+  },
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   transactionList: {
     gap: 10,

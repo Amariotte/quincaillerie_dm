@@ -5,6 +5,9 @@ const apiConfig = {
     login: '/auth/login',
     register: '/auth/register',
     logout: '/auth/logout',
+    currentUser: '/auth/me',
+    soldes: '/soldes',
+    transactions: '/transactions',
   },
 };
 

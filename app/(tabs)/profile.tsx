@@ -17,10 +17,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, isLoading } = useAuthContext();
+  const { userProfile, signOut, isLoading } = useAuthContext();
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
+  const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
+  const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
 
   const handleLogout = () => {
     Alert.alert(
@@ -82,25 +84,40 @@ export default function ProfileScreen() {
               <MaterialIcons name="person" size={40} color="white" />
             </View>
 
-            {user && (
+            {userProfile && (
               <View style={styles.userInfo}>
                 <Text style={[styles.userName, { color: textColor }]}>
-                  {user.name}
+                  {userProfile?.nom ?? userProfile.nom}
                 </Text>
-                <Text
-                  style={[
-                    styles.userEmail,
-                    {
-                      color: textColor,
-                      opacity: 0.6,
-                    },
-                  ]}
-                >
-                  {user.email}
+                <Text style={[styles.userEmail, { color: textColor, opacity: 0.6 }]}>
+                  {userProfile.email}
                 </Text>
               </View>
             )}
           </View>
+
+          {/* Fiche détaillée */}
+          {userProfile && (
+            <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
+              {[
+                { label: 'Représentant légal', value: userProfile.representantLegal, icon: 'badge' as const },
+                { label: 'Date de naissance', value: userProfile.dateNaissance, icon: 'cake' as const },
+                { label: 'Adresse', value: userProfile.adresse, icon: 'place' as const },
+                { label: 'Email', value: userProfile.email, icon: 'email' as const },
+              ].filter(f => f.value).map((field) => (
+                <View key={field.label} style={[styles.profileRow, { borderBottomColor: mutedColor + '30' }]}>
+                  <View style={[styles.profileIconWrap, { backgroundColor: tintColor + '18' }]}>
+                    <MaterialIcons name={field.icon} size={18} color={tintColor} />
+                  </View>
+                  <View style={styles.profileTextWrap}>
+                    <Text style={[styles.profileLabel, { color: mutedColor }]}>{field.label}</Text>
+                    <Text style={[styles.profileValue, { color: textColor }]}>{field.value}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* Settings Sections */}
           <View style={styles.settingsSection}>
@@ -368,5 +385,43 @@ const styles = StyleSheet.create({
   logoutButton: {
     marginTop: 24,
     marginBottom: 12,
+  },
+  profileCard: {
+    borderRadius: 20,
+    padding: 16,
+    gap: 4,
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  profileIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileTextWrap: {
+    flex: 1,
+  },
+  profileLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  profileValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 2,
   },
 });

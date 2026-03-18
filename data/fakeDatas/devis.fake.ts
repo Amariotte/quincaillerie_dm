@@ -1,15 +1,4 @@
-export type QuoteClient = {
-  id: string;
-  name: string;
-  sector: string;
-};
-
-export type QuoteProduct = {
-  id: string;
-  label: string;
-  unit: string;
-  price: number;
-};
+import { QuoteClient, QuoteProduct } from "@/types/devis.type";
 
 export const quoteClients: QuoteClient[] = [
   { id: 'client-1', name: 'Ets Mavungu Construction', sector: 'BTP' },

@@ -1,22 +1,32 @@
 import { AppHeader } from '@/components/app-header';
-import { invoices, type InvoiceStatus } from '@/data/fakeDatas/factures';
+import { factures } from '@/data/fakeDatas/factures.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { formatAmount } from '@/Tools/tools';
+import { formatAmount } from '@/tools/tools';
+import { factureStatus } from '@/types/factures.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
-const statusFilters: Array<'Toutes' | InvoiceStatus> = ['Toutes', 'Payée', 'En attente', 'Impayée'];
-const clientFilters = ['Tous', ...Array.from(new Set(invoices.map((invoice) => invoice.client)))];
+const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Payée', 'En attente', 'Impayée'];
+const clientFilters = [
+  'Tous',
+  ...Array.from(
+    new Set(
+      factures
+        .map((facture) => facture.nomSousCompte)
+        .filter((client): client is string => typeof client === 'string' && client.trim().length > 0)
+    )
+  ),
+];
 
 
 const toComparableDate = (value: string) => {
@@ -45,27 +55,27 @@ export default function FacturesScreen() {
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeClient, setActiveClient] = useState('Tous');
-  const [activeStatus, setActiveStatus] = useState<'Toutes' | InvoiceStatus>('Toutes');
+  const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
-  const filteredInvoices = invoices.filter((invoice) => {
+  const filteredInvoices = factures.filter((facture) => {
     const matchesQuery =
-      invoice.reference.toLowerCase().includes(query.toLowerCase()) ||
-      invoice.client.toLowerCase().includes(query.toLowerCase());
-    const issueComparable = toComparableDate(invoice.issueDate);
+      facture.codeVente.toLowerCase().includes(query.toLowerCase()) ||
+      facture.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
+    const issueComparable = toComparableDate(facture.dateVente);
     const startComparable = startDateQuery.trim().length > 0 ? toComparableDate(startDateQuery.trim()) : null;
     const endComparable = endDateQuery.trim().length > 0 ? toComparableDate(endDateQuery.trim()) : null;
     const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
     const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
     const matchesDate = afterStart && beforeEnd;
-    const matchesClient = activeClient === 'Tous' || invoice.client === activeClient;
-    const matchesStatus = activeStatus === 'Toutes' || invoice.status === activeStatus;
+    const matchesClient = activeClient === 'Tous' || facture.nomSousCompte === activeClient;
+    const matchesStatus = activeStatus === 'Toutes' || facture.status === activeStatus;
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus;
   });
 
-  const paidCount = invoices.filter((invoice) => invoice.status === 'Payée').length;
-  const pendingCount = invoices.filter((invoice) => invoice.status !== 'Payée').length;
-  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const paidCount = filteredInvoices.filter((facture) => facture.status === 'Payée').length;
+  const pendingCount = filteredInvoices.filter((facture) => facture.status !== 'Payée').length;
+  const totalAmount = filteredInvoices.reduce((sum, facture) => sum + facture.montant, 0);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
@@ -176,8 +186,8 @@ export default function FacturesScreen() {
                 <View key={invoice.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
                   <View style={styles.invoiceTopRow}>
                     <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.reference}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.client}</Text>
+                      <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
+                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte}</Text>
                     </View>
                     <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                       <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
@@ -187,20 +197,20 @@ export default function FacturesScreen() {
                   <View style={styles.invoiceMetaRow}>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.issueDate}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateVente}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dueDate}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEcheanceVente}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.itemsCount}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
                     </View>
                   </View>
 
                   <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.amount)}</Text>
+                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.montant)}</Text>
                     <TouchableOpacity
                       onPress={() => router.push(`/factures/${invoice.id}` as never)}
                       style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}

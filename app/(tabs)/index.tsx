@@ -1,21 +1,18 @@
 import { AppHeader } from '@/components/app-header';
-import { transactions } from '@/data/fakeDatas/transactions';
 import { menuItems } from '@/data/menus';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { fetchSoldeCompte } from '@/services/soldes-service';
+import { fetchTransactions } from '@/services/transactions-service';
+import { formatAmount } from '@/tools/tools';
+import { SoldeResponse } from '@/types/solde.type.js';
+import { Transaction } from '@/types/transactions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import {
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './styles.js';
-
-
 
 
 export default function HomeScreen() {
@@ -25,6 +22,66 @@ export default function HomeScreen() {
   const tintColor = useThemeColor({}, 'tint');
   const cardColor = useThemeColor({ light: '#ffffff', dark: '#1f2937' }, 'background');
   const mutedColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+
+  const [accountBalance, setAccountBalance] = useState<number | null>(null);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+
+  const loadBalance = useCallback(async () => {
+    let hasCachedBalance = false;
+    try {
+      setIsLoadingBalance(true);
+      const parsedCache = await getCacheData<SoldeResponse>(BALANCE_CACHE_KEY);
+
+      if (parsedCache) {
+        const cachedBalance = Number(parsedCache.solde);
+
+        if (!Number.isNaN(cachedBalance)) {
+          setAccountBalance(cachedBalance);
+          hasCachedBalance = true;
+        }
+      }
+
+      const solde = await fetchSoldeCompte();
+
+      setAccountBalance(Number(solde));
+      setIsOfflineMode(false);
+
+      await setCacheData(
+        BALANCE_CACHE_KEY,
+        { solde: solde },
+      );
+    } catch {
+      setIsOfflineMode(true);
+
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  }, []);
+
+  const loadRecentTransactions = useCallback(async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const cached = await getCacheData<Transaction[]>(RECENTS_TRANSACTIONS_CACHE_KEY);
+      if (cached && cached.length > 0) {
+        setRecentTransactions(cached);
+      }
+      const data = await fetchTransactions();
+      setRecentTransactions(data);
+      await setCacheData(RECENTS_TRANSACTIONS_CACHE_KEY, data);
+    } catch (ex) {
+      setIsOfflineMode(true);
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBalance();
+    loadRecentTransactions();
+  }, [loadBalance, loadRecentTransactions]);
 
   const handleMenuPress = (itemId: string) => {
     if (itemId === 'factures') {
@@ -91,22 +148,26 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader title="Tableau de bord" subtitle="Vue globale de vos opérations" />
-
-          <Text style={[styles.sectionTitle, { color: textColor }]}>Solde du compte</Text>
+          <AppHeader title="Tableau de bord" subtitle="Vue globale de vos opérations" isOffline={isOfflineMode} />
 
           <View style={[styles.balanceCard, { backgroundColor: cardColor }]}> 
             <View style={styles.balanceRow}>
               <View>
-                <Text style={[styles.balanceAmount, { color: tintColor }]}>0 FCFA</Text>
+                <Text style={[styles.balanceAmount, { color: tintColor }]}>
+                  {isLoadingBalance
+                    ? 'Chargement...'
+                    : accountBalance !== null
+                      ? formatAmount(accountBalance)
+                      : 'Solde indisponible'}
+                </Text>
                 <Text style={[styles.balanceCaption, { color: '#f59e0b' }]}>Mon solde courant</Text>
               </View>
-              <TouchableOpacity style={[styles.depositButton, { backgroundColor: tintColor }]}> 
-                <MaterialIcons name="add" size={18} color="#ffffff" />
-                <Text style={styles.depositText}>Déposer de l'argent</Text>
+              <TouchableOpacity onPress={loadBalance} style={[styles.depositButton, { backgroundColor: tintColor }]}> 
+                <MaterialIcons name="refresh" size={18} color="#ffffff" />
+                <Text style={styles.depositText}>Actualiser le solde</Text>
               </TouchableOpacity>
             </View>
 
@@ -124,8 +185,6 @@ export default function HomeScreen() {
                 <Text style={[styles.metricValue, { color: textColor }]}>0</Text>
               </View>
             </View>
-
-            <Text style={[styles.updateText, { color: mutedColor }]}>Dernière mise à jour : 17/03/2026 13:32:08</Text>
           </View>
 
           <Text style={[styles.sectionTitle, { color: textColor }]}>Menu</Text>
@@ -167,11 +226,23 @@ export default function HomeScreen() {
 
           <View style={styles.transactionsHeader}>
             <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>50 Dernières transactions</Text>
+            <TouchableOpacity onPress={() => router.push('/transactions' as never)}>
+              <Text style={[styles.seeAllText, { color: tintColor }]}>Voir tout</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.transactionList}>
-            {transactions.map((transaction) => (
-              <View key={transaction.id} style={[styles.transactionCard, { backgroundColor: cardColor }]}> 
+            {isLoadingTransactions && recentTransactions.length === 0 ? (
+              <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
+                <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Chargement...</Text>
+              </View>
+            ) : recentTransactions.map((transaction) => (
+              <TouchableOpacity
+                key={transaction.id}
+                activeOpacity={0.85}
+                onPress={() => router.push(`/transactions/${transaction.id}` as never)}
+                style={[styles.transactionCard, { backgroundColor: cardColor }]}
+              >
                 <View style={[styles.transactionIcon, { backgroundColor: `${tintColor}15` }]}>
                   <MaterialIcons name="sync-alt" size={20} color={tintColor} />
                 </View>
@@ -183,11 +254,9 @@ export default function HomeScreen() {
                   <Text style={[styles.transactionAmount, { color: textColor }]}>{transaction.amount}</Text>
                   <Text style={[styles.transactionStatus, { color: tintColor }]}>{transaction.status}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
-
-    
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,12 +1,6 @@
-export type Transaction = {
-  id: string;
-  label: string;
-  date: string;
-  amount: string;
-  status: string;
-};
+import { Transaction } from "@/types/transactions.type";
 
-export const transactions: Transaction[] = [
+export const transactionsFake: Transaction[] = [
   { id: '1', label: 'Facture #001', date: '17/03/2026', amount: '15 000 FCFA', status: 'Payée' },
   { id: '2', label: 'Proforma #042', date: '16/03/2026', amount: '8 500 FCFA', status: 'En attente' },
   { id: '3', label: 'Bon de livraison #018', date: '15/03/2026', amount: '22 000 FCFA', status: 'Livré' },

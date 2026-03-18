@@ -1,5 +1,5 @@
 import { ModuleListScreen } from '@/components/module-list-screen';
-import { operationsData } from '@/data/fakeDatas/modules';
+import { operationsData } from '@/data/fakeDatas/modules.fake';
 import React from 'react';
 
 export default function OperationsScreen() {

@@ -1,5 +1,5 @@
 import { ModuleDetailScreen } from '@/components/module-detail-screen';
-import { transactionsData } from '@/data/fakeDatas/modules';
+import { transactionsData } from '@/data/fakeDatas/modules.fake';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

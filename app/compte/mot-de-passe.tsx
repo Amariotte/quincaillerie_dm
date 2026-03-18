@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import COLORS from '@/constants/colors';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -15,23 +16,25 @@ export default function ChangePasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [nextPassword, setNextPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = () => {
     if (!currentPassword || !nextPassword || !confirmPassword) {
-      Alert.alert('Champs requis', 'Veuillez remplir tous les champs.');
+      setErrorMessage('Veuillez remplir tous les champs.');
       return;
     }
 
     if (nextPassword.length < 6) {
-      Alert.alert('Mot de passe invalide', 'Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      setErrorMessage('Le nouveau mot de passe doit contenir au moins 6 caractères.');
       return;
     }
 
     if (nextPassword !== confirmPassword) {
-      Alert.alert('Confirmation invalide', 'Les deux nouveaux mots de passe ne correspondent pas.');
+      setErrorMessage('Les deux nouveaux mots de passe ne correspondent pas.');
       return;
     }
 
+    setErrorMessage('');
     Alert.alert('Mot de passe modifié', 'Le mot de passe a été mis à jour avec succès.');
     setCurrentPassword('');
     setNextPassword('');
@@ -48,7 +51,10 @@ export default function ChangePasswordScreen() {
             <Text style={[styles.label, { color: mutedColor }]}>Mot de passe actuel</Text>
             <TextInput
               value={currentPassword}
-              onChangeText={setCurrentPassword}
+              onChangeText={(value) => {
+                setCurrentPassword(value);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry
               placeholder="Saisissez le mot de passe actuel"
               placeholderTextColor={mutedColor}
@@ -58,7 +64,10 @@ export default function ChangePasswordScreen() {
             <Text style={[styles.label, { color: mutedColor }]}>Nouveau mot de passe</Text>
             <TextInput
               value={nextPassword}
-              onChangeText={setNextPassword}
+              onChangeText={(value) => {
+                setNextPassword(value);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry
               placeholder="Minimum 6 caractères"
               placeholderTextColor={mutedColor}
@@ -68,12 +77,19 @@ export default function ChangePasswordScreen() {
             <Text style={[styles.label, { color: mutedColor }]}>Confirmer le nouveau mot de passe</Text>
             <TextInput
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(value) => {
+                setConfirmPassword(value);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry
               placeholder="Répétez le mot de passe"
               placeholderTextColor={mutedColor}
               style={[styles.input, { color: textColor, borderColor }]}
             />
+
+            {!!errorMessage && (
+              <Text style={[styles.errorText, { color: COLORS.errorColor }]}>{errorMessage}</Text>
+            )}
 
             <TouchableOpacity onPress={handleSubmit} style={[styles.submitButton, { backgroundColor: tintColor }]}>
               <Text style={styles.submitButtonText}>Enregistrer</Text>

@@ -6,19 +6,20 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type AppHeaderProps = {
   title: string;
   subtitle?: string;
   showBack?: boolean;
+  isOffline?: boolean;
 };
 
 type MenuAction = 'qr' | 'password' | 'sync' | 'logout';
@@ -55,7 +56,7 @@ const menuEntries: Array<{
   },
 ];
 
-export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, showBack = false, isOffline = false }: AppHeaderProps) {
   const router = useRouter();
   const { user, signOut, isLoading } = useAuthContext();
   const textColor = useThemeColor({}, 'text');
@@ -135,6 +136,12 @@ export function AppHeader({ title, subtitle, showBack = false }: AppHeaderProps)
             <Text style={[styles.pageSubtitle, { color: headerSubtextColor }]} numberOfLines={1}>
               {subtitle ?? defaultSubtitle}
             </Text>
+            {isOffline ? (
+              <View style={styles.offlineBadge}>
+                <MaterialIcons name="cloud-off" size={12} color="#fef3c7" />
+                <Text style={styles.offlineBadgeText}>Mode déconnecté</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -228,6 +235,22 @@ const styles = StyleSheet.create({
   pageSubtitle: {
     fontSize: 13,
     marginTop: 4,
+  },
+  offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  offlineBadgeText: {
+    color: '#fef3c7',
+    fontSize: 11,
+    fontWeight: '700',
   },
   avatarButton: {
     width: 52,

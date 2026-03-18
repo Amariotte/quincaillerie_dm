@@ -26,6 +26,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 16,
   },
+  errorText: {
+    fontSize: 13,
+    marginTop: -4,
+    marginBottom: 10,
+  },
   submitButton: {
     marginTop: 6,
     borderRadius: 16,

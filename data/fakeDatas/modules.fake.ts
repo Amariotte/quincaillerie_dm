@@ -35,8 +35,8 @@ export const transactionsData: ModuleListItem[] = [
 ];
 
 export const promotionsData: ModuleListItem[] = [
-  { id: 'prm-1', title: 'PROMO-PEINT-01', subtitle: 'Réduction peinture intérieure', date: '01/03/2026', amount: '15%', status: 'Active' },
-  { id: 'prm-2', title: 'PROMO-CIMENT-02', subtitle: 'Offre lot de ciment', date: '10/03/2026', amount: '10%', status: 'Planifiée' },
+  { id: 'prm-1', title: 'PROMO-PEINT-01', subtitle: 'Réduction peinture intérieure', date: '01/03/2026', amount: '15%', status: 'Active', palier: 'Palier 1' },
+  { id: 'prm-2', title: 'PROMO-CIMENT-02', subtitle: 'Offre lot de ciment', date: '10/03/2026', amount: '10%', status: 'Planifiée', palier: 'Palier 2' },
 ];
 
 export const operationsData: ModuleListItem[] = [

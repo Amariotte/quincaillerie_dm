@@ -1,5 +1,5 @@
 import { ModuleListScreen } from '@/components/module-list-screen';
-import { promotionsData } from '@/data/fakeDatas/modules';
+import { promotionsData } from '@/data/fakeDatas/modules.fake';
 import React from 'react';
 
 export default function PromotionsScreen() {

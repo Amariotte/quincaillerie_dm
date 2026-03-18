@@ -13,6 +13,7 @@ export type ModuleListItem = {
   date: string;
   amount: string;
   status: string;
+  palier?: string;
 };
 
 type ModuleListScreenProps = {
@@ -40,7 +41,7 @@ export function ModuleListScreen({ title, subtitle, icon, items, detailBasePath 
     }
 
     return items.filter((item) =>
-      [item.title, item.subtitle, item.date, item.status, item.amount]
+      [item.title, item.subtitle, item.date, item.status, item.amount, item.palier]
         .join(' ')
         .toLowerCase()
         .includes(normalized)

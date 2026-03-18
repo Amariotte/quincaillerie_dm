@@ -1,5 +1,5 @@
 import { ModuleListScreen } from '@/components/module-list-screen';
-import { achatsData } from '@/data/fakeDatas/modules';
+import { achatsData } from '@/data/fakeDatas/modules.fake';
 import React from 'react';
 
 export default function AchatsScreen() {

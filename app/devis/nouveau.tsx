@@ -1,5 +1,5 @@
 import { AppHeader } from '@/components/app-header';
-import { quoteClients, quoteProducts } from '@/data/fakeDatas/devis';
+import { quoteClients, quoteProducts } from '@/data/fakeDatas/devis.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';

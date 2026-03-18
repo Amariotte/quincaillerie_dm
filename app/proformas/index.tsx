@@ -1,5 +1,5 @@
 import { ModuleListScreen } from '@/components/module-list-screen';
-import { proformasData } from '@/data/fakeDatas/modules';
+import { proformasData } from '@/data/fakeDatas/modules.fake';
 import React from 'react';
 
 export default function ProformasScreen() {

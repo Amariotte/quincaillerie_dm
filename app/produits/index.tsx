@@ -1,5 +1,5 @@
 import { AppHeader } from '@/components/app-header';
-import { products } from '@/data/fakeDatas/produits';
+import { products } from '@/data/fakeDatas/produits.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
