@@ -6,3 +6,9 @@ export type user = {
   adresse: string;
   email: string;
 };
+
+
+export type AuthResponse = {
+  token: string;
+  user: user | null;
+};

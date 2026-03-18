@@ -1,6 +1,7 @@
-import apiConfig, { getApiUrl } from '@/config/api';
+import { userDataFake } from '@/data/fakeDatas/user.fake';
+import { signInApi, signOutApi, signUpApi } from '@/services/auth-service';
 import { fetchConnectedUser } from '@/services/user-service';
-import { user as UserProfile } from '@/types/user.type';
+import { user, user as UserProfile } from '@/types/user.type';
 import { useState } from 'react';
 
 const DEMO_DELAY_MS = 700;
@@ -8,27 +9,11 @@ const DEMO_TOKEN = 'demo-token';
 
 export const DEMO_ACCOUNT = {
   login: 'demo',
-  password: 'demo123',
-  email: 'demo@quincaillerie.dm',
-  name: 'Compte demo',
+  password: 'demo123'
 };
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function parseResponseBody(response: Response) {
-  const rawBody = await response.text();
-
-  if (!rawBody) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawBody);
-  } catch {
-    return null;
-  }
 }
 
 export interface AuthState {
@@ -52,29 +37,22 @@ export interface UseAuthReturn extends AuthState {
   error: string | null;
 }
 
-type RawAuthUser = {
-  id?: string;
-  email?: string;
-  name?: string;
-  nom?: string;
-};
 
-function toAuthUser(user: RawAuthUser | null | undefined): AuthState['user'] {
+function toAuthUser(user: user | null | undefined): AuthState['user'] {
   if (!user) {
     return null;
   }
 
   const id = user.id ?? '';
   const email = user.email ?? '';
-  const name = user.name ?? user.nom ?? '';
+  const nom = user.nom ?? '';
 
-  if (!id || !email || !name) {
+  if (!id || !email || !nom) {
     return null;
   }
 
-  return { id, email, name };
+  return { id, email, name: nom };
 }
-
 export function useAuth(): UseAuthReturn {
   const [state, setState] = useState<AuthState>({
     isLoading: false,
@@ -121,8 +99,8 @@ export function useAuth(): UseAuthReturn {
 
       applyAuthenticatedState(DEMO_TOKEN, {
         id: 'demo-user',
-        email: DEMO_ACCOUNT.email,
-        name: DEMO_ACCOUNT.name,
+        email: userDataFake.email,
+        name: userDataFake.nom,
       });
       await loadUserProfile(DEMO_TOKEN);
     } catch (err) {
@@ -144,57 +122,25 @@ export function useAuth(): UseAuthReturn {
         throw new Error('Veuillez entrer votre login et mot de passe');
       }
 
-      if (
-        login.trim().toLowerCase() === DEMO_ACCOUNT.login &&
+      if (login.trim().toLowerCase() === DEMO_ACCOUNT.login &&
         password === DEMO_ACCOUNT.password
       ) {
         await wait(DEMO_DELAY_MS);
-
         applyAuthenticatedState(DEMO_TOKEN, {
           id: 'demo-user',
-          email: DEMO_ACCOUNT.email,
-          name: DEMO_ACCOUNT.name,
+          email: userDataFake.email,
+          name: userDataFake.nom,
         });
         await loadUserProfile(DEMO_TOKEN);
         return;
       }
-      
-      // Call API
-      const response = await fetch(getApiUrl(apiConfig.endpoints.login), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ login, password }),
-      });
 
-      const data = await parseResponseBody(response);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || 'Erreur lors de la connexion'
-        );
-      }
-
-      const { token, user } = data ?? {};
-
-      if (!token) {
-        throw new Error('Réponse invalide du serveur de connexion');
-      }
-
-      const normalizedApiUser = toAuthUser(user);
-
-      if (normalizedApiUser) {
-        applyAuthenticatedState(token, normalizedApiUser);
-      } else {
-        const connectedUser = await fetchConnectedUser(token);
-        applyAuthenticatedState(token, {
-          id: connectedUser.id,
-          email: connectedUser.email,
-          name: connectedUser.nom,
-        });
-      }
-      await loadUserProfile(token);
+      const authRes = await signInApi(login, password);
+      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token).then(p => ({
+        id: p.id, email: p.email, name: p.nom,
+      }));
+      applyAuthenticatedState(authRes.token, baseUser);
+      await loadUserProfile(authRes.token);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erreur de connexion';
@@ -222,54 +168,23 @@ export function useAuth(): UseAuthReturn {
         throw new Error('Le mot de passe doit contenir au moins 6 caractères');
       }
 
-      if (email.trim().toLowerCase() === DEMO_ACCOUNT.email) {
+      if (email.trim().toLowerCase() === userDataFake.email) {
         await wait(DEMO_DELAY_MS);
-
         applyAuthenticatedState(DEMO_TOKEN, {
           id: 'demo-user',
-          email: DEMO_ACCOUNT.email,
-          name: name.trim() || DEMO_ACCOUNT.name,
+          email: userDataFake.email,
+          name: name.trim() || userDataFake.nom,
         });
         await loadUserProfile(DEMO_TOKEN);
         return;
       }
 
-      // Call API
-      const response = await fetch(getApiUrl(apiConfig.endpoints.register), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, name }),
-      });
-
-      const data = await parseResponseBody(response);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || "Erreur lors de l'inscription"
-        );
-      }
-
-      const { token, user } = data ?? {};
-
-      if (!token) {
-        throw new Error("Réponse invalide du serveur d'inscription");
-      }
-
-      const normalizedApiUser = toAuthUser(user);
-
-      if (normalizedApiUser) {
-        applyAuthenticatedState(token, normalizedApiUser);
-      } else {
-        const connectedUser = await fetchConnectedUser(token);
-        applyAuthenticatedState(token, {
-          id: connectedUser.id,
-          email: connectedUser.email,
-          name: connectedUser.nom,
-        });
-      }
-      await loadUserProfile(token);
+      const authRes = await signUpApi(email, password, name);
+      const baseUser = authRes.user ?? await fetchConnectedUser(authRes.token).then(p => ({
+        id: p.id, email: p.email, name: p.nom,
+      }));
+      applyAuthenticatedState(authRes.token, baseUser);
+      await loadUserProfile(authRes.token);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur lors de l'inscription";
@@ -298,12 +213,7 @@ export function useAuth(): UseAuthReturn {
       }
 
       // Call API
-      await fetch(getApiUrl(apiConfig.endpoints.logout), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      await signOutApi(state.userToken ?? '');
 
       setState({
         isLoading: false,

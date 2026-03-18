@@ -8,3 +8,11 @@ export const userDataFake : user = {
   adresse: 'Abidjan, Cocody, Riviera 2',
   email: 'ange.mariotte@example.com',
 };
+
+
+export const AuthResponseDataFake = {
+  id: 'profile-123',
+  nom: 'Ange mariotte',
+  prenom: 'BEUGRE AIKPA',
+  email: 'ange.mariotte@example.com',
+}
