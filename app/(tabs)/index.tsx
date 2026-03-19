@@ -5,7 +5,7 @@ import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCac
 import { fetchSoldeCompte } from '@/services/soldes-service';
 import { fetchTransactions } from '@/services/transactions-service';
 import { formatAmount } from '@/tools/tools';
-import { SoldeResponse } from '@/types/solde.type.js';
+import { SoldeResponse } from '@/types/solde.type';
 import { Transaction } from '@/types/transactions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
