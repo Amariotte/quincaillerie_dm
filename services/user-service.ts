@@ -21,8 +21,8 @@ export async function signInApi(login: string, password: string): Promise<AuthRe
   if (isFakeModeEnabled()) {
     return { token: 'fake-token', user: userDataFake };
   }
-
-  const data = await postJson<AuthResponse, { login: string; password: string }>(
+ try {
+   const data = await postJson<AuthResponse, { login: string; password: string }>(
     apiConfig.endpoints.login,
     { login, password }
   );
@@ -34,6 +34,11 @@ export async function signInApi(login: string, password: string): Promise<AuthRe
   }
 
   return data;
+  
+ } catch (error) {
+  throw error;
+ }
+ 
 }
 
 export async function signOutApi(userToken: string): Promise<void> {
@@ -46,4 +51,17 @@ export async function signOutApi(userToken: string): Promise<void> {
   }
 
   await postJsonAuth<void>(apiConfig.endpoints.logout, userToken);
+}
+
+
+export async function updatePasswordApi(userToken: string, oldPassword: string, newPassword: string): Promise<void> {
+  if (isFakeModeEnabled()) {
+    return;
+  }
+
+  if (!userToken) {
+    throw new Error('Token utilisateur manquant');
+  }
+
+  await postJsonAuth<void>(apiConfig.endpoints.changePassword, userToken, { oldPassword, newPassword });
 }

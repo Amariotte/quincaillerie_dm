@@ -1,10 +1,15 @@
 export type user = {
   id: string;
   nom: string;
-  representantLegal: string;
+  code: string;
+  ncc: string;
+  telFixe: string;
+  telMobile: string;
   dateNaissance: string;
   adresse: string;
   email: string;
+  nomAgence: string;
+  photo: string;
 };
 
 

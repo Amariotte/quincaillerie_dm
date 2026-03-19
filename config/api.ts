@@ -7,7 +7,7 @@ const apiConfig = {
     currentUser: '/auth/me',
     soldes: '/soldes',
     transactions: '/transactions',
-    updatePassword: '/auth/update-password',
+    changePassword: '/auth/update-password',
 
   },
 };

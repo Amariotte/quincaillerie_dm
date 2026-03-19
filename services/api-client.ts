@@ -1,6 +1,7 @@
 import { getApiUrl } from '@/config/api';
 
 async function requestJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
+
   const response = await fetch(getApiUrl(endpoint), {
     ...init,
     headers: {
@@ -35,6 +36,7 @@ export async function getJsonAuth<T>(endpoint: string, token: string): Promise<T
 }
 
 export async function postJson<TResponse, TBody = unknown>(endpoint: string, body?: TBody): Promise<TResponse> {
+  
   return requestJson<TResponse>(endpoint, {
     method: 'POST',
     body: body === undefined ? undefined : JSON.stringify(body),
