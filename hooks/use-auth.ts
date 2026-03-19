@@ -103,6 +103,7 @@ export function useAuth(): UseAuthReturn {
       }
 
       const authRes = await signInApi(login, password);
+      alert(JSON.stringify(authRes));
       applyAuthenticatedState(authRes.token, authRes.user);
       await loadUserProfile(authRes.token);
     } catch (err) {
