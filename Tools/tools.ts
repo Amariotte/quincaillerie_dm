@@ -1,6 +1,16 @@
 import { Linking } from "react-native";
 
-export const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
+export const formatAmount = (amount: number | string | null | undefined) => {
+  const normalized =
+    typeof amount === 'number'
+      ? amount
+      : typeof amount === 'string'
+        ? Number(amount.replace(/\s/g, '').replace(',', '.'))
+        : 0;
+
+  const safeValue = Number.isFinite(normalized) ? normalized : 0;
+  return `${safeValue.toLocaleString('fr-FR')} FCFA`;
+};
 
 
 const openNormalizedInvoice = async (URL : string) => {
@@ -18,16 +28,54 @@ const openNormalizedInvoice = async (URL : string) => {
   }
 
 
- export const toComparableDate = (value: string) => {
-    const parts = value.split('/');
-    if (parts.length !== 3) {
+ export const toComparableDate = (value: Date | string | null | undefined): string | null => {
+    if (!value) {
       return null;
     }
-  
-    const [day, month, year] = parts;
-    if (!day || !month || !year || day.length < 1 || month.length < 1 || year.length !== 4) {
+
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        return null;
+      }
+
+      const day = value.getDate();
+      const month = value.getMonth() + 1;
+      const year = value.getFullYear();
+      return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
+    }
+
+    const raw = value.trim();
+    if (!raw) {
       return null;
     }
-  
-    return `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+
+    // Handles dd/mm/yyyy first to avoid locale parsing ambiguity.
+    const slashParts = raw.split('/');
+    if (slashParts.length === 3) {
+      const [day, month, year] = slashParts;
+      const dayNum = Number(day);
+      const monthNum = Number(month);
+      const yearNum = Number(year);
+
+      if (
+        Number.isInteger(dayNum) &&
+        Number.isInteger(monthNum) &&
+        Number.isInteger(yearNum) &&
+        dayNum >= 1 && dayNum <= 31 &&
+        monthNum >= 1 && monthNum <= 12 &&
+        yearNum >= 1900
+      ) {
+        return `${yearNum}${String(monthNum).padStart(2, '0')}${String(dayNum).padStart(2, '0')}`;
+      }
+    }
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    const day = parsed.getDate();
+    const month = parsed.getMonth() + 1;
+    const year = parsed.getFullYear();
+    return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
   };

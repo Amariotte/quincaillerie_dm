@@ -103,9 +103,8 @@ export function useAuth(): UseAuthReturn {
       }
 
       const authRes = await signInApi(login, password);
-      alert(JSON.stringify(authRes));
-      applyAuthenticatedState(authRes.token, authRes.user);
-      await loadUserProfile(authRes.token);
+      applyAuthenticatedState(authRes.access_token, authRes.user);
+      await loadUserProfile(authRes.access_token);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Erreur de connexion';

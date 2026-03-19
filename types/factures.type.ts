@@ -1,29 +1,40 @@
-export type factureStatus = 'Soldée' | 'Non soldée' | 'Impayée';
+import { meta } from "./other.type";
+
+export type factureStatus = 'Soldée' | 'Non soldée' | 'Echue';
 
 export const statusFactureColorMap: Record<factureStatus, string> = {
   'Soldée': '#16a34a',
   'Non soldée': '#f59e0b',
-  'Impayée': '#dc2626',
+  'Echue': '#dc2626',
 };
 
 
 export type facture = {
   id: string;
   codeVente: string;
+  descVente: string;
   nomSousCompte?: string;
   nomAgence?: string;
   nomCaisse?: string;
   operateurSaisie?: string;
   operateurValidation?: string;
-  dateVente: string;
-  dateEcheanceVente?: string;
-  montant: number;
-  status: factureStatus;
+  dateVente: Date;
+  dateEchVente?: Date;
+  dateLivSouhaite?: Date;
+  lieuLivSouhaite?: string;
+  soldeVente: number;
   nbProduits: number;
-  fneURL?: string;
-  fneDate?: string;
-  fneReference?: string
+  totalRemise: number;
+  totalHT: number;
+  totalTaxe: number;
+  totalNetPayer: number;
+  fneUrl?: string;
+  fneGeneree?: boolean;
+  fneDate?: Date;
+  fneRef?: string;
+  status: factureStatus
 };
+
 
 export type detailsFacture = {
   id: string;
@@ -41,4 +52,9 @@ export type detailsFacture = {
   montantTVA?: number;
 };
 
+
+export type listFactures = {
+  meta: meta;
+  data: facture[];
+};
 

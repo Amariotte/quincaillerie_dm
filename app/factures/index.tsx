@@ -1,74 +1,137 @@
 import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
-import { factures } from '@/data/fakeDatas/factures.fake';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { getFactures } from '@/services/factures-service';
 import { formatAmount, toComparableDate } from '@/tools/tools';
-import { factureStatus, statusFactureColorMap } from '@/types/factures.type';
+import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
-const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Impayée'];
-const clientFilters = [
-  'Tous',
-  ...Array.from(
-    new Set(
-      factures
-        .map((facture) => facture.nomSousCompte)
-        .filter((client): client is string => typeof client === 'string' && client.trim().length > 0)
-    )
-  ),
-];
+const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Echue'];
+const MAIN_ACCOUNT_FILTER = 'Compte principal';
 
 export default function FacturesScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
+  const { userToken } = useAuthContext();
+
+  const [factures, setFactures] = useState<listFactures>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeClient, setActiveClient] = useState('Tous');
   const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
+  const loadFactures = useCallback(async () => {
+    if (!userToken) return;
+    try {
+      setIsLoading(true);
+      setIsError(false);
+      
+      // Try to load from cache first
+      const cachedData = await getCacheData<listFactures>(FACTURES_LIST_CACHE_KEY);
+      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
+        setFactures(cachedData);
+      }
+
+      // Fetch from API to update
+      const data = await getFactures(userToken);
+      setFactures(data);
+      setIsOfflineMode(false);
+      await setCacheData(FACTURES_LIST_CACHE_KEY, data);
+    } catch {
+      setFactures({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+      setIsError(true);
+      setIsOfflineMode(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    loadFactures();
+  }, [loadFactures]);
+
+  const sousCompteFilters = [
+    'Tous',
+    MAIN_ACCOUNT_FILTER,
+    ...Array.from(
+      new Set(
+        factures.data
+          .map((f) => f.nomSousCompte)
+          .filter((sousCompte): sousCompte is string => typeof sousCompte === 'string' && sousCompte.trim().length > 0)
+      )
+    ),
+  ];
+
+  sousCompteFilters.sort((a, b) => {
+    if (a === 'Tous') return -1;
+    if (b === 'Tous') return 1;
+    if (a === MAIN_ACCOUNT_FILTER) return -1;
+    if (b === MAIN_ACCOUNT_FILTER) return 1;
+    return a.localeCompare(b);
+  });
+
   const today = new Date();
   const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
-  const filteredInvoices = factures.filter((facture) => {
+  const filteredInvoices = factures.data.filter((facture) => {
     const matchesQuery =
       facture.codeVente.toLowerCase().includes(query.toLowerCase()) ||
       facture.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
     const issueComparable = toComparableDate(facture.dateVente);
-    const startComparable = startDateQuery.trim().length > 0 ? toComparableDate(startDateQuery.trim()) : null;
-    const endComparable = endDateQuery.trim().length > 0 ? toComparableDate(endDateQuery.trim()) : null;
+    const parseInputDate = (s: string): Date | null => {
+      const [d, m, y] = s.split('/');
+      if (!d || !m || !y) return null;
+      const dt = new Date(Number(y), Number(m) - 1, Number(d));
+      return isNaN(dt.getTime()) ? null : dt;
+    };
+    const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
+    const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
+    const startComparable = startParsed ? toComparableDate(startParsed) : null;
+    const endComparable = endParsed ? toComparableDate(endParsed) : null;
     const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
     const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
     const matchesDate = afterStart && beforeEnd;
-    const matchesClient = activeClient === 'Tous' || facture.nomSousCompte === activeClient;
+    const hasSousCompte = typeof facture.nomSousCompte === 'string' && facture.nomSousCompte.trim().length > 0;
+    const matchesClient =
+      activeClient === 'Tous'
+        ? true
+        : activeClient === MAIN_ACCOUNT_FILTER
+          ? !hasSousCompte
+          : facture.nomSousCompte === activeClient;
     const matchesStatus = activeStatus === 'Toutes' || facture.status === activeStatus;
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus;
   });
 
-  const unsettledInvoices = filteredInvoices.filter((facture) => facture.status !== 'Soldée');
-  const overdueInvoices = unsettledInvoices.filter((facture) => {
-    const dueComparable = facture.dateEcheanceVente ? toComparableDate(facture.dateEcheanceVente) : null;
-    return !!dueComparable && dueComparable < todayComparable;
-  });
+  const unsettledInvoices = filteredInvoices.filter((facture) => facture.soldeVente > 0);
+  const overdueInvoices = filteredInvoices.filter((facture) => facture.status === 'Echue');
+
 
   const totalCount = filteredInvoices.length;
-  const totalAmount = filteredInvoices.reduce((sum, facture) => sum + facture.montant, 0);
+  const totalAmount = filteredInvoices.reduce((sum, facture) => sum + facture.totalNetPayer, 0);
   const unsettledCount = unsettledInvoices.length;
-  const unsettledAmount = unsettledInvoices.reduce((sum, facture) => sum + facture.montant, 0);
+  const unsettledAmount = unsettledInvoices.reduce((sum, facture) => sum + facture.soldeVente, 0);
   const overdueCount = overdueInvoices.length;
-  const overdueAmount = overdueInvoices.reduce((sum, facture) => sum + facture.montant, 0);
+  const overdueAmount = overdueInvoices.reduce((sum, facture) => sum + facture.soldeVente, 0);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
@@ -129,14 +192,15 @@ export default function FacturesScreen() {
             </View>
           </View>
 
+ {sousCompteFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            {clientFilters.map((client) => {
-              const isActive = client === activeClient;
+            {sousCompteFilters.map((sousCompte) => {
+              const isActive = sousCompte === activeClient;
 
               return (
                 <TouchableOpacity
-                  key={client}
-                  onPress={() => setActiveClient(client)}
+                  key={sousCompte}
+                  onPress={() => setActiveClient(sousCompte)}
                   style={[
                     styles.filterChip,
                     {
@@ -145,12 +209,14 @@ export default function FacturesScreen() {
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{client}</Text>
+                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
+ )}
 
+{statusFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
             {statusFilters.map((status) => {
               const isActive = status === activeStatus;
@@ -172,7 +238,23 @@ export default function FacturesScreen() {
               );
             })}
           </ScrollView>
+ )}
+          {isLoading && (
+            <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+          )}
 
+          {isError && !isLoading && (
+            <EmptyResultsCard
+              iconName="cloud-off"
+              title="Erreur de chargement"
+              subtitle="Impossible de récupérer les factures. Vérifiez votre connexion."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          )}
+
+          {!isLoading && !isError && (
           <View style={styles.listBlock}>
             {filteredInvoices.map((invoice) => {
 
@@ -183,7 +265,7 @@ export default function FacturesScreen() {
                   <View style={styles.invoiceTopRow}>
                     <View style={styles.invoiceRefBlock}>
                       <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte}</Text>
+                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
                     </View>
                     <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                       <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
@@ -193,11 +275,11 @@ export default function FacturesScreen() {
                   <View style={styles.invoiceMetaRow}>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateVente}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEcheanceVente}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
@@ -206,7 +288,7 @@ export default function FacturesScreen() {
                   </View>
 
                   <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.montant)}</Text>
+                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
                     <TouchableOpacity
                       onPress={() => router.push(`/factures/${invoice.id}` as never)}
                       style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
@@ -230,6 +312,7 @@ export default function FacturesScreen() {
                         ) : null}
            
           </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,12 +1,13 @@
 import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
-import { factures, fallbackItems } from '@/data/fakeDatas/factures.fake';
+import { fallbackItems } from '@/data/fakeDatas/factures.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { FACTURES_LIST_CACHE_KEY, getCacheData } from '@/services/cache-service';
 import { formatAmount } from '@/tools/tools';
-import { statusFactureColorMap } from '@/types/factures.type';
+import { facture, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
@@ -15,6 +16,23 @@ import styles from './style.js';
 export default function FactureDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const [factures, setFactures] = useState<facture[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadFactures = async () => {
+      try {
+        const invoices = await getCacheData<facture[]>(FACTURES_LIST_CACHE_KEY);
+        setFactures(invoices ?? []);
+      } catch {
+        setFactures([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFactures();
+  }, []);
 
   const invoice = factures.find((item) => item.id === id);
 
@@ -43,25 +61,25 @@ export default function FactureDetailScreen() {
 
   const invoiceLines = fallbackItems.slice(0, invoice.nbProduits);
   const computedSubtotal = invoiceLines.reduce((sum, line) => sum + line.qteFacturee * line.prixTTC, 0);
-  const subtotal = computedSubtotal > 0 ? computedSubtotal : invoice.montant;
+  const subtotal = computedSubtotal > 0 ? computedSubtotal : invoice.totalNetPayer;
   const vat = Math.round(subtotal * 0.16);
   const total = subtotal + vat;
-  const hasFneUrl = Boolean(invoice.fneURL && invoice.fneURL.trim().length > 0);
+  const hasFneUrl = Boolean(invoice.fneUrl && invoice.fneUrl.trim().length > 0);
 
   const openNormalizedInvoice = async () => {
-    if (!hasFneUrl || !invoice.fneURL) {
+    if (!hasFneUrl || !invoice.fneUrl) {
       return;
     }
 
-    await Linking.openURL(invoice.fneURL);
+    await Linking.openURL(invoice.fneUrl);
   };
 
   const openTicket = async () => {
-    if (!hasFneUrl || !invoice.fneURL) {
+    if (!hasFneUrl || !invoice.fneUrl) {
       return;
     }
 
-    await Linking.openURL(invoice.fneURL);
+    await Linking.openURL(invoice.fneUrl);
   };
 
   return (
@@ -98,8 +116,8 @@ export default function FactureDetailScreen() {
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {invoice.dateVente}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEcheanceVente}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>

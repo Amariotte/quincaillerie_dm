@@ -8,6 +8,8 @@ const apiConfig = {
     soldes: '/soldes',
     transactions: '/transactions',
     changePassword: '/auth/update-password',
+    factures: '/factures',
+    stats: '/stats'
 
   },
 };

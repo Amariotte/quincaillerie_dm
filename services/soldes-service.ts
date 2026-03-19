@@ -2,16 +2,16 @@ import apiConfig from '@/config/api';
 import { soldeFake } from '@/data/fakeDatas/solde.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
 import { SoldeResponse } from '@/types/solde.type';
-import { getJson } from './api-client';
+import { getJsonAuth } from './api-client';
 
 
-export async function fetchSoldeCompte(): Promise<number> {
+export async function fetchSoldeCompte(token: string): Promise<number> {
 
   if (isFakeModeEnabled()) {
     return getSoldeFromFakeData();
 }
 
-  const payload = await getJson<SoldeResponse>(apiConfig.endpoints.soldes);
+  const payload = await getJsonAuth<SoldeResponse>(apiConfig.endpoints.soldes, token);
   const rawBalance = payload?.solde;
   const parsedBalance = Number(rawBalance);
 

@@ -1,10 +1,13 @@
 import { AppHeader } from '@/components/app-header';
 import { menuItems } from '@/data/menus';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
+import { getStats } from '@/services/other-service.js';
 import { fetchSoldeCompte } from '@/services/soldes-service';
 import { fetchTransactions } from '@/services/transactions-service';
 import { formatAmount } from '@/tools/tools';
+import { stat } from '@/types/other.type.js';
 import { SoldeResponse } from '@/types/solde.type';
 import { Transaction } from '@/types/transactions.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,12 +21,14 @@ import styles from './styles.js';
 export default function HomeScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const { userToken } = useAuthContext();
 
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+  const [statInfos, setStatInfos] = useState<stat | null>(null);
 
   const loadBalance = useCallback(async () => {
     let hasCachedBalance = false;
@@ -40,7 +45,11 @@ export default function HomeScreen() {
         }
       }
 
-      const solde = await fetchSoldeCompte();
+      if (!userToken) {
+        throw new Error('Token utilisateur manquant');
+      }
+
+      const solde = await fetchSoldeCompte(userToken);
 
       setAccountBalance(Number(solde));
       setIsOfflineMode(false);
@@ -55,7 +64,22 @@ export default function HomeScreen() {
     } finally {
       setIsLoadingBalance(false);
     }
+  }, [userToken]);
+
+  const loadStatData = useCallback(async () => {
+    try {
+      const cached = await getCacheData<stat>(STAT_DATA_CACHE_KEY);
+      if (cached) {
+        setStatInfos(cached);
+      }
+      const statInfos = await getStats( userToken ?? '');
+      setStatInfos(statInfos);
+      await setCacheData(STAT_DATA_CACHE_KEY, statInfos);
+    } catch (ex) {
+      setIsOfflineMode(true);
+    }
   }, []);
+
 
   const loadRecentTransactions = useCallback(async () => {
     setIsLoadingTransactions(true);
@@ -77,7 +101,8 @@ export default function HomeScreen() {
   useEffect(() => {
     loadBalance();
     loadRecentTransactions();
-  }, [loadBalance, loadRecentTransactions]);
+    loadStatData();
+  }, [loadBalance, loadRecentTransactions, loadStatData]);
 
   const handleMenuPress = (itemId: string) => {
     if (itemId === 'factures') {
@@ -170,15 +195,15 @@ export default function HomeScreen() {
             <View style={styles.metricsRow}>
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures non soldées</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>0</Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteNonSoldees.nbre ?? 0}</Text>
               </View>
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures échues</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>0</Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteEchue.nbre ?? 0}</Text>
               </View>
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Promotions actives</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>0</Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.promotionActive ?? 0}</Text>
               </View>
             </View>
           </View>

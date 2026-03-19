@@ -1,5 +1,5 @@
 import apiConfig from '@/config/api';
-import { userDataFake } from '@/data/fakeDatas/user.fake';
+import { userDataFake, userDataFakeAuthResponse } from '@/data/fakeDatas/user.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
 import { AuthResponse, user } from '@/types/user.type';
 import { getJsonAuth, postJson, postJsonAuth } from './api-client';
@@ -19,7 +19,7 @@ export async function fetchConnectedUser(userToken: string): Promise<user> {
 
 export async function signInApi(login: string, password: string): Promise<AuthResponse> {
   if (isFakeModeEnabled()) {
-    return { token: 'fake-token', user: userDataFake };
+    return userDataFakeAuthResponse;
   }
  try {
    const data = await postJson<AuthResponse, { login: string; password: string }>(
@@ -27,7 +27,7 @@ export async function signInApi(login: string, password: string): Promise<AuthRe
     { login, password }
   );
 
-  const token = typeof data?.token === 'string' ? data.token : '';
+  const token = typeof data?.access_token === 'string' ? data.access_token : '';
 
   if (!token) {
     throw new Error('Réponse invalide du serveur de connexion');
