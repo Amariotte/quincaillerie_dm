@@ -5,8 +5,6 @@ import { stat } from "@/types/other.type";
 export const statsFake: stat = {
   venteNonSoldee: {
     total: 50,
-  },
-  venteNonSoldees: {
     nbre: 30,
   },
   venteEchue: {

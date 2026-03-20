@@ -1,0 +1,27 @@
+import { meta } from "./other.type";
+
+export type typeMouvements = 'Vente' | 'Décaissement' | 'Réglement' | 'Commission';
+
+export const typeMouvementColorMap: Record<typeMouvements, string> = {
+  'Vente': '#3b82f6',
+  'Décaissement': '#f59e0b',
+  'Réglement': '#16a34a' ,
+  'Commission': '#f59e0b'
+};
+
+export type Mouvement = {
+  id: string;
+  codeOp: string;
+  dateOp: string;
+  montant: number;
+  type: number;
+  nomAgence: string;
+  nomSousCompte: string;
+  libType: typeMouvements;
+};
+
+
+export type listMouvements = {
+  meta: meta;
+  data: Mouvement[];
+};

@@ -88,7 +88,7 @@ export default function ProfileScreen() {
             <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
               <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
               {[
-                { label: 'Représentant légal', value: user.representantLegal, icon: 'badge' as const },
+                { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'badge' as const },
                 { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake' as const },
                 { label: 'Adresse', value: user.adresse, icon: 'place' as const },
                 { label: 'Email', value: user.email, icon: 'email' as const },

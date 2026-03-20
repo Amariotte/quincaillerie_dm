@@ -1,4 +1,4 @@
-export type devisStatus = 'Payée' | 'En attente' | 'Impayée';
+export type devisStatus = 'En saisie' | 'Validé' | 'Transformé';
 
 export type devis = {
   id: string;
@@ -10,8 +10,16 @@ export type devis = {
   dateDevis: string;
   montant: number;
   status: devisStatus;
+  totalRemCciale: number;
+  totalRemCialeTTC: number;
+  totalRemCialeHT: number;
+  totalTaxeEncaisse: number;
+  totalTaxe: number;
+  totalHTBrut: number;
+  totalTTCBrut: number;
   nbProduits: number;
 };
+
 
 export type detailsDevis = {
   id: string;

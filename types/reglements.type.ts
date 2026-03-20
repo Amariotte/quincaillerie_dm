@@ -1,4 +1,8 @@
+import { meta } from "./other.type";
+
 export type typeDetails = 'Vente' | 'Décaissement' | 'Impayée';
+export type statusEncaisse = 'Encaissé' | 'Non encaissé';
+
 
 export type reglement = {
   id: string;
@@ -7,12 +11,14 @@ export type reglement = {
   nomAgence?: string;
   nomCompte?: string;
   operateurSaisie?: string;
-  dateReg: string;
-  montant: number;
+  dateReg: Date;
+  dateEncaissement?: Date;
+  montantReg: number;
+  descReg?: string;
   soldeReg: number;
   refReg?: string,
-  modePaiement?: string;
-  isEncaisse?: boolean;
+  nomModePaiement?: string;
+  statusEncaisse?: statusEncaisse;
 };
 
 export type detailsReglement = {
@@ -21,6 +27,11 @@ export type detailsReglement = {
   nomClient: string;
   montantRegle: number;
   type: typeDetails;
+};
+
+export type listReglements = {
+  meta: meta;
+  data: reglement[];
 };
 
 

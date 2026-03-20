@@ -9,8 +9,6 @@ export type meta = {
 export type stat = {
   venteNonSoldee: {
     total: number;
-  };
-  venteNonSoldees: {
     nbre: number;
   };
   venteEchue: {

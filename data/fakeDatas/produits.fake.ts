@@ -1,12 +1,23 @@
-import { Product } from "@/types/produits.type";
+import { listProduits } from "@/types/produits.type";
 
-export const products: Product[] = [
-  { id: 'prod-001', name: 'Ciment gris 50kg', sku: 'CIM-50-001', category: 'Construction', image: 'ciment', unit: 'sac', stock: 120, price: 18500 },
-  { id: 'prod-002', name: 'Peinture blanche 20L', sku: 'PNT-20-004', category: 'Peinture', image: 'peinture', unit: 'bidon', stock: 34, price: 42000 },
-  { id: 'prod-003', name: 'Fer à béton 12mm', sku: 'FER-12-018', category: 'Construction', image: 'fer', unit: 'barre', stock: 260, price: 9600 },
-  { id: 'prod-004', name: 'Interrupteur double', sku: 'ELEC-INT-022', category: 'Électricité', image: 'interrupteur', unit: 'pièce', stock: 77, price: 3500 },
-  { id: 'prod-005', name: 'Prise murale renforcée', sku: 'ELEC-PRI-016', category: 'Électricité', image: 'prise', unit: 'pièce', stock: 65, price: 4100 },
-  { id: 'prod-006', name: 'Vernis satiné 5L', sku: 'PNT-VRN-009', category: 'Peinture', image: 'vernis', unit: 'pot', stock: 22, price: 19500 },
-  { id: 'prod-007', name: 'Tôle galvanisée 3m', sku: 'COV-TOL-031', category: 'Couverture', image: 'tole', unit: 'feuille', stock: 48, price: 31500 },
-  { id: 'prod-008', name: 'Marteau 500g', sku: 'OUT-MAR-005', category: 'Outillage', image: 'marteau', unit: 'pièce', stock: 29, price: 8500 },
-];
+
+export const produitsFakeData: listProduits = {
+  meta: {
+    page: 1,
+    next: 2,
+    totalPages: 12,
+    total: 1116,
+    size: 100
+  },
+  data : [
+  { id: 'prod-001', designation: 'Ciment gris 50kg', reference: 'CIM-50-001', nomfamille: 'Construction', image: 'ciment', unit: 'sac', prixVenteTTC: 18500 },
+  { id: 'prod-002', designation: 'Peinture acrylique 5L', reference: 'PEI-5L-002', nomfamille: 'Peinture', image: 'peinture', unit: 'pot', prixVenteTTC: 45000 },
+  { id: 'prod-003', designation: 'Fer à béton 12mm', reference: 'FER-12-003', nomfamille: 'Construction', image: 'fer', unit: 'tonne', prixVenteTTC: 750000 },
+  { id: 'prod-004', designation: 'Interrupteur simple', reference: 'INT-S-004', nomfamille: 'Électricité', image: 'interrupteur', unit: 'pièce', prixVenteTTC: 1500 },
+  { id: 'prod-005', designation: 'Prise électrique double', reference: 'PRI-D-005', nomfamille: 'Électricité', image: 'prise', unit: 'pièce',  prixVenteTTC: 2500 },
+  { id: 'prod-006', designation: 'Vernis bois 1L', reference: 'VER-1L-006', nomfamille: 'Peinture', image: 'vernis', unit: 'pot', prixVenteTTC: 30000 },
+  { id: 'prod-007', designation: 'Tôle ondulée 2m x 1m', reference: 'TOL-2X1-007', nomfamille: 'Construction', image: 'tole', unit: 'feuille',  prixVenteTTC: 20000 },
+  { id: 'prod-008', designation: 'Marteau de charpentier', reference: 'MAR-CH-008', nomfamille: 'Outils', image: 'marteau', unit: 'pièce',  prixVenteTTC: 12000 },
+]
+  
+  };

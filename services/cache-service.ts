@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const BALANCE_CACHE_KEY = 'home.balance.cache.v1';
-export const RECENTS_TRANSACTIONS_CACHE_KEY = 'home.recents.cache.v1';
+export const RECENTS_MOUVEMENTS_CACHE_KEY = 'home.mouvements.recents.cache.v1';
 export const TRANSACTIONS_LIST_CACHE_KEY = 'transactions.list.cache.v1';
 export const FACTURES_LIST_CACHE_KEY = 'factures.list.cache.v1';
 export const STAT_DATA_CACHE_KEY = 'statData.cache.v1';
+export const PRODUITS_LIST_CACHE_KEY = 'produits.list.cache.v1';
 
 
 export async function getCacheData<T>(key: string): Promise<T | null> {

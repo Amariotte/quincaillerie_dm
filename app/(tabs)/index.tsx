@@ -2,14 +2,14 @@ import { AppHeader } from '@/components/app-header';
 import { menuItems } from '@/data/menus';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { BALANCE_CACHE_KEY, getCacheData, RECENTS_TRANSACTIONS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
-import { getStats } from '@/services/other-service.js';
+import { BALANCE_CACHE_KEY, getCacheData, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
+import { getStats } from '@/services/other-service';
 import { fetchSoldeCompte } from '@/services/soldes-service';
-import { fetchTransactions } from '@/services/transactions-service';
+import { getfetchRecentMouvements } from '@/services/transactions-service';
 import { formatAmount } from '@/tools/tools';
-import { stat } from '@/types/other.type.js';
+import { listMouvements } from '@/types/mouvements.type';
+import { stat } from '@/types/other.type';
 import { SoldeResponse } from '@/types/solde.type';
-import { Transaction } from '@/types/transactions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -26,8 +26,8 @@ export default function HomeScreen() {
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
-  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+  const [recentMouvements, setRecentMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
+  const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] = useState(true);
   const [statInfos, setStatInfos] = useState<stat | null>(null);
 
   const loadBalance = useCallback(async () => {
@@ -72,37 +72,43 @@ export default function HomeScreen() {
       if (cached) {
         setStatInfos(cached);
       }
+      if (!userToken) {
+        return;
+      }
       const statInfos = await getStats( userToken ?? '');
       setStatInfos(statInfos);
       await setCacheData(STAT_DATA_CACHE_KEY, statInfos);
     } catch (ex) {
       setIsOfflineMode(true);
     }
-  }, []);
+  }, [userToken]);
 
 
-  const loadRecentTransactions = useCallback(async () => {
-    setIsLoadingTransactions(true);
+   const loadRecentMouvements = useCallback(async () => {
+    setIsLoadingRecentMouvements(true);
     try {
-      const cached = await getCacheData<Transaction[]>(RECENTS_TRANSACTIONS_CACHE_KEY);
-      if (cached && cached.length > 0) {
-        setRecentTransactions(cached);
+      const cached = await getCacheData<listMouvements>(RECENTS_MOUVEMENTS_CACHE_KEY);
+      if (cached && cached.data.length > 0) {
+        setRecentMouvements(cached);
       }
-      const data = await fetchTransactions();
-      setRecentTransactions(data);
-      await setCacheData(RECENTS_TRANSACTIONS_CACHE_KEY, data);
+      if (!userToken) {
+        return;
+      }
+      const data = await getfetchRecentMouvements(userToken ?? '');
+      setRecentMouvements(data);
+      await setCacheData(RECENTS_MOUVEMENTS_CACHE_KEY, data);
     } catch (ex) {
       setIsOfflineMode(true);
     } finally {
-      setIsLoadingTransactions(false);
+      setIsLoadingRecentMouvements(false);
     }
-  }, []);
+  }, [userToken]);
 
   useEffect(() => {
     loadBalance();
-    loadRecentTransactions();
+    loadRecentMouvements();
     loadStatData();
-  }, [loadBalance, loadRecentTransactions, loadStatData]);
+  }, [loadBalance, loadRecentMouvements, loadStatData]);
 
   const handleMenuPress = (itemId: string) => {
     if (itemId === 'factures') {
@@ -195,7 +201,7 @@ export default function HomeScreen() {
             <View style={styles.metricsRow}>
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures non soldées</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteNonSoldees.nbre ?? 0}</Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteNonSoldee.nbre ?? 0}</Text>
               </View>
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures échues</Text>
@@ -246,34 +252,37 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.transactionsHeader}>
-            <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>50 Dernières transactions</Text>
+            <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>20 Dernières transactions</Text>
             <TouchableOpacity onPress={() => router.push('/transactions' as never)}>
               <Text style={[styles.seeAllText, { color: tintColor }]}>Voir tout</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.transactionList}>
-            {isLoadingTransactions && recentTransactions.length === 0 ? (
+            {isLoadingRecentMouvements && recentMouvements.data.length === 0 ? (
               <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
                 <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Chargement...</Text>
               </View>
-            ) : recentTransactions.map((transaction) => (
+            ) : recentMouvements.data.length === 0 ? (
+              <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
+                <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune transaction recente</Text>
+              </View>
+            ) : recentMouvements.data.map((mouvement) => (
               <TouchableOpacity
-                key={transaction.id}
+                key={mouvement.id}
                 activeOpacity={0.85}
-                onPress={() => router.push(`/transactions/${transaction.id}` as never)}
+                onPress={() => router.push(`/transactions/${mouvement.id}` as never)}
                 style={[styles.transactionCard, { backgroundColor: cardColor }]}
               >
                 <View style={[styles.transactionIcon, { backgroundColor: `${tintColor}15` }]}>
                   <MaterialIcons name="sync-alt" size={20} color={tintColor} />
                 </View>
                 <View style={styles.transactionContent}>
-                  <Text style={[styles.transactionLabel, { color: textColor }]}>{transaction.label}</Text>
-                  <Text style={[styles.transactionDate, { color: mutedColor }]}>{transaction.date}</Text>
+                  <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
+                  <Text style={[styles.transactionDate, { color: mutedColor }]}>{mouvement.dateOp}</Text>
                 </View>
                 <View style={styles.transactionRight}>
-                  <Text style={[styles.transactionAmount, { color: textColor }]}>{transaction.amount}</Text>
-                  <Text style={[styles.transactionStatus, { color: tintColor }]}>{transaction.status}</Text>
+                  <Text style={[styles.transactionAmount, { color: textColor }]}>{formatAmount(mouvement.montant)}</Text>
                 </View>
               </TouchableOpacity>
             ))}

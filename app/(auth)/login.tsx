@@ -88,7 +88,7 @@ export default function LoginScreen() {
           )}
 
           <TextInput
-            placeholder="Login"
+            placeholder="Nom d'utilisateur"
             value={login}
             onChangeText={setLogin}
             style={styles.input}
@@ -100,7 +100,7 @@ export default function LoginScreen() {
           )}
 
           <TextInput
-            placeholder="Password"
+            placeholder="Mot de passe"
             value={password}
             onChangeText={setPassword}
             style={styles.input}

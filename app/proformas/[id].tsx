@@ -1,6 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { proformaProductLines, proformasData } from '@/data/fakeDatas/modules.fake';
-import { products } from '@/data/fakeDatas/produits.fake';
+import { produitsFakeData } from '@/data/fakeDatas/produits.fake';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -47,7 +47,8 @@ export default function ProformaDetailScreen() {
 
   const detailedLines = lines
     .map((line) => {
-      const product = products.find((entry) => entry.id === line.productId);
+      const product = produitsFakeData.data.find((entry) => entry.id === line.productId);
+
       if (!product) {
         return null;
       }
@@ -67,7 +68,7 @@ export default function ProformaDetailScreen() {
     const pricing = computeLinePricing({
       quantity: line.quantity,
       freeQuantity: line.freeQuantity,
-      unitPrice: line.product.price,
+      unitPrice: line.product.prixVenteTTC,
       discountRate: line.discountRate,
       discountAmount: line.discountAmount,
       vatRate: line.vatRate,
@@ -79,7 +80,7 @@ export default function ProformaDetailScreen() {
     const pricing = computeLinePricing({
       quantity: line.quantity,
       freeQuantity: line.freeQuantity,
-      unitPrice: line.product.price,
+      unitPrice: line.product.prixVenteTTC,
       discountRate: line.discountRate,
       discountAmount: line.discountAmount,
       vatRate: line.vatRate,
@@ -125,7 +126,7 @@ export default function ProformaDetailScreen() {
               const pricing = computeLinePricing({
                 quantity: line.quantity,
                 freeQuantity: line.freeQuantity,
-                unitPrice: line.product.price,
+                unitPrice: line.product.prixVenteTTC,
                 discountRate: line.discountRate,
                 discountAmount: line.discountAmount,
                 vatRate: line.vatRate,
@@ -134,9 +135,9 @@ export default function ProformaDetailScreen() {
               return (
                 <View key={line.product.id} style={styles.productRow}>
                   <View style={styles.productLeft}>
-                    <Text style={[styles.productName, { color: textColor }]}>{line.product.name}</Text>
+                    <Text style={[styles.productName, { color: textColor }]}>{line.product.designation}</Text>
                     <Text style={[styles.productMeta, { color: mutedColor }]}>Qté: {line.quantity} · Gratuite: {line.freeQuantity} · Facturée: {pricing.billableQuantity}</Text>
-                    <Text style={[styles.productMeta, { color: mutedColor }]}>PU: {formatAmount(line.product.price)} · Remise: {line.discountRate}% + {formatAmount(line.discountAmount)}</Text>
+                    <Text style={[styles.productMeta, { color: mutedColor }]}>PU: {formatAmount(line.product.prixVenteTTC)} · Remise: {line.discountRate}% + {formatAmount(line.discountAmount)}</Text>
                     <Text style={[styles.productMeta, { color: mutedColor }]}>TVA: {line.vatRate}% ({formatAmount(pricing.vat)})</Text>
                   </View>
                   <Text style={[styles.productTotal, { color: textColor }]}>{formatAmount(pricing.total)}</Text>

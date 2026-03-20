@@ -6,10 +6,12 @@ const apiConfig = {
     logout: '/auth/logout',
     currentUser: '/auth/me',
     soldes: '/soldes',
-    transactions: '/transactions',
+    mouvements: '/mouvements',
     changePassword: '/auth/update-password',
     factures: '/factures',
-    stats: '/stats'
+    stats: '/stats',
+    produits: '/produits',
+    reglements: '/reglements'
 
   },
 };

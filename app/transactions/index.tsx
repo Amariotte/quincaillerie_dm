@@ -1,9 +1,10 @@
 import { AppHeader } from '@/components/app-header';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
-import { fetchTransactions, getTransactionsFromFakeData } from '@/services/transactions-service';
-import { Transaction } from '@/types/transactions.type';
+import { getfetchMouvements } from '@/services/transactions-service';
+import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -23,53 +24,44 @@ export default function TransactionsScreen() {
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
   const offlineBg = useThemeColor({ light: '#fff7ed', dark: '#431407' }, 'background');
   const offlineText = useThemeColor({ light: '#c2410c', dark: '#fb923c' }, 'text');
+  const { userToken } = useAuthContext();
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [mouvements, setMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [updatedAt, setUpdatedAt] = useState('');
   const [query, setQuery] = useState('');
 
-  const loadTransactions = useCallback(async () => {
+  const loadMouvements = useCallback(async () => {
     setIsLoading(true);
     try {
-      const cached = await getCacheData<Transaction[]>(TRANSACTIONS_LIST_CACHE_KEY);
-      if (cached && cached.length > 0) {
-        setTransactions(cached);
+      const cached = await getCacheData<listMouvements>(TRANSACTIONS_LIST_CACHE_KEY);
+      if (cached && cached.data.length > 0) {
+        setMouvements(cached);
       }
 
-      const data = await fetchTransactions();
-      setTransactions(data);
+      const data = await getfetchMouvements(userToken ?? '');
+      setMouvements(data);
       setIsOfflineMode(false);
-      const now = new Date().toLocaleString('fr-FR');
-      setUpdatedAt(now);
       await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
     } catch {
       setIsOfflineMode(true);
-      if (transactions.length === 0) {
-        setTransactions(getTransactionsFromFakeData());
-        setUpdatedAt('Source locale (fakeData)');
-      }
+     
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
+    loadMouvements();
+  }, [loadMouvements]);
 
-  const filtered = transactions.filter((t) =>
-    t.label.toLowerCase().includes(query.toLowerCase()) ||
-    t.status.toLowerCase().includes(query.toLowerCase())
+  const filtered = mouvements.data.filter((t) =>
+    t.libType.toLowerCase().includes(query.toLowerCase()) ||
+    t.nomAgence.toLowerCase().includes(query.toLowerCase()) ||
+    t.nomSousCompte.toLowerCase().includes(query.toLowerCase()) ||
+    t.codeOp.toLowerCase().includes(query.toLowerCase())
   );
 
-  const statusColor = (status: string) => {
-    if (status === 'Payée') return '#16a34a';
-    if (status === 'En attente') return '#f59e0b';
-    if (status === 'Livré') return '#3b82f6';
-    return '#dc2626';
-  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
@@ -95,7 +87,7 @@ export default function TransactionsScreen() {
             />
           </View>
 
-          {isLoading && transactions.length === 0 ? (
+          {isLoading && mouvements.data.length === 0 ? (
             <View style={styles.loaderBlock}>
               <ActivityIndicator size="large" color={tintColor} />
             </View>
@@ -108,7 +100,7 @@ export default function TransactionsScreen() {
           ) : (
             <View style={styles.listBlock}>
               {filtered.map((tx) => {
-                const sc = statusColor(tx.status);
+                const sc = typeMouvementColorMap[tx.libType] || tintColor;
                 return (
                   <TouchableOpacity
                     key={tx.id}
@@ -117,32 +109,19 @@ export default function TransactionsScreen() {
                     style={[styles.txCard, { backgroundColor: cardColor }]}
                   >
                     <View style={styles.txTopRow}>
-                      <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>{tx.label}</Text>
+                      <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>{tx.libType} {tx.codeOp}</Text>
                       <View style={[styles.statusBadge, { backgroundColor: `${sc}18` }]}>
-                        <Text style={[styles.statusText, { color: sc }]}>{tx.status}</Text>
                       </View>
                     </View>
                     <View style={styles.txBottomRow}>
-                      <Text style={[styles.txDate, { color: mutedColor }]}>{tx.date}</Text>
-                      <Text style={[styles.txAmount, { color: textColor }]}>{tx.amount}</Text>
+                      <Text style={[styles.txDate, { color: mutedColor }]}>{tx.dateOp}</Text>
+                      <Text style={[styles.txAmount, { color: sc }]}>{tx.montant}</Text>
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
           )}
-
-          {updatedAt.length > 0 && (
-            <Text style={[styles.updatedAt, { color: mutedColor }]}>Mis à jour : {updatedAt}</Text>
-          )}
-
-          <TouchableOpacity
-            onPress={loadTransactions}
-            style={[styles.refreshButton, { backgroundColor: tintColor }]}
-          >
-            <MaterialIcons name="refresh" size={18} color="#ffffff" />
-            <Text style={styles.refreshText}>Actualiser</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

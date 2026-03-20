@@ -1,22 +1,35 @@
 import apiConfig from '@/config/api';
-import { transactionsFake } from '@/data/fakeDatas/transactions.fake';
+import { mouvementsFakeData } from '@/data/fakeDatas/mouvements.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
-import { Transaction } from '@/types/transactions.type';
-import { getJson } from './api-client';
+import { listMouvements } from '@/types/mouvements.type';
+import { getJsonAuth } from './api-client';
 
-const LIMIT = 50;
+const LIMIT = 20;
 
 
-export async function fetchTransactions(): Promise<Transaction[]> {
-  
+export async function getfetchRecentMouvements(token: string): Promise<listMouvements> {
     if (isFakeModeEnabled()) {
-      return getTransactionsFromFakeData();
+      return getRecentMouvementsFromFakeData();
     }
-  
-  const data = await getJson<Transaction[]>(`${apiConfig.endpoints.transactions}?limit=${LIMIT}`);
+
+  const data = await getJsonAuth<listMouvements>(`${apiConfig.endpoints.mouvements}?size=${LIMIT}`, token);
   return data;
 }
 
-export function getTransactionsFromFakeData(): Transaction[] {
-  return transactionsFake.slice(0, LIMIT);
+export function getRecentMouvementsFromFakeData(): listMouvements {
+  return {
+    ...mouvementsFakeData,
+    data: mouvementsFakeData.data.slice(0, LIMIT)
+  };
+}
+
+
+export async function getfetchMouvements(token: string): Promise<listMouvements> {
+  
+    if (isFakeModeEnabled()) {
+      return getRecentMouvementsFromFakeData();
+    }
+  
+  const data = await getJsonAuth<listMouvements>(`${apiConfig.endpoints.mouvements}`, token);
+  return data;
 }
