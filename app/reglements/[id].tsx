@@ -10,18 +10,6 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
 
-const getReglementStatus = (soldeReg: number, isEncaisse?: boolean): 'Soldé' | 'Partiel' | 'Non encaissé' => {
-  if (isEncaisse && soldeReg <= 0) {
-    return 'Soldé';
-  }
-
-  if (isEncaisse && soldeReg > 0) {
-    return 'Partiel';
-  }
-
-  return 'Non encaissé';
-};
-
 export default function ReglementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
@@ -45,9 +33,8 @@ export default function ReglementDetailScreen() {
     );
   }
 
-  const statusLabel = getReglementStatus(reglement.soldeReg, reglement.soldeReg > 0);
-  const statusColor =
-    statusLabel === 'Soldé' ? '#16a34a' : statusLabel === 'Partiel' ? '#f59e0b' : '#dc2626';
+  const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
+  const statusColor = statusLabel === 'Encaissé' ? '#16a34a' : '#dc2626';
 
   const reglementLines = detailsReglements.filter((line) => line.codeVente === reglement.codeReg);
   const totalRegle = reglementLines.reduce((sum, line) => sum + line.montantRegle, 0);
@@ -102,10 +89,6 @@ export default function ReglementDetailScreen() {
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant réglé</Text>
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(totalRegle || reglement.montantReg)}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Solde restant</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(reglement.soldeReg)}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.summaryRow}>

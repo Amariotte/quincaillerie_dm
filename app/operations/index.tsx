@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchOperations } from '@/services/api-service';
 import { getCacheData, OPERATIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { formatAmount, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listOperations, typeMouvementColorMap, typeOperation } from '@/types/operations.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -20,7 +20,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
-const MAIN_ACCOUNT_FILTER = 'Compte principal';
 const statusFilters: Array<'Toutes' | typeOperation> = ['Toutes', 'Encaissement', 'Décaissement'];
 
 const formatDisplayDate = (value?: Date | string | null) => {
@@ -84,25 +83,10 @@ export default function OperationsScreen() {
     loadOperations();
   }, [loadOperations]);
 
-  const sousCompteFilters = [
-    'Tous',
-    MAIN_ACCOUNT_FILTER,
-    ...Array.from(
-      new Set(
-        operations.data
-          .map((f) => f.nomSousCompte)
-          .filter((sousCompte): sousCompte is string => typeof sousCompte === 'string' && sousCompte.trim().length > 0)
-      )
-    ),
-  ];
-
-  sousCompteFilters.sort((a, b) => {
-    if (a === 'Tous') return -1;
-    if (b === 'Tous') return 1;
-    if (a === MAIN_ACCOUNT_FILTER) return -1;
-    if (b === MAIN_ACCOUNT_FILTER) return 1;
-    return a.localeCompare(b);
-  });
+  const sousCompteFilters = buildSousCompteFilters(
+    operations.data,
+    (operation) => operation.nomSousCompte,
+  );
 
   const today = new Date();
   const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
@@ -111,27 +95,10 @@ export default function OperationsScreen() {
     const matchesQuery =
       operation.codeOp.toLowerCase().includes(query.toLowerCase()) ||
       operation.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
+      
     const issueComparable = toComparableDate(operation.dateOp);
-    const parseInputDate = (s: string): Date | null => {
-      const [d, m, y] = s.split('/');
-      if (!d || !m || !y) return null;
-      const dt = new Date(Number(y), Number(m) - 1, Number(d));
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-    const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
-    const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
-    const startComparable = startParsed ? toComparableDate(startParsed) : null;
-    const endComparable = endParsed ? toComparableDate(endParsed) : null;
-    const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
-    const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
-    const matchesDate = afterStart && beforeEnd;
-    const hasSousCompte = typeof operation.nomSousCompte === 'string' && operation.nomSousCompte.trim().length > 0;
-    const matchesClient =
-      activeClient === 'Tous'
-        ? true
-        : activeClient === MAIN_ACCOUNT_FILTER
-          ? !hasSousCompte
-          : operation.nomSousCompte === activeClient;
+    const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+    const matchesClient = matchesSousCompteFilter(activeClient, operation.nomSousCompte);
     const matchesStatus = activeStatus === 'Toutes' || operation.libType === activeStatus;
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus;

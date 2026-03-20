@@ -1,6 +1,262 @@
-import { ModuleListScreen } from '@/components/module-list-screen';
-import React from 'react';
+import { AppHeader } from '@/components/app-header';
+import { EmptyResultsCard } from '@/components/empty-results-card';
+import { useAuthContext } from '@/hooks/auth-context';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style';
+
+import { getfetchDevis } from '@/services/api-service';
+import { devisStatus, listDevis, statusDevisColorMap } from '@/types/devis.type';
+const statusFilters: Array<'Toutes' | devisStatus> = ['Toutes', 'En saisie', 'Validé', 'Transformé'];
 
 export default function ProformasScreen() {
-  return <ModuleListScreen title="Proformas" subtitle="Liste des devis proforma" icon="description" items={[]}detailBasePath="/proformas" />;
+  const router = useRouter();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
+  const { userToken } = useAuthContext();
+
+  const [proformas, setProformas] = useState<listDevis>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
+  const [query, setQuery] = useState('');
+  const [startDateQuery, setStartDateQuery] = useState('');
+  const [endDateQuery, setEndDateQuery] = useState('');
+  const [activeClient, setActiveClient] = useState('Tous');
+  const [activeStatus, setActiveStatus] = useState<'Toutes' | devisStatus>('Toutes');
+
+  const loadProformas = useCallback(async () => {
+    if (!userToken) return;
+    try {
+      setIsLoading(true);
+      setIsError(false);
+      // Try to load from cache first
+      const cachedData = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
+      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
+        setProformas(cachedData);
+      }
+
+      // Fetch from API to update
+      const data = await getfetchDevis(userToken);
+      setProformas(data);
+      setIsOfflineMode(false);
+      await setCacheData(DEVIS_LIST_CACHE_KEY, data);
+    } catch {
+      setProformas({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+      setIsError(true);
+      setIsOfflineMode(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    loadProformas();
+  }, [loadProformas]);
+
+
+  const sousCompteFilters = buildSousCompteFilters(
+      proformas.data,
+      (proforma) => proforma.nomSousCompte,
+    );
+
+  const filteredInvoices = proformas.data.filter((proforma) => {
+    const matchesQuery =
+      proforma.codeDevis.toLowerCase().includes(query.toLowerCase()) ||
+      proforma.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
+    const issueComparable = toComparableDate(proforma.dateDevis);
+    const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+    const matchesClient = matchesSousCompteFilter(activeClient, proforma.nomSousCompte);
+    const matchesStatus = activeStatus === 'Toutes' || proforma.status === activeStatus;
+
+    return matchesQuery && matchesDate && matchesClient && matchesStatus;
+  });
+
+  const totalCount = filteredInvoices.length;
+  const totalAmount = filteredInvoices.reduce((sum, proforma) => sum + proforma.totalNetPayer, 0);
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
+          <AppHeader showBack title="Liste des devis" subtitle="Suivi des devis et proformas" />
+
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
+              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} devis{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+            </View>  
+          </View>
+
+          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+            <MaterialIcons name="search" size={20} color={mutedColor} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Rechercher un devis ou un client"
+              placeholderTextColor={mutedColor}
+              style={[styles.searchInput, { color: textColor }]}
+            />
+          </View>
+
+          <View style={styles.periodRow}>
+            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
+              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
+              <TextInput
+                value={startDateQuery}
+                onChangeText={setStartDateQuery}
+                placeholder="Du (JJ/MM/AAAA)"
+                placeholderTextColor={mutedColor}
+                style={[styles.periodInput, { color: textColor }]}
+              />
+            </View>
+
+            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
+              <MaterialIcons name="event" size={18} color={mutedColor} />
+              <TextInput
+                value={endDateQuery}
+                onChangeText={setEndDateQuery}
+                placeholder="Au (JJ/MM/AAAA)"
+                placeholderTextColor={mutedColor}
+                style={[styles.periodInput, { color: textColor }]}
+              />
+            </View>
+          </View>
+
+ {sousCompteFilters.length > 2 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            {sousCompteFilters.map((sousCompte) => {
+              const isActive = sousCompte === activeClient;
+
+              return (
+                <TouchableOpacity
+                  key={sousCompte}
+                  onPress={() => setActiveClient(sousCompte)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: isActive ? tintColor : cardColor,
+                      borderColor: isActive ? tintColor : borderColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+ )}
+
+{statusFilters.length > 2 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            {statusFilters.map((status) => {
+              const isActive = status === activeStatus;
+
+              return (
+                <TouchableOpacity
+                  key={status}
+                  onPress={() => setActiveStatus(status)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: isActive ? tintColor : cardColor,
+                      borderColor: isActive ? tintColor : borderColor,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+ )}
+          {isLoading && (
+            <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+          )}
+
+          {isError && !isLoading && (
+            <EmptyResultsCard
+              iconName="cloud-off"
+              title="Erreur de chargement"
+              subtitle="Impossible de récupérer les factures. Vérifiez votre connexion."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          )}
+
+          {!isLoading && !isError && (
+          <View style={styles.listBlock}>
+            {filteredInvoices.map((proforma) => {
+
+             const statusColor = statusDevisColorMap[proforma.status];
+              
+              return (
+                <View key={proforma.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+                  <View style={styles.invoiceTopRow}>
+                    <View style={styles.invoiceRefBlock}>
+                      <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
+                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                      <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.invoiceMetaRow}>
+                    <View>
+                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{new Date(proforma.dateDevis).toLocaleDateString('fr-FR')}</Text>
+                    </View>
+                  
+                    <View>
+                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.invoiceBottomRow}>
+                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/proformas/${proforma.id}` as never)}
+                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                    >
+                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+
+              {filteredInvoices.length === 0 ? (
+                          <EmptyResultsCard
+                            iconName="inventory-2"
+                            title="Aucune facture trouvée"
+                            subtitle="Essayez une autre recherche ou filtre."
+                            cardColor={cardColor}
+                            titleColor={textColor}
+                            subtitleColor={mutedColor}
+                          />
+                        ) : null}
+           
+          </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }

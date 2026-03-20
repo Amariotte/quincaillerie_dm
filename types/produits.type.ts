@@ -6,7 +6,7 @@ export type Produit = {
   reference: string;
   designation: string;
   nomfamille: string;
-  image?: string;
+  imageUrl?: string;
   unit?: string;
   prixVenteTTC: number;
   txTva?: number;

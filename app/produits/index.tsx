@@ -35,7 +35,9 @@ export default function ProduitsScreen() {
       const matchesQuery =
         product.designation.toLowerCase().includes(query.toLowerCase()) ||
         product.reference.toLowerCase().includes(query.toLowerCase());
-      const matchesFamille = activeFamille === 'Toutes' || product.nomfamille === activeFamille;
+      
+  
+        const matchesFamille = activeFamille === 'Toutes' ? true : product.nomfamille === activeFamille;
 
       return matchesQuery && matchesFamille;
     });
@@ -70,7 +72,7 @@ export default function ProduitsScreen() {
 
 
  const familles = [
-    'Tous',
+    'Toutes',
     MAIN_ACCOUNT_FILTER,
     ...Array.from(
       new Set(
@@ -82,17 +84,12 @@ export default function ProduitsScreen() {
   ];
 
   familles.sort((a, b) => {
-    if (a === 'Tous') return -1;
-    if (b === 'Tous') return 1;
+    if (a === 'Toutes') return -1;
+    if (b === 'Toutes') return 1;
     if (a === MAIN_ACCOUNT_FILTER) return -1;
     if (b === MAIN_ACCOUNT_FILTER) return 1;
     return a.localeCompare(b);
   });
-
-
-
-
-
 
 
 useEffect(() => {
@@ -148,21 +145,14 @@ useEffect(() => {
                   style={[styles.productCard, { backgroundColor: cardColor }]}
                 >
                   <View style={styles.productTopRow}>
-                    <Image source={getProductImage(product.image)} style={styles.productImage} resizeMode="cover" />
+                    <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
                     <View style={styles.productInfo}>
                       <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
-                      <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
-                    </View>
-                    <View style={[styles.categoryTag, { backgroundColor: `${tintColor}18` }]}>
-                      <Text style={[styles.categoryText, { color: tintColor }]}>{product.nomfamille}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.productBottomRow}>
-                  
-                    <View style={styles.priceBlock}>
-                      <Text style={[styles.priceLabel, { color: mutedColor }]}>Prix unitaire</Text>
-                      <Text style={[styles.priceValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
+                      <View style={styles.productMetaRow}>
+                        <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
+                        <Text style={[styles.priceInlineValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
+                      </View>
+                      <Text style={[styles.familyValue, { color: tintColor }]}>{product.nomfamille || MAIN_ACCOUNT_FILTER}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -259,21 +249,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  categoryTag: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  productBottomRow: {
+  productMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    gap: 10,
+    alignItems: 'center',
+    gap: 12,
   },
   stockLabel: {
     fontSize: 12,
@@ -283,15 +263,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 4,
   },
-  priceBlock: {
-    alignItems: 'flex-end',
-  },
-  priceLabel: {
-    fontSize: 12,
-  },
-  priceValue: {
-    fontSize: 16,
+  priceInlineValue: {
+    fontSize: 14,
     fontWeight: '900',
     marginTop: 4,
+  },
+  familyValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 6,
   },
 });

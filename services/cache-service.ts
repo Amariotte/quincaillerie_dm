@@ -10,6 +10,7 @@ export const PROMOTIONS_LIST_CACHE_KEY = 'promotions.list.cache.v1';
 export const REGLEMENTS_LIST_CACHE_KEY = 'reglements.list.cache.v1';
 export const COMMISSIONS_LIST_CACHE_KEY = 'commissions.list.cache.v1';
 export const OPERATIONS_LIST_CACHE_KEY = 'operations.list.cache.v1';
+export const DEVIS_LIST_CACHE_KEY = 'devis.list.cache.v1';
 
 
 

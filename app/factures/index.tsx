@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactures } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,7 +21,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
 const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Echue'];
-const MAIN_ACCOUNT_FILTER = 'Compte principal';
 
 export default function FacturesScreen() {
   const router = useRouter();
@@ -44,7 +43,6 @@ export default function FacturesScreen() {
     try {
       setIsLoading(true);
       setIsError(false);
-      
       // Try to load from cache first
       const cachedData = await getCacheData<listFactures>(FACTURES_LIST_CACHE_KEY);
       if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
@@ -69,54 +67,19 @@ export default function FacturesScreen() {
     loadFactures();
   }, [loadFactures]);
 
-  const sousCompteFilters = [
-    'Tous',
-    MAIN_ACCOUNT_FILTER,
-    ...Array.from(
-      new Set(
-        factures.data
-          .map((f) => f.nomSousCompte)
-          .filter((sousCompte): sousCompte is string => typeof sousCompte === 'string' && sousCompte.trim().length > 0)
-      )
-    ),
-  ];
 
-  sousCompteFilters.sort((a, b) => {
-    if (a === 'Tous') return -1;
-    if (b === 'Tous') return 1;
-    if (a === MAIN_ACCOUNT_FILTER) return -1;
-    if (b === MAIN_ACCOUNT_FILTER) return 1;
-    return a.localeCompare(b);
-  });
-
-  const today = new Date();
-  const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const sousCompteFilters = buildSousCompteFilters(
+      factures.data,
+      (facture) => facture.nomSousCompte,
+    );
 
   const filteredInvoices = factures.data.filter((facture) => {
     const matchesQuery =
       facture.codeVente.toLowerCase().includes(query.toLowerCase()) ||
       facture.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
     const issueComparable = toComparableDate(facture.dateVente);
-    const parseInputDate = (s: string): Date | null => {
-      const [d, m, y] = s.split('/');
-      if (!d || !m || !y) return null;
-      const dt = new Date(Number(y), Number(m) - 1, Number(d));
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-    const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
-    const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
-    const startComparable = startParsed ? toComparableDate(startParsed) : null;
-    const endComparable = endParsed ? toComparableDate(endParsed) : null;
-    const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
-    const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
-    const matchesDate = afterStart && beforeEnd;
-    const hasSousCompte = typeof facture.nomSousCompte === 'string' && facture.nomSousCompte.trim().length > 0;
-    const matchesClient =
-      activeClient === 'Tous'
-        ? true
-        : activeClient === MAIN_ACCOUNT_FILTER
-          ? !hasSousCompte
-          : facture.nomSousCompte === activeClient;
+    const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+    const matchesClient = matchesSousCompteFilter(activeClient, facture.nomSousCompte);
     const matchesStatus = activeStatus === 'Toutes' || facture.status === activeStatus;
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus;

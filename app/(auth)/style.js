@@ -13,6 +13,19 @@ const styles = StyleSheet.create({
 
   topSection: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 24,
+  },
+
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  logo: {
+    width: 200,
+    height: 200,
   },
 
   title: {

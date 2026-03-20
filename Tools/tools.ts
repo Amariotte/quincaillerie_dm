@@ -11,8 +11,10 @@ export const formatAmount = (amount: number | string | null | undefined) => {
   return `${safeValue.toLocaleString('fr-FR')} FCFA`;
 };
 
+export const MAIN_ACCOUNT_FILTER = 'Compte principal';
 
-const formatDisplayDate = (value?: Date | string | null) => {
+
+export const formatDisplayDate = (value?: Date | string | null) => {
   if (!value) return '—';
   const dt = new Date(value);
   return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('fr-FR');
@@ -75,3 +77,69 @@ const formatDisplayDate = (value?: Date | string | null) => {
     const year = parsed.getFullYear();
     return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
   };
+
+export const buildSousCompteFilters = <T>(
+  items: T[],
+  getLabel: (item: T) => string | null | undefined,
+): string[] => {
+  const filters = [
+    'Tous',
+    MAIN_ACCOUNT_FILTER,
+    ...Array.from(
+      new Set(
+        items
+          .map(getLabel)
+          .filter((label): label is string => typeof label === 'string' && label.trim().length > 0)
+      )
+    ),
+  ];
+
+  filters.sort((a, b) => {
+    if (a === 'Tous') return -1;
+    if (b === 'Tous') return 1;
+    if (a === MAIN_ACCOUNT_FILTER) return -1;
+    if (b === MAIN_ACCOUNT_FILTER) return 1;
+    return a.localeCompare(b);
+  });
+
+  return filters;
+};
+
+export const matchesSousCompteFilter = (
+  activeFilter: string,
+  label: string | null | undefined,
+): boolean => {
+  const hasLabel = typeof label === 'string' && label.trim().length > 0;
+
+  if (activeFilter === 'Tous') {
+    return true;
+  }
+
+  if (activeFilter === MAIN_ACCOUNT_FILTER) {
+    return !hasLabel;
+  }
+
+  return label === activeFilter;
+};
+
+export const matchesDateRange = (
+  issueComparable: string | null,
+  startDateQuery: string,
+  endDateQuery: string,
+): boolean => {
+  const parseInputDate = (s: string): Date | null => {
+    const [d, m, y] = s.split('/');
+    if (!d || !m || !y) return null;
+    const dt = new Date(Number(y), Number(m) - 1, Number(d));
+    return isNaN(dt.getTime()) ? null : dt;
+  };
+
+  const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
+  const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
+  const startComparable = startParsed ? toComparableDate(startParsed) : null;
+  const endComparable = endParsed ? toComparableDate(endParsed) : null;
+  const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
+  const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
+
+  return afterStart && beforeEnd;
+};

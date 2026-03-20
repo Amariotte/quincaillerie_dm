@@ -44,7 +44,7 @@ export default function ProduitDetailScreen() {
           <AppHeader showBack title="Détail produit" subtitle={product.reference} />
 
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
-            <Image source={getProductImage(product.image)} style={styles.productImage} resizeMode="cover" />
+            <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
             <View style={styles.productTextBlock}>
               <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
               <View style={[styles.categoryTag, { backgroundColor: `${tintColor}18` }]}>

@@ -194,11 +194,11 @@ export default function FactureDetailScreen() {
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total remise HT</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalRemise)}</Text>
+                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalRemCialeHT)}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total remise TTC</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalRemise)}</Text>
+                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalRemCialeTTC)}</Text>
                 </View>
               </>
             
@@ -207,11 +207,7 @@ export default function FactureDetailScreen() {
               <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalHT)}</Text>
             </View>
 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Remise</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(invoice.totalRemise)}</Text>
-            </View>
-
+        
 
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA</Text>

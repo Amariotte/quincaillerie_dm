@@ -15,7 +15,6 @@ export type reglement = {
   dateEncaissement?: Date;
   montantReg: number;
   descReg?: string;
-  soldeReg: number;
   refReg?: string,
   nomModePaiement?: string;
   statusEncaisse?: statusEncaisse;

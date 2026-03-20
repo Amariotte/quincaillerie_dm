@@ -1,4 +1,4 @@
-import { userDataFake } from '@/data/fakeDatas/user.fake';
+import { userDataFake } from '@/data/datas.fake';
 import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
 import { user } from '@/types/user.type';
 import { useState } from 'react';

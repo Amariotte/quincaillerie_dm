@@ -24,18 +24,20 @@ export type facture = {
   lieuLivSouhaite?: string;
   soldeVente: number;
   nbProduits: number;
-  totalRemise: number;
   totalHT: number;
   totalTaxe: number;
   totalNetPayer: number;
+  totalBrutHT: number;
+  totalBrutTTC: number;
+  totalRemCialeHT: number;
+  totalRemCialeTTC: number;
+  status: factureStatus;
   fneUrl?: string;
   fneGeneree?: boolean;
   fneDate?: Date;
   fneRef?: string;
-  status: factureStatus;
   details?: detailsFacture[];
 };
-
 
 export type detailsFacture = {
   id: string;

@@ -3,8 +3,9 @@ import { DEMO_ACCOUNT } from '@/hooks/use-auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import styles from './style.js';
-
+ 
 import {
+  Image,
   Keyboard,
   Text,
   TextInput,
@@ -22,6 +23,7 @@ export default function LoginScreen() {
     password?: string;
   }>({});
   const { signIn, signInDemo, isLoading, error } = useAuthContext();
+  const brandLogo = require('../../assets/images/logo.png');
 
   const validateForm = () => {
     const errors: {
@@ -30,6 +32,7 @@ export default function LoginScreen() {
     } = {};
 
     if (!login.trim()) {
+ 
       errors.login = 'Le login est requis';
     }
 
@@ -75,6 +78,9 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topSection}>
         {/* Partie haute (verte) */}
+         <View style={styles.logoContainer}>
+            <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
+          </View>
       </View>
 
       <View style={styles.bottomSection}>
@@ -92,7 +98,6 @@ export default function LoginScreen() {
             value={login}
             onChangeText={setLogin}
             style={styles.input}
-            autoCapitalize="none"
             editable={!isLoading}
           />
           {validationErrors.login && (

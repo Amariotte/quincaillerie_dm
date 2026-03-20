@@ -1,10 +1,13 @@
 import { AppHeader } from '@/components/app-header';
-import { reglements } from '@/data/datas.fake';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { formatAmount, toComparableDate } from '@/tools/tools';
+import { getfetchReglements } from '@/services/api-service';
+import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { buildSousCompteFilters, formatAmount, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { listReglements, statusEncaisse } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -13,39 +16,78 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
+import styles from './style.js';
 
-type ReglementFilterStatus = 'Toutes' | 'Soldé' | 'Disponible' | 'Non encaissé';
+export default function ReglementsScreen() {
+  const router = useRouter();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
 
-const statusFilters: ReglementFilterStatus[] = ['Toutes', 'Soldé', 'Disponible', 'Non encaissé'];
+const { userToken } = useAuthContext();
 
-const getReglementStatus = (soldeReg: number, isEncaisse?: boolean): Exclude<ReglementFilterStatus, 'Toutes'> => {
-  if (isEncaisse && soldeReg <= 0) {
-    return 'Soldé';
-  }
+  const [reglements, setReglements] = useState<listReglements>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
-  if (isEncaisse && soldeReg > 0) {
-    return 'Disponible';
-  }
+  const [query, setQuery] = useState('');
+  const [startDateQuery, setStartDateQuery] = useState('');
+  const [endDateQuery, setEndDateQuery] = useState('');
+  const [activeClient, setActiveClient] = useState('Tous');
+  const [activeStatus, setActiveStatus] = useState<statusEncaisse | 'Tous'>('Tous');
+  const [activePaymentMode, setActivePaymentMode] = useState('Tous modes');
 
-  return 'Non encaissé';
-};
-const clientFilters = [
+
+ const loadReglements = useCallback(async () => {
+    if (!userToken) return;
+    try {
+      setIsLoading(true);
+      setIsError(false);
+      // Try to load from cache first
+      const cachedData = await getCacheData<listReglements>(REGLEMENTS_LIST_CACHE_KEY);
+      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
+        setReglements(cachedData);
+      }
+
+      // Fetch from API to update
+      const data = await getfetchReglements(userToken);
+      setReglements(data);
+      setIsOfflineMode(false);
+      await setCacheData(REGLEMENTS_LIST_CACHE_KEY, data);
+    } catch {
+      setReglements({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+      setIsError(true);
+      setIsOfflineMode(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    loadReglements();
+  }, [loadReglements]);
+
+
+ const statusFilters: Array<statusEncaisse | 'Tous'> = [
   'Tous',
   ...Array.from(
     new Set(
-      reglements
-        .map((reglement) => reglement.nomSousCompte)
-        .filter((client): client is string => typeof client === 'string' && client.trim().length > 0)
+      reglements.data
+        .map((reglement) => reglement.statusEncaisse)
+        .filter((status): status is statusEncaisse => typeof status === 'string' && status.trim().length > 0)
     )
   ),
 ];
+
+ const sousCompteFilters = buildSousCompteFilters(
+      reglements.data,
+      (reglement) => reglement.nomSousCompte,
+    );
 
 const paymentModeFilters = [
   'Tous modes',
   ...Array.from(
     new Set(
-      reglements
+      reglements.data
         .map((reglement) => reglement.nomModePaiement)
         .filter((mode): mode is string => typeof mode === 'string' && mode.trim().length > 0)
     )
@@ -54,44 +96,25 @@ const paymentModeFilters = [
 
 
 
-
-export default function ReglementsScreen() {
-  const router = useRouter();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const [query, setQuery] = useState('');
-  const [startDateQuery, setStartDateQuery] = useState('');
-  const [endDateQuery, setEndDateQuery] = useState('');
-  const [activeClient, setActiveClient] = useState('Tous');
-  const [activeStatus, setActiveStatus] = useState<ReglementFilterStatus>('Toutes');
-  const [activePaymentMode, setActivePaymentMode] = useState('Tous modes');
-
-  const filteredReglements = reglements.filter((reglement) => {
+  const filteredReglements = reglements.data.filter((reglement) => {
     const matchesQuery =
       reglement.codeReg.toLowerCase().includes(query.toLowerCase()) ||
       reglement.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
     const issueComparable = toComparableDate(reglement.dateReg);
-    const startComparable = startDateQuery.trim().length > 0 ? toComparableDate(startDateQuery.trim()) : null;
-    const endComparable = endDateQuery.trim().length > 0 ? toComparableDate(endDateQuery.trim()) : null;
-    const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
-    const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
-    const matchesDate = afterStart && beforeEnd;
-    const matchesClient = activeClient === 'Tous' || reglement.nomSousCompte === activeClient;
-    const reglementStatus = getReglementStatus(reglement.soldeReg, reglement.dateEncaissement !== null  );
-    const matchesStatus = activeStatus === 'Toutes' || reglementStatus === activeStatus;
+       const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+    const matchesStatus = activeStatus === 'Tous' || reglement.statusEncaisse === activeStatus;
     const matchesPaymentMode = activePaymentMode === 'Tous modes' || reglement.nomModePaiement === activePaymentMode;
+    const matchesClient = matchesSousCompteFilter(activeClient, reglement.nomSousCompte);
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus && matchesPaymentMode;
   });
 
-  const unsettledReglements = filteredReglements.filter((reglement) => reglement.soldeReg > 0 || reglement.dateEncaissement === null);
-  const settledReglements = filteredReglements.filter((reglement) => reglement.soldeReg <= 0 && reglement.dateEncaissement !== null);
-  const totalSolde = filteredReglements.reduce((sum, reglement) => sum + reglement.soldeReg, 0);
-
+  
   const totalCount = filteredReglements.length;
   const totalAmount = filteredReglements.reduce((sum, reglement) => sum + reglement.montantReg, 0);
+  const unsettledReglements = filteredReglements.filter(reglement => reglement.statusEncaisse === 'Non encaissé');
   const unsettledCount = unsettledReglements.length;
   const unsettledAmount = unsettledReglements.reduce((sum, reglement) => sum + reglement.montantReg, 0);
-  const settledCount = settledReglements.length;
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
@@ -105,15 +128,11 @@ export default function ReglementsScreen() {
               <Text style={[styles.statCount, { color: textColor }]}>{totalCount} règlement{totalCount > 1 ? 's' : ''}</Text>
               <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
+           
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Règlements à suivre</Text>
-              <Text style={[styles.statCount, { color: tintColor }]}>{unsettledCount} règlement{unsettledCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Soldes restants</Text>
-              <Text style={[styles.statCount, { color: '#16a34a' }]}>{settledCount} soldé{settledCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: '#16a34a' }]}>{formatAmount(totalSolde)}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Règlements non encaissés</Text>
+              <Text style={[styles.statCount, { color: '#dc2626' }]}>{unsettledCount} règlement{unsettledCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statValue, { color: '#dc2626' }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
           </View>
 
@@ -152,9 +171,12 @@ export default function ReglementsScreen() {
             </View>
           </View>
 
+         {(sousCompteFilters.length > 2) && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            {clientFilters.map((client) => {
+            {sousCompteFilters.map((client) => {
+
               const isActive = client === activeClient;
+
 
               return (
                 <TouchableOpacity
@@ -173,7 +195,9 @@ export default function ReglementsScreen() {
               );
             })}
           </ScrollView>
-
+          )}
+          
+          {(statusFilters.length > 2) && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
             {statusFilters.map((status) => {
               const isActive = status === activeStatus;
@@ -195,7 +219,9 @@ export default function ReglementsScreen() {
               );
             })}
           </ScrollView>
+          )}
 
+          {(paymentModeFilters.length > 2) && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
             {paymentModeFilters.map((mode) => {
               const isActive = mode === activePaymentMode;
@@ -217,12 +243,12 @@ export default function ReglementsScreen() {
               );
             })}
           </ScrollView>
-
+          )}
           <View style={styles.listBlock}>
             {filteredReglements.map((reglement) => {
-              const statusLabel = getReglementStatus(reglement.soldeReg, reglement.dateEncaissement !== null);
+              const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
               const statusColor =
-                statusLabel === 'Soldé' ? '#fcfdfc' : statusLabel === 'Disponible' ? '#16a34a' : '#dc2626';
+                statusLabel === 'Encaissé' ? '#16a34a' : '#dc2626';
 
               return (
                 <View key={reglement.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
@@ -245,10 +271,6 @@ export default function ReglementsScreen() {
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>
                       <Text style={[styles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
                     </View>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Solde</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatAmount(reglement.soldeReg)}</Text>
-                    </View>
                   </View>
 
                   <View style={styles.metaModeRow}>
@@ -259,7 +281,6 @@ export default function ReglementsScreen() {
                   <View style={styles.invoiceBottomRow}>
                     <View style={styles.amountBlock}>
                       <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
-                      <Text style={[styles.paymentModeText, { color: mutedColor }]}>{reglement.nomModePaiement || '—'}</Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => router.push(`/reglements/${reglement.id}` as never)}

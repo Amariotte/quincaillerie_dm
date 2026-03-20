@@ -1,8 +1,9 @@
 import apiConfig from '@/config/api';
-import { bonAchatsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
+import { bonAchatsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, proformasFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
 import { listBonAchats } from '@/types/bon-achats.type';
 import { listCommissions } from '@/types/commissions.type';
+import { listDevis } from '@/types/devis.type';
 import { facture, listFactures } from '@/types/factures.type';
 import { listMouvements } from '@/types/mouvements.type';
 import { listOperations } from '@/types/operations.type';
@@ -60,6 +61,7 @@ export async function getfetchProduits(token: string): Promise<listProduits> {
     }
   
   const data = await getJsonAuth<listProduits>(`${apiConfig.endpoints.produits}`, token);
+  alert(JSON.stringify(data));
   return data;
 }
 
@@ -94,6 +96,16 @@ export async function getfetchFactures(token: string): Promise<listFactures> {
   return  d ;
 }
 
+export async function getfetchDevis(token: string): Promise<listDevis> {
+
+  if (isFakeModeEnabled()) {
+    return proformasFakeData;
+  }
+
+  const d = await getJsonAuth<listDevis>(apiConfig.endpoints.devis, token);
+  return  d ;
+}
+
 export async function getfetchFactureById(token: string, id: string): Promise<facture | null> {
 
   if (isFakeModeEnabled()) {
@@ -103,6 +115,7 @@ export async function getfetchFactureById(token: string, id: string): Promise<fa
   }
 
   const d = await getJsonAuth<facture>(`${apiConfig.endpoints.factures}/${id}`, token);
+
   return  d ;
 }
 
@@ -125,6 +138,7 @@ export async function getfetchReglements(token: string): Promise<listReglements>
     }
   
   const data = await getJsonAuth<listReglements>(`${apiConfig.endpoints.reglements}`, token);
+  alert(JSON.stringify(data));
   return data;
 }
 

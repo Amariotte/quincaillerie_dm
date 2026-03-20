@@ -16,6 +16,7 @@ const apiConfig = {
     commissions: '/commissions',
     operations: '/operations',
     bonAchats: '/bon-achats',
+    devis: '/devis',
 
   },
 };
