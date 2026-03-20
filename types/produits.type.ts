@@ -13,6 +13,7 @@ export type Produit = {
   prixVenteHT?: number;
 };
 
+
 export type listProduits = {
   meta?: meta;
   data: Produit[];

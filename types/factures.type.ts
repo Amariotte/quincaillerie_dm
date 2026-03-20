@@ -32,26 +32,33 @@ export type facture = {
   fneGeneree?: boolean;
   fneDate?: Date;
   fneRef?: string;
-  status: factureStatus
+  status: factureStatus;
+  details?: detailsFacture[];
 };
 
 
 export type detailsFacture = {
   id: string;
-  codeProduit: string;
-  nomProduit: string;
-  detailsPackage?: string;
-  qteFacturee: number;
-  prixHT?: number;
-  prixTTC: number;
-  qteGratuite?: number;
-  tauxRemise?: number;
-  prixRemise?: number;
-  remise?: number;
-  tauxTVA?: number;
-  montantTVA?: number;
-};
-
+  qteLivree: number;
+  prixVenteTTC: number;
+  prixVenteHT: number;
+  qteVendue: number;
+  txTaxe: number;
+  txRemise: number;
+  remisePrix: number;
+  montantRemiseHT: number;
+  montantRemiseTTC: number;
+  montantTTC: number;
+  montantHT: number;
+  montantBrutHT: number;
+  montantBrutTTC: number;
+  montantTaxe: number;
+  qteGratuite: number;
+  nomSuplementaire: string;
+  reference: string;
+  descPackage: string;
+  designation: string;
+}
 
 export type listFactures = {
   meta?: meta;

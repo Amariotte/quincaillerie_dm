@@ -2,7 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { getfetchOperations } from '@/services/api-service.js';
+import { getfetchOperations } from '@/services/api-service';
 import { getCacheData, OPERATIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
 import { formatAmount, toComparableDate } from '@/tools/tools';
 import { listOperations, typeMouvementColorMap, typeOperation } from '@/types/operations.type';

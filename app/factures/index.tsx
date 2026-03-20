@@ -2,7 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { getfetchFactures } from '@/services/api-service.js';
+import { getfetchFactures } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
 import { formatAmount, toComparableDate } from '@/tools/tools';
 import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';

@@ -1,7 +1,6 @@
 import { ModuleListScreen } from '@/components/module-list-screen';
-import { proformasData } from '@/data/fakeDatas/modules.fake';
 import React from 'react';
 
 export default function ProformasScreen() {
-  return <ModuleListScreen title="Proformas" subtitle="Liste des devis proforma" icon="description" items={proformasData} detailBasePath="/proformas" />;
+  return <ModuleListScreen title="Proformas" subtitle="Liste des devis proforma" icon="description" items={[]}detailBasePath="/proformas" />;
 }

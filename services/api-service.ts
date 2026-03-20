@@ -3,7 +3,7 @@ import { bonAchatsFakeData, commissionsFakeData, facturesFakeData, mouvementsFak
 import { isFakeModeEnabled } from '@/tools/tools';
 import { listBonAchats } from '@/types/bon-achats.type';
 import { listCommissions } from '@/types/commissions.type';
-import { listFactures } from '@/types/factures.type';
+import { facture, listFactures } from '@/types/factures.type';
 import { listMouvements } from '@/types/mouvements.type';
 import { listOperations } from '@/types/operations.type';
 import { stat } from '@/types/other.type';
@@ -94,6 +94,18 @@ export async function getfetchFactures(token: string): Promise<listFactures> {
   return  d ;
 }
 
+export async function getfetchFactureById(token: string, id: string): Promise<facture | null> {
+
+  if (isFakeModeEnabled()) {
+    return facturesFakeData.data.filter(facture => facture.id === id).length > 0
+      ? facturesFakeData.data.filter(facture => facture.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<facture>(`${apiConfig.endpoints.factures}/${id}`, token);
+  return  d ;
+}
+
 export async function getfetchOperations(token: string): Promise<listOperations> {
 
   if (isFakeModeEnabled()) {
@@ -103,6 +115,8 @@ export async function getfetchOperations(token: string): Promise<listOperations>
   const d = await getJsonAuth<listOperations>(apiConfig.endpoints.operations, token);
   return  d ;
 }
+
+
 
 export async function getfetchReglements(token: string): Promise<listReglements> {
   

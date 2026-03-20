@@ -74,12 +74,29 @@ export const userDataFakeAuthResponse : AuthResponse = {
 
 
 export const fallbackItems: detailsFacture[] = [
-  { id: '1', codeProduit : '001',nomProduit: 'Ciment gris 50kg', qteFacturee: 4, prixTTC: 18500, qteGratuite: 10 },
-  { id: '2', codeProduit : '002',nomProduit: 'Interrupteur double', qteFacturee: 10, prixTTC: 3500, tauxTVA: 18 },
-  { id: '3', codeProduit : '003',nomProduit: 'Fer à béton 12mm', qteFacturee: 8, prixTTC: 9600, tauxRemise: 10, prixRemise: 960 },
-  { id: '4', codeProduit : '004',nomProduit: 'Peinture blanche 20L', qteFacturee: 1, prixTTC: 42000 },
-  { id: '5', codeProduit : '005',nomProduit: 'Prise murale renforcée', qteFacturee: 6, prixTTC: 4100 },
-  { id: '6', codeProduit : '006',nomProduit: 'Vernis satiné 5L', qteFacturee: 2, prixTTC: 19500 },
+  {
+    id: '1',
+    qteLivree: 0,
+    prixVenteTTC: 0,
+    prixVenteHT: 0,
+    qteVendue: 0,
+    txTaxe: 0,
+    txRemise: 0,
+    remisePrix: 0,
+    montantRemiseHT: 0,
+    montantRemiseTTC: 0,
+    montantTTC: 0,
+    montantHT: 0,
+    montantBrutHT: 0,
+    montantBrutTTC: 0,
+    montantTaxe: 0,
+    qteGratuite: 0,
+    nomSuplementaire: '',
+    reference: '',
+    descPackage: '',
+    designation: ''
+  },
+
 ];
 
 export const facturesFakeData: listFactures = {
@@ -103,6 +120,7 @@ export const facturesFakeData: listFactures = {
     totalHT: 127119,
     totalTaxe: 22881,
     totalNetPayer: 150000,
+    details: fallbackItems,
   },
   {
     id: 'inv-002',
@@ -123,6 +141,7 @@ export const facturesFakeData: listFactures = {
     totalTaxe: 13576,
     totalNetPayer: 89000,
     fneUrl: 'https://factures.example.com/FAC-2026-002',
+    details: fallbackItems,
   },
   {
     id: 'inv-003',
@@ -143,6 +162,7 @@ export const facturesFakeData: listFactures = {
     totalTaxe: 7353,
     totalNetPayer: 48200,
     fneUrl: 'https://factures.example.com/FAC-2026-003',
+    details: fallbackItems,
   },
   {
     id: 'inv-004',
@@ -163,6 +183,7 @@ export const facturesFakeData: listFactures = {
     totalTaxe: 32025,
     totalNetPayer: 210500,
     fneUrl: 'https://factures.example.com/FAC-2026-004',
+    details: fallbackItems,
   },
   {
     id: 'inv-005',
@@ -183,6 +204,7 @@ export const facturesFakeData: listFactures = {
     totalTaxe: 9687,
     totalNetPayer: 63500,
     fneUrl: 'https://factures.example.com/FAC-2026-005',
+    details: fallbackItems,
   },
   {
     id: 'inv-006',
@@ -203,6 +225,7 @@ export const facturesFakeData: listFactures = {
     totalTaxe: 14797,
     totalNetPayer: 97000,
     fneUrl: 'https://factures.example.com/FAC-2026-006',
+    details: fallbackItems,
   },
 ]
 };

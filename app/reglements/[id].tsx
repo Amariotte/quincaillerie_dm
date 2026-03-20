@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/app-header';
-import { detailsReglements, reglements } from '@/data/fakeDatas/reglements.fake';
+import { reglements } from '@/data/datas.fake';
+import { detailsReglements } from '@/data/fakeDatas/reglements.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -44,7 +45,7 @@ export default function ReglementDetailScreen() {
     );
   }
 
-  const statusLabel = getReglementStatus(reglement.soldeReg, reglement.isEncaisse);
+  const statusLabel = getReglementStatus(reglement.soldeReg, reglement.soldeReg > 0);
   const statusColor =
     statusLabel === 'Soldé' ? '#16a34a' : statusLabel === 'Partiel' ? '#f59e0b' : '#dc2626';
 
@@ -65,8 +66,8 @@ export default function ReglementDetailScreen() {
               </View>
             </View>
 
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {reglement.dateReg}</Text>
+            <View style={styles.metaRow}>              
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {reglement.dateReg ? new Date(reglement.dateReg).toLocaleDateString('fr-FR') : '—'}</Text>
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence : {reglement.refReg ?? '—'}</Text>
             </View>
             <View style={styles.metaRow}>
@@ -74,7 +75,7 @@ export default function ReglementDetailScreen() {
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Compte : {reglement.nomCompte ?? '—'}</Text>
             </View>
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode : {reglement.modePaiement ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode : {reglement.nomModePaiement ?? '—'}</Text>
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur : {reglement.operateurSaisie ?? '—'}</Text>
             </View>
           </View>
@@ -100,7 +101,7 @@ export default function ReglementDetailScreen() {
           <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant réglé</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(totalRegle || reglement.montant)}</Text>
+              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(totalRegle || reglement.montantReg)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: mutedColor }]}>Solde restant</Text>
@@ -109,7 +110,7 @@ export default function ReglementDetailScreen() {
             <View style={styles.separator} />
             <View style={styles.summaryRow}>
               <Text style={[styles.totalLabel, { color: textColor }]}>Montant total</Text>
-              <Text style={[styles.totalValue, { color: tintColor }]}>{formatAmount(reglement.montant)}</Text>
+              <Text style={[styles.totalValue, { color: tintColor }]}>{formatAmount(reglement.montantReg)}</Text>
             </View>
           </View>
         </View>

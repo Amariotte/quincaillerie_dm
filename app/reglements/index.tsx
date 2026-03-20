@@ -1,5 +1,5 @@
 import { AppHeader } from '@/components/app-header';
-import { reglements } from '@/data/fakeDatas/reglements.fake';
+import { reglements } from '@/data/datas.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatAmount, toComparableDate } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -46,7 +46,7 @@ const paymentModeFilters = [
   ...Array.from(
     new Set(
       reglements
-        .map((reglement) => reglement.modePaiement)
+        .map((reglement) => reglement.nomModePaiement)
         .filter((mode): mode is string => typeof mode === 'string' && mode.trim().length > 0)
     )
   ),
@@ -76,21 +76,21 @@ export default function ReglementsScreen() {
     const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
     const matchesDate = afterStart && beforeEnd;
     const matchesClient = activeClient === 'Tous' || reglement.nomSousCompte === activeClient;
-    const reglementStatus = getReglementStatus(reglement.soldeReg, reglement.isEncaisse);
+    const reglementStatus = getReglementStatus(reglement.soldeReg, reglement.dateEncaissement !== null  );
     const matchesStatus = activeStatus === 'Toutes' || reglementStatus === activeStatus;
-    const matchesPaymentMode = activePaymentMode === 'Tous modes' || reglement.modePaiement === activePaymentMode;
+    const matchesPaymentMode = activePaymentMode === 'Tous modes' || reglement.nomModePaiement === activePaymentMode;
 
     return matchesQuery && matchesDate && matchesClient && matchesStatus && matchesPaymentMode;
   });
 
-  const unsettledReglements = filteredReglements.filter((reglement) => reglement.soldeReg > 0 || !reglement.isEncaisse);
-  const settledReglements = filteredReglements.filter((reglement) => reglement.soldeReg <= 0 && reglement.isEncaisse);
+  const unsettledReglements = filteredReglements.filter((reglement) => reglement.soldeReg > 0 || reglement.dateEncaissement === null);
+  const settledReglements = filteredReglements.filter((reglement) => reglement.soldeReg <= 0 && reglement.dateEncaissement !== null);
   const totalSolde = filteredReglements.reduce((sum, reglement) => sum + reglement.soldeReg, 0);
 
   const totalCount = filteredReglements.length;
-  const totalAmount = filteredReglements.reduce((sum, reglement) => sum + reglement.montant, 0);
+  const totalAmount = filteredReglements.reduce((sum, reglement) => sum + reglement.montantReg, 0);
   const unsettledCount = unsettledReglements.length;
-  const unsettledAmount = unsettledReglements.reduce((sum, reglement) => sum + reglement.montant, 0);
+  const unsettledAmount = unsettledReglements.reduce((sum, reglement) => sum + reglement.montantReg, 0);
   const settledCount = settledReglements.length;
 
   return (
@@ -220,7 +220,7 @@ export default function ReglementsScreen() {
 
           <View style={styles.listBlock}>
             {filteredReglements.map((reglement) => {
-              const statusLabel = getReglementStatus(reglement.soldeReg, reglement.isEncaisse);
+              const statusLabel = getReglementStatus(reglement.soldeReg, reglement.dateEncaissement !== null);
               const statusColor =
                 statusLabel === 'Soldé' ? '#fcfdfc' : statusLabel === 'Disponible' ? '#16a34a' : '#dc2626';
 
@@ -239,7 +239,7 @@ export default function ReglementsScreen() {
                   <View style={styles.invoiceMetaRow}>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? new Date(reglement.dateReg).toLocaleDateString('fr-FR') : '—'}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>
@@ -253,13 +253,13 @@ export default function ReglementsScreen() {
 
                   <View style={styles.metaModeRow}>
                     <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode de paiement</Text>
-                    <Text style={[styles.metaValue, { color: textColor }]}>{reglement.modePaiement || '—'}</Text>
+                    <Text style={[styles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
                   </View>
 
                   <View style={styles.invoiceBottomRow}>
                     <View style={styles.amountBlock}>
-                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montant)}</Text>
-                      <Text style={[styles.paymentModeText, { color: mutedColor }]}>{reglement.modePaiement || '—'}</Text>
+                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
+                      <Text style={[styles.paymentModeText, { color: mutedColor }]}>{reglement.nomModePaiement || '—'}</Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => router.push(`/reglements/${reglement.id}` as never)}
