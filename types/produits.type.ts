@@ -14,6 +14,6 @@ export type Produit = {
 };
 
 export type listProduits = {
-  meta: meta;
+  meta?: meta;
   data: Produit[];
 };

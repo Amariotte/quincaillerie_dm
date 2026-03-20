@@ -30,7 +30,7 @@ export type detailsReglement = {
 };
 
 export type listReglements = {
-  meta: meta;
+  meta?: meta;
   data: reglement[];
 };
 

@@ -1,6 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
-import { fallbackItems } from '@/data/fakeDatas/factures.fake';
+import { fallbackItems } from '@/data/datas.fake.js';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { FACTURES_LIST_CACHE_KEY, getCacheData } from '@/services/cache-service';
 import { formatAmount } from '@/tools/tools';

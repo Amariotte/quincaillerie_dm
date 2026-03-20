@@ -22,6 +22,6 @@ export type Mouvement = {
 
 
 export type listMouvements = {
-  meta: meta;
+  meta?: meta;
   data: Mouvement[];
 };

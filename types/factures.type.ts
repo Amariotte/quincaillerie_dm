@@ -54,7 +54,7 @@ export type detailsFacture = {
 
 
 export type listFactures = {
-  meta: meta;
+  meta?: meta;
   data: facture[];
 };
 

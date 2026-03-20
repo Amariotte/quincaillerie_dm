@@ -1,8 +1,7 @@
 import { AppHeader } from '@/components/app-header';
-import { products } from '@/data/fakeDatas/produits.fake';
+import { produitsFakeData } from '@/data/datas.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { formatAmount } from '@/tools/tools';
-import { ProductImageKey } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -12,13 +11,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const defaultProductImage = require('../../assets/images/partial-react-logo.png');
 
-const getProductImage = (imageKey?: ProductImageKey) => ( defaultProductImage);
+const getProductImage = (url : string | undefined
+) => ( defaultProductImage);
 
 export default function ProduitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
 
-  const product = products.find((item) => item.id === id);
+  const product = produitsFakeData.data.find((item) => item.id === id);
 
   if (!product) {
     return (
@@ -37,20 +37,18 @@ export default function ProduitDetailScreen() {
     );
   }
 
-  const stockColor = product.stock < 30 ? '#dc2626' : product.stock < 60 ? '#f59e0b' : '#16a34a';
-
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail produit" subtitle={product.sku} />
+          <AppHeader showBack title="Détail produit" subtitle={product.reference} />
 
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
             <Image source={getProductImage(product.image)} style={styles.productImage} resizeMode="cover" />
             <View style={styles.productTextBlock}>
-              <Text style={[styles.productName, { color: textColor }]}>{product.name}</Text>
+              <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
               <View style={[styles.categoryTag, { backgroundColor: `${tintColor}18` }]}>
-                <Text style={[styles.categoryText, { color: tintColor }]}>{product.category}</Text>
+                <Text style={[styles.categoryText, { color: tintColor }]}>{product.nomfamille}</Text>
               </View>
             </View>
           </View>
@@ -58,20 +56,13 @@ export default function ProduitDetailScreen() {
           <View style={[styles.detailCard, { backgroundColor: cardColor }]}>
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: mutedColor }]}>Référence</Text>
-              <Text style={[styles.detailValue, { color: textColor }]}>{product.sku}</Text>
+              <Text style={[styles.detailValue, { color: textColor }]}>{product.reference}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: mutedColor }]}>Prix unitaire</Text>
-              <Text style={[styles.detailValue, { color: textColor }]}>{formatAmount(product.price)}</Text>
+              <Text style={[styles.detailValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
             </View>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: mutedColor }]}>Stock disponible</Text>
-              <Text style={[styles.detailValue, { color: stockColor }]}>{product.stock} {product.unit}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: mutedColor }]}>Valeur du stock</Text>
-              <Text style={[styles.detailValue, { color: textColor }]}>{formatAmount(product.stock * product.price)}</Text>
-            </View>
+          
           </View>
         </View>
       </ScrollView>

@@ -1,5 +1,5 @@
 import apiConfig from '@/config/api';
-import { userDataFake, userDataFakeAuthResponse } from '@/data/fakeDatas/user.fake';
+import { userDataFake, userDataFakeAuthResponse } from '@/data/datas.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
 import { AuthResponse, user } from '@/types/user.type';
 import { getJsonAuth, postJson, postJsonAuth } from './api-client';

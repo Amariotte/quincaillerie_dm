@@ -11,7 +11,11 @@ const apiConfig = {
     factures: '/factures',
     stats: '/stats',
     produits: '/produits',
-    reglements: '/reglements'
+    reglements: '/reglements',
+    promotions: '/promotions',
+    commissions: '/commissions',
+    operations: '/operations',
+    bonAchats: '/bon-achats',
 
   },
 };

@@ -1,4 +1,3 @@
-import { Linking } from "react-native";
 
 export const formatAmount = (amount: number | string | null | undefined) => {
   const normalized =
@@ -13,14 +12,11 @@ export const formatAmount = (amount: number | string | null | undefined) => {
 };
 
 
-const openNormalizedInvoice = async (URL : string) => {
-    if (URL.trim().length === 0) {
-      return;
-    }
-
-    await Linking.openURL(URL);
-  };
-
+const formatDisplayDate = (value?: Date | string | null) => {
+  if (!value) return '—';
+  const dt = new Date(value);
+  return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('fr-FR');
+};
 
   
  export const isFakeModeEnabled = (): boolean => {
