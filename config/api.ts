@@ -1,6 +1,10 @@
 
+const resolvedBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+const fallbackDevBaseUrl = 'http://localhost:3000/api';
+
 const apiConfig = {
-  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: resolvedBaseUrl || (__DEV__ ? fallbackDevBaseUrl : ''),
   endpoints: {
     login: '/auth/login',
     logout: '/auth/logout',
@@ -22,6 +26,12 @@ const apiConfig = {
 };
 
 export function getApiUrl(endpoint: string): string {
+  if (!apiConfig.baseURL) {
+    throw new Error(
+      'EXPO_PUBLIC_API_BASE_URL is missing. Set it before creating a production build.'
+    );
+  }
+
   return `${apiConfig.baseURL}${endpoint}`;
 }
 
