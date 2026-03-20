@@ -6,6 +6,12 @@
 			"type": "shell",
 			"command": "cd android; gradlew.bat assembleDebug",
 			"isBackground": false
+		},
+		{
+			"label": "build-apk-release",
+			"type": "shell",
+			"command": "cd android; .\\gradlew.bat assembleRelease --stacktrace --console=plain",
+			"isBackground": false
 		}
 	]
 }
