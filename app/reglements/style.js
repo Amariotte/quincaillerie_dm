@@ -92,6 +92,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  loadingBanner: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  loadingText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   emptyTitle: { fontSize: 17, fontWeight: '800' },
   emptyText: { fontSize: 13, textAlign: 'center' },
   headerRow: {

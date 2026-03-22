@@ -1,10 +1,11 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchCommissions } from '@/services/api-service';
 import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listCommissions } from '@/types/commissions.type';
 import { factureStatus } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -23,6 +25,12 @@ import styles from './style';
 
 const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Echue'];
 const MAIN_ACCOUNT_FILTER = 'Compte principal';
+
+const formatDisplayDate = (value?: Date | string | null) => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString('fr-FR');
+};
 
 
 
@@ -43,7 +51,10 @@ export default function CommissionsScreen() {
   const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
   const loadCommissions = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -72,54 +83,21 @@ export default function CommissionsScreen() {
     loadCommissions();
   }, [loadCommissions]);
 
-  const sousCompteFilters = [
-    'Tous',
-    MAIN_ACCOUNT_FILTER,
-    ...Array.from(
-      new Set(
-        commissions.data
-          .map((f) => f.nomSousCompte)
-          .filter((sousCompte): sousCompte is string => typeof sousCompte === 'string' && sousCompte.trim().length > 0)
-      )
-    ),
-  ];
-
-  sousCompteFilters.sort((a, b) => {
-    if (a === 'Tous') return -1;
-    if (b === 'Tous') return 1;
-    if (a === MAIN_ACCOUNT_FILTER) return -1;
-    if (b === MAIN_ACCOUNT_FILTER) return 1;
-    return a.localeCompare(b);
-  });
-
-  const today = new Date();
-  const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const sousCompteFilters = buildSousCompteFilters(
+        commissions.data,
+        (commission) => commission.nomSousCompte,
+      );
 
   const filteredCommissions = commissions.data.filter((commission) => {
     const matchesQuery =
       commission.codeCom.toLowerCase().includes(query.toLowerCase()) ||
       commission.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
     const issueComparable = toComparableDate(commission.dateCom);
-    const parseInputDate = (s: string): Date | null => {
-      const [d, m, y] = s.split('/');
-      if (!d || !m || !y) return null;
-      const dt = new Date(Number(y), Number(m) - 1, Number(d));
-      return isNaN(dt.getTime()) ? null : dt;
-    };
-    const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
-    const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
-    const startComparable = startParsed ? toComparableDate(startParsed) : null;
-    const endComparable = endParsed ? toComparableDate(endParsed) : null;
-    const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
-    const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
-    const matchesDate = afterStart && beforeEnd;
-    const hasSousCompte = typeof commission.nomSousCompte === 'string' && commission.nomSousCompte.trim().length > 0;
-    const matchesClient =
-      activeClient === 'Tous'
-        ? true
-        : activeClient === MAIN_ACCOUNT_FILTER
-          ? !hasSousCompte
-          : commission.nomSousCompte === activeClient;
+
+   
+     const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+     const matchesClient = matchesSousCompteFilter(activeClient, commission.nomSousCompte);
+     
 
     return matchesQuery && matchesDate && matchesClient;
   });
@@ -152,29 +130,17 @@ export default function CommissionsScreen() {
             />
           </View>
 
-          <View style={styles.periodRow}>
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
-              <TextInput
-                value={startDateQuery}
-                onChangeText={setStartDateQuery}
-                placeholder="Du (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="event" size={18} color={mutedColor} />
-              <TextInput
-                value={endDateQuery}
-                onChangeText={setEndDateQuery}
-                placeholder="Au (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-          </View>
+          <DateRangePicker
+            startDateValue={startDateQuery}
+            endDateValue={endDateQuery}
+            onChangeStartDate={setStartDateQuery}
+            onChangeEndDate={setEndDateQuery}
+            cardColor={cardColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            mutedColor={mutedColor}
+            tintColor={tintColor}
+          />
 
  {sousCompteFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -231,7 +197,7 @@ export default function CommissionsScreen() {
             <EmptyResultsCard
               iconName="cloud-off"
               title="Erreur de chargement"
-              subtitle="Impossible de récupérer les factures. Vérifiez votre connexion."
+              subtitle="Impossible de récupérer les commissions. Vérifiez votre connexion."
               cardColor={cardColor}
               titleColor={textColor}
               subtitleColor={mutedColor}
@@ -239,15 +205,23 @@ export default function CommissionsScreen() {
           )}
 
           {!isLoading && !isError && (
-          <View style={styles.listBlock}>
-            {filteredCommissions.map((commission) => {
-              
-              function formatDisplayDate(descVente: Date | undefined): React.ReactNode {
-                throw new Error('Function not implemented.');
-              }
-
-              return (
-                <View key={commission.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+          filteredCommissions.length === 0 ? (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title="Aucune commission trouvée"
+              subtitle="Essayez une autre recherche ou filtre."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          ) : (
+            <FlatList
+              data={filteredCommissions}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: commission }) => (
+                <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
                   <View style={styles.invoiceTopRow}>
                     <View style={styles.invoiceRefBlock}>
                       <Text style={[styles.invoiceRef, { color: textColor }]}>{commission.codeCom}</Text>
@@ -266,12 +240,13 @@ export default function CommissionsScreen() {
                       <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(commission.dateCom)}</Text>
                     </View>
                     <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(commission.dateEchVente)}</Text>
+                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Code la vente</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{commission.codeVente ?? '—'}</Text>
                     </View>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{commission.nbProduits}</Text>
+
+                     <View>
+                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Date de la vente</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
                     </View>
                   </View>
 
@@ -285,21 +260,9 @@ export default function CommissionsScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-              );
-            })}
-
-              {filteredCommissions.length === 0 ? (
-                          <EmptyResultsCard
-                            iconName="inventory-2"
-                            title="Aucune commission trouvée"
-                            subtitle="Essayez une autre recherche ou filtre."
-                            cardColor={cardColor}
-                            titleColor={textColor}
-                            subtitleColor={mutedColor}
-                          />
-                        ) : null}
-           
-          </View>
+              )}
+            />
+          )
           )}
         </View>
       </ScrollView>

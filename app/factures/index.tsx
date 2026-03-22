@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -11,6 +12,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -39,7 +41,10 @@ export default function FacturesScreen() {
   const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
   const loadFactures = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -131,29 +136,17 @@ export default function FacturesScreen() {
             />
           </View>
 
-          <View style={styles.periodRow}>
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
-              <TextInput
-                value={startDateQuery}
-                onChangeText={setStartDateQuery}
-                placeholder="Du (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="event" size={18} color={mutedColor} />
-              <TextInput
-                value={endDateQuery}
-                onChangeText={setEndDateQuery}
-                placeholder="Au (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-          </View>
+          <DateRangePicker
+            startDateValue={startDateQuery}
+            endDateValue={endDateQuery}
+            onChangeStartDate={setStartDateQuery}
+            onChangeEndDate={setEndDateQuery}
+            cardColor={cardColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            mutedColor={mutedColor}
+            tintColor={tintColor}
+          />
 
  {sousCompteFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -217,64 +210,66 @@ export default function FacturesScreen() {
             />
           )}
 
-          {!isLoading && !isError && (
-          <View style={styles.listBlock}>
-            {filteredInvoices.map((invoice) => {
+          {!isLoading && !isError && filteredInvoices.length === 0 && (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title="Aucune facture trouvée"
+              subtitle="Essayez une autre recherche ou filtre."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          )}
 
-             const statusColor = statusFactureColorMap[invoice.status];
-              
-              return (
-                <View key={invoice.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                  <View style={styles.invoiceTopRow}>
-                    <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+          {!isLoading && !isError && filteredInvoices.length > 0 && (
+            <FlatList
+              data={filteredInvoices}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: invoice }) => {
+                const statusColor = statusFactureColorMap[invoice.status];
+
+                return (
+                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={styles.invoiceTopRow}>
+                      <View style={styles.invoiceRefBlock}>
+                        <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                        <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                      <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
+
+                    <View style={styles.invoiceMetaRow}>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
+                      </View>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
+                      </View>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.invoiceBottomRow}>
+                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/factures/${invoice.id}` as never)}
+                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                      >
+                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  <View style={styles.invoiceMetaRow}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/factures/${invoice.id}` as never)}
-                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                    >
-                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-
-              {filteredInvoices.length === 0 ? (
-                          <EmptyResultsCard
-                            iconName="inventory-2"
-                            title="Aucune facture trouvée"
-                            subtitle="Essayez une autre recherche ou filtre."
-                            cardColor={cardColor}
-                            titleColor={textColor}
-                            subtitleColor={mutedColor}
-                          />
-                        ) : null}
-           
-          </View>
+                );
+              }}
+            />
           )}
         </View>
       </ScrollView>

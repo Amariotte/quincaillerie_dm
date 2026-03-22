@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -32,6 +33,11 @@ export default function TransactionsScreen() {
   const [query, setQuery] = useState('');
 
   const loadMouvements = useCallback(async () => {
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const cached = await getCacheData<listMouvements>(TRANSACTIONS_LIST_CACHE_KEY);
@@ -39,7 +45,7 @@ export default function TransactionsScreen() {
         setMouvements(cached);
       }
 
-      const data = await getfetchMouvements(userToken ?? '');
+      const data = await getfetchMouvements(userToken);
       setMouvements(data);
       setIsOfflineMode(false);
       await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
@@ -49,7 +55,7 @@ export default function TransactionsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userToken]);
 
   useEffect(() => {
     loadMouvements();
@@ -98,12 +104,15 @@ export default function TransactionsScreen() {
               <Text style={[styles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
             </View>
           ) : (
-            <View style={styles.listBlock}>
-              {filtered.map((tx) => {
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: tx }) => {
                 const sc = typeMouvementColorMap[tx.libType] || tintColor;
                 return (
                   <TouchableOpacity
-                    key={tx.id}
                     activeOpacity={0.85}
                     onPress={() => router.push(`/transactions/${tx.id}` as never)}
                     style={[styles.txCard, { backgroundColor: cardColor }]}
@@ -119,8 +128,8 @@ export default function TransactionsScreen() {
                     </View>
                   </TouchableOpacity>
                 );
-              })}
-            </View>
+              }}
+            />
           )}
         </View>
       </ScrollView>

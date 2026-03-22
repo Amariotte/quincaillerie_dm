@@ -1,4 +1,5 @@
 import { meta } from "./other.type";
+import { detailsTransaction } from "./reglements.type";
 
  
 export type bonAchat = {
@@ -13,6 +14,8 @@ export type bonAchat = {
   autreClientUse: boolean;
   uniqueAgence: boolean;
   nomAgence: string;
+  details?: detailsTransaction[];
+  
 };
 
 export type listBonAchats = {

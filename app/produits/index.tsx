@@ -9,7 +9,7 @@ import { listProduits } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const defaultProductImage = require('../../assets/images/partial-react-logo.png');
@@ -45,7 +45,10 @@ export default function ProduitsScreen() {
 
 
   const loadProduits = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -113,13 +116,16 @@ useEffect(() => {
             />
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            {familles.map((famille: string) => {
+          <FlatList
+            data={familles}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item}
+            contentContainerStyle={styles.filterRow}
+            renderItem={({ item: famille }) => {
               const isActive = famille === activeFamille;
-
               return (
                 <TouchableOpacity
-                  key={famille}
                   onPress={() => setActiveFamille(famille)}
                   style={[
                     styles.filterChip,
@@ -132,34 +138,15 @@ useEffect(() => {
                   <Text style={[styles.filterText, { color: isActive ? '#ffffff' : textColor }]}>{famille}</Text>
                 </TouchableOpacity>
               );
-            })}
-          </ScrollView>
+            }}
+          />
 
           <View style={styles.listBlock}>
-            {filteredProducts.map((product) => {
-              return (
-                <TouchableOpacity
-                  key={product.id}
-                  activeOpacity={0.85}
-                  onPress={() => router.push(`/produits/${product.id}` as never)}
-                  style={[styles.productCard, { backgroundColor: cardColor }]}
-                >
-                  <View style={styles.productTopRow}>
-                    <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
-                    <View style={styles.productInfo}>
-                      <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
-                      <View style={styles.productMetaRow}>
-                        <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
-                        <Text style={[styles.priceInlineValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
-                      </View>
-                      <Text style={[styles.familyValue, { color: tintColor }]}>{product.nomfamille || MAIN_ACCOUNT_FILTER}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-
-            {filteredProducts.length === 0 ? (
+            {isLoading ? (
+              <View style={styles.loaderBlock}>
+                <ActivityIndicator size="large" color={tintColor} />
+              </View>
+            ) : filteredProducts.length === 0 ? (
               <EmptyResultsCard
                 iconName="inventory-2"
                 title="Aucun produit trouvé"
@@ -168,7 +155,33 @@ useEffect(() => {
                 titleColor={textColor}
                 subtitleColor={mutedColor}
               />
-            ) : null}
+            ) : (
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={(item) => String(item.id)}
+                scrollEnabled={false}
+                contentContainerStyle={styles.listBlock}
+                renderItem={({ item: product }) => (
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => router.push(`/produits/${product.id}` as never)}
+                    style={[styles.productCard, { backgroundColor: cardColor }]}
+                  >
+                    <View style={styles.productTopRow}>
+                      <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
+                      <View style={styles.productInfo}>
+                        <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
+                        <View style={styles.productMetaRow}>
+                          <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
+                          <Text style={[styles.priceInlineValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
+                        </View>
+                        <Text style={[styles.familyValue, { color: tintColor }]}>{product.nomfamille || MAIN_ACCOUNT_FILTER}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
           </View>
         </View>
       </ScrollView>
@@ -217,6 +230,10 @@ const styles = StyleSheet.create({
   },
   listBlock: {
     gap: 12,
+  },
+  loaderBlock: {
+    paddingVertical: 24,
+    alignItems: 'center',
   },
   productCard: {
     borderRadius: 20,

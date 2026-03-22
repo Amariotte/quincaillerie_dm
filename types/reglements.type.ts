@@ -1,7 +1,14 @@
 import { meta } from "./other.type";
 
-export type typeDetails = 'Vente' | 'Décaissement' | 'Impayée';
+export type typeDetails = 'Vente' | 'Décaissement';
 export type statusEncaisse = 'Encaissé' | 'Non encaissé';
+
+export const statusEncaisseColorMap: Record<statusEncaisse, string> = {
+  'Encaissé': '#16a34a',
+  'Non encaissé': '#dc2626',
+};
+
+
 
 
 export type reglement = {
@@ -18,14 +25,20 @@ export type reglement = {
   refReg?: string,
   nomModePaiement?: string;
   statusEncaisse?: statusEncaisse;
+  details?: detailsTransaction[];
 };
 
-export type detailsReglement = {
+
+export type detailsTransaction = {
   id: string;
-  codeVente: string;
-  nomClient: string;
-  montantRegle: number;
-  type: typeDetails;
+  montantRegDoc: number;
+  montantDoc: number;
+  dateAction: Date;
+  dateEchDoc: Date;
+  dateDoc: Date;
+  idDoc: string;
+  codeDoc: string;
+  typeDoc: typeDetails;
 };
 
 export type listReglements = {

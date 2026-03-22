@@ -1,16 +1,16 @@
 import apiConfig from '@/config/api';
 import { bonAchatsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, proformasFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
-import { listBonAchats } from '@/types/bon-achats.type';
-import { listCommissions } from '@/types/commissions.type';
-import { listDevis } from '@/types/devis.type';
+import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
+import { commission, listCommissions } from '@/types/commissions.type';
+import { devis, listDevis } from '@/types/devis.type';
 import { facture, listFactures } from '@/types/factures.type';
 import { listMouvements } from '@/types/mouvements.type';
 import { listOperations } from '@/types/operations.type';
 import { stat } from '@/types/other.type';
 import { listProduits } from '@/types/produits.type';
 import { listPromotions } from '@/types/promotions.type';
-import { listReglements } from '@/types/reglements.type';
+import { listReglements, reglement } from '@/types/reglements.type';
 import { SoldeResponse } from '@/types/solde.type';
 import { getJsonAuth } from './api-client';
 
@@ -118,6 +118,62 @@ export async function getfetchFactureById(token: string, id: string): Promise<fa
 
   return  d ;
 }
+
+
+export async function getfetchReglementById(token: string, id: string): Promise<reglement | null> {
+
+  if (isFakeModeEnabled()) {
+    return reglementsFakeData.data.filter(reglement => reglement.id === id).length > 0
+      ? reglementsFakeData.data.filter(reglement => reglement.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<reglement>(`${apiConfig.endpoints.reglements}/${id}`, token);
+
+  return  d ;
+}
+
+export async function getfetchCommissionById(token: string, id: string): Promise<commission | null> {
+
+  if (isFakeModeEnabled()) {
+    return commissionsFakeData.data.filter(commission => commission.id === id).length > 0
+      ? commissionsFakeData.data.filter(commission => commission.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<commission>(`${apiConfig.endpoints.commissions}/${id}`, token);
+
+  return  d ;
+}
+
+
+export async function getfetchBonAchatById(token: string, id: string): Promise<bonAchat | null> {
+
+  if (isFakeModeEnabled()) {
+    return bonAchatsFakeData.data.filter(bonAchat => bonAchat.id === id).length > 0
+      ? bonAchatsFakeData.data.filter(bonAchat => bonAchat.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<bonAchat>(`${apiConfig.endpoints.bonAchats}/${id}`, token);
+
+  return  d ;
+}
+
+
+export async function getfetchDevisById(token: string, id: string): Promise<devis | null> {
+
+  if (isFakeModeEnabled()) {
+    return proformasFakeData.data.filter(devis => devis.id === id).length > 0
+      ? proformasFakeData.data.filter(devis => devis.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<devis>(`${apiConfig.endpoints.devis}/${id}`, token);
+
+  return  d ;
+}
+
 
 export async function getfetchOperations(token: string): Promise<listOperations> {
 

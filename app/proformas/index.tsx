@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -8,12 +9,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
@@ -39,7 +41,10 @@ export default function ProformasScreen() {
   const [activeStatus, setActiveStatus] = useState<'Toutes' | devisStatus>('Toutes');
 
   const loadProformas = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -113,29 +118,17 @@ export default function ProformasScreen() {
             />
           </View>
 
-          <View style={styles.periodRow}>
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
-              <TextInput
-                value={startDateQuery}
-                onChangeText={setStartDateQuery}
-                placeholder="Du (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="event" size={18} color={mutedColor} />
-              <TextInput
-                value={endDateQuery}
-                onChangeText={setEndDateQuery}
-                placeholder="Au (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-          </View>
+          <DateRangePicker
+            startDateValue={startDateQuery}
+            endDateValue={endDateQuery}
+            onChangeStartDate={setStartDateQuery}
+            onChangeEndDate={setEndDateQuery}
+            cardColor={cardColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            mutedColor={mutedColor}
+            tintColor={tintColor}
+          />
 
  {sousCompteFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -199,61 +192,63 @@ export default function ProformasScreen() {
             />
           )}
 
-          {!isLoading && !isError && (
-          <View style={styles.listBlock}>
-            {filteredInvoices.map((proforma) => {
+          {!isLoading && !isError && filteredInvoices.length === 0 && (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title="Aucune facture trouvée"
+              subtitle="Essayez une autre recherche ou filtre."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          )}
 
-             const statusColor = statusDevisColorMap[proforma.status];
-              
-              return (
-                <View key={proforma.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                  <View style={styles.invoiceTopRow}>
-                    <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+          {!isLoading && !isError && filteredInvoices.length > 0 && (
+            <FlatList
+              data={filteredInvoices}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: proforma }) => {
+                const statusColor = statusDevisColorMap[proforma.status];
+
+                return (
+                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={styles.invoiceTopRow}>
+                      <View style={styles.invoiceRefBlock}>
+                        <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                        <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                      <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+
+                    <View style={styles.invoiceMetaRow}>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{new Date(proforma.dateDevis).toLocaleDateString('fr-FR')}</Text>
+                      </View>
+
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.invoiceBottomRow}>
+                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/proformas/${proforma.id}` as never)}
+                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                      >
+                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  <View style={styles.invoiceMetaRow}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{new Date(proforma.dateDevis).toLocaleDateString('fr-FR')}</Text>
-                    </View>
-                  
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/proformas/${proforma.id}` as never)}
-                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                    >
-                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-
-              {filteredInvoices.length === 0 ? (
-                          <EmptyResultsCard
-                            iconName="inventory-2"
-                            title="Aucune facture trouvée"
-                            subtitle="Essayez une autre recherche ou filtre."
-                            cardColor={cardColor}
-                            titleColor={textColor}
-                            subtitleColor={mutedColor}
-                          />
-                        ) : null}
-           
-          </View>
+                );
+              }}
+            />
           )}
         </View>
       </ScrollView>

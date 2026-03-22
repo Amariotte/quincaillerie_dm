@@ -200,44 +200,6 @@ export default function ProfileScreen() {
             </Text>
 
             <TouchableOpacity
-              onPress={() => router.push('/compte/synchronisation')}
-              style={[
-                styles.settingItem,
-                {
-                  borderBottomColor: backgroundColor,
-                },
-              ]}
-            >
-              <View style={styles.settingItemLeft}>
-                <MaterialIcons
-                  name="settings"
-                  size={24}
-                  color={tintColor}
-                  style={styles.settingIcon}
-                />
-                <View>
-                  <Text style={[styles.settingLabel, { color: textColor }]}>
-                    Tout synchroniser
-                  </Text>
-                  <Text
-                    style={[
-                      styles.settingDescription,
-                      { color: textColor, opacity: 0.6 },
-                    ]}
-                  >
-                    Mettre à jour toutes les données locales
-                  </Text>
-                </View>
-              </View>
-              <MaterialIcons
-                name="chevron-right"
-                size={24}
-                color={textColor}
-                style={{ opacity: 0.5 }}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={[
                 styles.settingItem,
                 {

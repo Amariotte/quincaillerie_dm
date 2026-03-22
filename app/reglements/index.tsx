@@ -1,14 +1,17 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglements } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
 import { buildSousCompteFilters, formatAmount, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
-import { listReglements, statusEncaisse } from '@/types/reglements.type';
+import { listReglements, statusEncaisse, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -38,7 +41,10 @@ const { userToken } = useAuthContext();
 
 
  const loadReglements = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -147,29 +153,17 @@ const paymentModeFilters = [
             />
           </View>
 
-          <View style={styles.periodRow}>
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
-              <TextInput
-                value={startDateQuery}
-                onChangeText={setStartDateQuery}
-                placeholder="Du (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="event" size={18} color={mutedColor} />
-              <TextInput
-                value={endDateQuery}
-                onChangeText={setEndDateQuery}
-                placeholder="Au (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-          </View>
+          <DateRangePicker
+            startDateValue={startDateQuery}
+            endDateValue={endDateQuery}
+            onChangeStartDate={setStartDateQuery}
+            onChangeEndDate={setEndDateQuery}
+            cardColor={cardColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            mutedColor={mutedColor}
+            tintColor={tintColor}
+          />
 
          {(sousCompteFilters.length > 2) && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -244,63 +238,74 @@ const paymentModeFilters = [
             })}
           </ScrollView>
           )}
-          <View style={styles.listBlock}>
-            {filteredReglements.map((reglement) => {
-              const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
-              const statusColor =
-                statusLabel === 'Encaissé' ? '#16a34a' : '#dc2626';
+          {isLoading ? (
+            <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+          ) : isError ? (
+            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+              <MaterialIcons name="cloud-off" size={28} color={mutedColor} />
+              <Text style={[styles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
+              <Text style={[styles.emptyText, { color: mutedColor }]}>Impossible de récupérer les règlements.</Text>
+            </View>
+          ) : filteredReglements.length === 0 ? (
+            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+              <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
+              <Text style={[styles.emptyTitle, { color: textColor }]}>Aucun règlement trouvé</Text>
+              <Text style={[styles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredReglements}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: reglement }) => {
+                const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
+   const statusColor = statusEncaisseColorMap[reglement.statusEncaisse ?? 'Non encaissé'] || tintColor;
 
-              return (
-                <View key={reglement.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                  <View style={styles.invoiceTopRow}>
-                    <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte}</Text>
+                return (
+                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={styles.invoiceTopRow}>
+                      <View style={styles.invoiceRefBlock}>
+                        <Text style={[styles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                        <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                      <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+
+                    <View style={styles.invoiceMetaRow}>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? new Date(reglement.dateReg).toLocaleDateString('fr-FR') : '—'}</Text>
+                      </View>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.metaModeRow}>
+                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode de paiement</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
+                    </View>
+
+                    <View style={styles.invoiceBottomRow}>
+                      <View style={styles.amountBlock}>
+                        <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/reglements/${reglement.id}` as never)}
+                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                      >
+                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  <View style={styles.invoiceMetaRow}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? new Date(reglement.dateReg).toLocaleDateString('fr-FR') : '—'}</Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.metaModeRow}>
-                    <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode de paiement</Text>
-                    <Text style={[styles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
-                  </View>
-
-                  <View style={styles.invoiceBottomRow}>
-                    <View style={styles.amountBlock}>
-                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/reglements/${reglement.id}` as never)}
-                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                    >
-                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-
-            {filteredReglements.length === 0 ? (
-              <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
-                <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
-                <Text style={[styles.emptyTitle, { color: textColor }]}>Aucun règlement trouvé</Text>
-                <Text style={[styles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
-              </View>
-            ) : null}
-          </View>
+                );
+              }}
+            />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

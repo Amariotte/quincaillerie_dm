@@ -11,7 +11,7 @@ import { SoldeResponse } from '@/types/solde.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './styles.js';
 
@@ -172,6 +172,57 @@ export default function HomeScreen() {
     Alert.alert('Bientot disponible', 'Ce module n\'est pas encore relie dans cette version.');
   };
 
+  const renderMenuItem = ({ item }: { item: (typeof menuItems)[number] }) => (
+    <TouchableOpacity
+      onPress={() => handleMenuPress(item.id)}
+      style={[
+        styles.menuCard,
+        { backgroundColor: cardColor },
+        item.featured && { backgroundColor: item.tint, justifyContent: 'center' },
+      ]}
+    >
+      <View
+        style={[
+          styles.menuIcon,
+          { backgroundColor: item.featured ? 'rgba(255,255,255,0.18)' : `${item.tint}18` },
+        ]}
+      >
+        <MaterialIcons
+          name={item.icon as any}
+          size={26}
+          color={item.featured ? '#ffffff' : item.tint}
+        />
+      </View>
+      <Text
+        style={[
+          styles.menuLabel,
+          { color: item.featured ? '#ffffff' : textColor },
+        ]}
+      >
+        {item.title}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderRecentMouvement = ({ item: mouvement }: { item: listMouvements['data'][number] }) => (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() => router.push(`/transactions/${mouvement.id}` as never)}
+      style={[styles.transactionCard, { backgroundColor: cardColor }]}
+    >
+      <View style={[styles.transactionIcon, { backgroundColor: `${tintColor}15` }]}>
+        <MaterialIcons name="sync-alt" size={20} color={tintColor} />
+      </View>
+      <View style={styles.transactionContent}>
+        <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
+        <Text style={[styles.transactionDate, { color: mutedColor }]}>{mouvement.dateOp}</Text>
+      </View>
+      <View style={styles.transactionRight}>
+        <Text style={[styles.transactionAmount, { color: textColor }]}>{formatAmount(mouvement.montant)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -192,7 +243,6 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity onPress={loadBalance} style={[styles.depositButton, { backgroundColor: tintColor }]}> 
                 <MaterialIcons name="refresh" size={18} color="#ffffff" />
-                <Text style={styles.depositText}>Actualiser le solde</Text>
               </TouchableOpacity>
             </View>
 
@@ -214,40 +264,15 @@ export default function HomeScreen() {
 
           <Text style={[styles.sectionTitle, { color: textColor }]}>Menu</Text>
 
-          <View style={styles.menuGrid}>
-            {menuItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => handleMenuPress(item.id)}
-                style={[
-                  styles.menuCard,
-                  { backgroundColor: cardColor },
-                  item.featured && { backgroundColor: item.tint, justifyContent: 'center' },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.menuIcon,
-                    { backgroundColor: item.featured ? 'rgba(255,255,255,0.18)' : `${item.tint}18` },
-                  ]}
-                >
-                  <MaterialIcons
-                    name={item.icon as any}
-                    size={26}
-                    color={item.featured ? '#ffffff' : item.tint}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.menuLabel,
-                    { color: item.featured ? '#ffffff' : textColor },
-                  ]}
-                >
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <FlatList
+            data={menuItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMenuItem}
+            numColumns={4}
+            scrollEnabled={false}
+            columnWrapperStyle={styles.menuRow}
+            contentContainerStyle={styles.menuGrid}
+          />
 
           <View style={styles.transactionsHeader}>
             <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>20 Dernières transactions</Text>
@@ -265,25 +290,15 @@ export default function HomeScreen() {
               <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
                 <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune transaction recente</Text>
               </View>
-            ) : recentMouvements.data.map((mouvement) => (
-              <TouchableOpacity
-                key={mouvement.id}
-                activeOpacity={0.85}
-                onPress={() => router.push(`/transactions/${mouvement.id}` as never)}
-                style={[styles.transactionCard, { backgroundColor: cardColor }]}
-              >
-                <View style={[styles.transactionIcon, { backgroundColor: `${tintColor}15` }]}>
-                  <MaterialIcons name="sync-alt" size={20} color={tintColor} />
-                </View>
-                <View style={styles.transactionContent}>
-                  <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
-                  <Text style={[styles.transactionDate, { color: mutedColor }]}>{mouvement.dateOp}</Text>
-                </View>
-                <View style={styles.transactionRight}>
-                  <Text style={[styles.transactionAmount, { color: textColor }]}>{formatAmount(mouvement.montant)}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            ) : (
+              <FlatList
+                data={recentMouvements.data}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={renderRecentMouvement}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+              />
+            )}
           </View>
         </View>
       </ScrollView>

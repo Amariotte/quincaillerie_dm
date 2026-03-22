@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   menuGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     rowGap: 12,
     marginBottom: 20,
+  },
+  menuRow: {
+    justifyContent: 'space-between',
   },
   menuCard: {
     width: '23.5%',

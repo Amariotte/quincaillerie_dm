@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -11,6 +12,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   Text,
   TextInput,
@@ -54,7 +56,10 @@ export default function OperationsScreen() {
   const [activeStatus, setActiveStatus] = useState<'Toutes' | typeOperation>('Toutes');
 
   const loadOperations = useCallback(async () => {
-    if (!userToken) return;
+    if (!userToken) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setIsError(false);
@@ -87,9 +92,6 @@ export default function OperationsScreen() {
     operations.data,
     (operation) => operation.nomSousCompte,
   );
-
-  const today = new Date();
-  const todayComparable = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
   const filteredOperations = operations.data.filter((operation) => {
     const matchesQuery =
@@ -151,29 +153,17 @@ export default function OperationsScreen() {
             />
           </View>
 
-          <View style={styles.periodRow}>
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="calendar-month" size={18} color={mutedColor} />
-              <TextInput
-                value={startDateQuery}
-                onChangeText={setStartDateQuery}
-                placeholder="Du (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-
-            <View style={[styles.periodInputBox, { backgroundColor: cardColor, borderColor }]}> 
-              <MaterialIcons name="event" size={18} color={mutedColor} />
-              <TextInput
-                value={endDateQuery}
-                onChangeText={setEndDateQuery}
-                placeholder="Au (JJ/MM/AAAA)"
-                placeholderTextColor={mutedColor}
-                style={[styles.periodInput, { color: textColor }]}
-              />
-            </View>
-          </View>
+          <DateRangePicker
+            startDateValue={startDateQuery}
+            endDateValue={endDateQuery}
+            onChangeStartDate={setStartDateQuery}
+            onChangeEndDate={setEndDateQuery}
+            cardColor={cardColor}
+            borderColor={borderColor}
+            textColor={textColor}
+            mutedColor={mutedColor}
+            tintColor={tintColor}
+          />
 
  {sousCompteFilters.length > 2 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -238,57 +228,57 @@ export default function OperationsScreen() {
           )}
 
           {!isLoading && !isError && (
-          <View style={styles.listBlock}>
-            {filteredOperations.map((operation) => {
+          filteredOperations.length === 0 ? (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title="Aucune opération trouvée"
+              subtitle="Essayez une autre recherche ou filtre."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          ) : (
+            <FlatList
+              data={filteredOperations}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listBlock}
+              renderItem={({ item: operation }) => {
+                const statusColor = typeMouvementColorMap[operation.libType ?? 'Décaissement'];
 
-             const statusColor = typeMouvementColorMap[operation.libType ?? 'Décaissement'];
-              
-              return (
-                <View key={operation.id} style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                  <View style={styles.invoiceTopRow}>
-                    <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{operation.codeOp}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{operation.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                return (
+                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={styles.invoiceTopRow}>
+                      <View style={styles.invoiceRefBlock}>
+                        <Text style={[styles.invoiceRef, { color: textColor }]}>{operation.codeOp}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{operation.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                        <Text style={[styles.statusText, { color: statusColor }]}>{operation.libType}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                      <Text style={[styles.statusText, { color: statusColor }]}>{operation.libType}</Text>
+
+                    <View style={styles.invoiceMetaRow}>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(operation.dateOp)}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.invoiceBottomRow}>
+                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(operation.montantOp)}</Text>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/operations/${operation.id}` as never)}
+                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                      >
+                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  <View style={styles.invoiceMetaRow}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(operation.dateOp)}</Text>
-                    </View>
-                   
-            
-                  </View>
-
-                  <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(operation.montantOp)}</Text>
-                    <TouchableOpacity
-                      onPress={() => router.push(`/operations/${operation.id}` as never)}
-                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                    >
-                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-
-              {filteredOperations.length === 0 ? (
-                          <EmptyResultsCard
-                            iconName="inventory-2"
-                            title="Aucune opération trouvée"
-                            subtitle="Essayez une autre recherche ou filtre."
-                            cardColor={cardColor}
-                            titleColor={textColor}
-                            subtitleColor={mutedColor}
-                          />
-                        ) : null}
-           
-          </View>
+                );
+              }}
+            />
+          )
           )}
         </View>
       </ScrollView>
