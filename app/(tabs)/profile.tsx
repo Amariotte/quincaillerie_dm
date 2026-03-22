@@ -94,6 +94,11 @@ export default function ProfileScreen() {
                 { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake' as const },
                 { label: 'Adresse', value: user.adresse, icon: 'place' as const },
                 { label: 'Email', value: user.email, icon: 'email' as const },
+                { label: 'Téléphone fixe', value: user.telFixe, icon: 'phone' as const },
+                { label: 'Téléphone mobile', value: user.telMobile, icon: 'smartphone' as const },
+                { label: 'NCC', value: user.ncc, icon: 'account-balance' as const },
+                { label: 'Agence', value: user.nomAgence, icon: 'apartment' as const },
+             
               ].filter(f => f.value).map((field) => (
                 <View key={field.label} style={[styles.profileRow, { borderBottomColor: mutedColor + '30' }]}>
                   <View style={[styles.profileIconWrap, { backgroundColor: tintColor + '18' }]}>

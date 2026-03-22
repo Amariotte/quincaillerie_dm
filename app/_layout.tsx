@@ -5,6 +5,8 @@ import 'react-native-reanimated';
 
 import { AuthProvider, useAuthContext } from '@/hooks/auth-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { setUnauthorizedHandler } from '@/services/api-client';
+import { useEffect } from 'react';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -12,7 +14,15 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { userToken } = useAuthContext();
+  const { userToken, clearAuthSession } = useAuthContext();
+
+  useEffect(() => {
+    setUnauthorizedHandler(clearAuthSession);
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, [clearAuthSession]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

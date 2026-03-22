@@ -26,6 +26,7 @@ export interface UseAuthReturn extends AuthState {
   signIn: (login: string, password: string) => Promise<void>;
   signInDemo: () => Promise<void>;
   signOut: () => Promise<void>;
+  clearAuthSession: () => void;
   refreshUserProfile: () => Promise<void>;
   error: string | null;
 }
@@ -47,6 +48,16 @@ export function useAuth(): UseAuthReturn {
       userToken: token,
       user,
     });
+  };
+
+  const clearAuthSession = () => {
+    setState({
+      isLoading: false,
+      isSignout: true,
+      userToken: null,
+      user: null,
+    });
+    setError(null);
   };
 
   const loadUserProfile = async (token: string) => {
@@ -121,26 +132,14 @@ export function useAuth(): UseAuthReturn {
       if (state.userToken === DEMO_TOKEN) {
         await wait(250);
 
-        setState({
-          isLoading: false,
-          isSignout: true,
-          userToken: null,
-          user: null,
-        });
-        setError(null);
+        clearAuthSession();
         return;
       }
 
       // Call API
       await signOutApi(state.userToken ?? '');
 
-      setState({
-        isLoading: false,
-        isSignout: true,
-        userToken: null,
-        user: null,
-      });
-      setError(null);
+      clearAuthSession();
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -157,6 +156,7 @@ export function useAuth(): UseAuthReturn {
     signIn,
     signInDemo,
     signOut,
+    clearAuthSession,
     refreshUserProfile,
     error,
   };
