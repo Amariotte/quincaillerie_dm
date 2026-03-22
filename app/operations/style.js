@@ -7,6 +7,11 @@ import { sharedComponents, sharedLayout } from '../../styles/shared';
 const styles = StyleSheet.create({
   safeArea: { ...sharedLayout.safeArea },
 
+  fixedHeader: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+  },
+
   scrollContent: { ...sharedLayout.scrollContentBottom32 },
 
   container: { ...sharedLayout.containerHorizontal18Top12Gap16 },
@@ -70,6 +75,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: { fontSize: 17, fontWeight: '800' },
+  descriptionText: { fontSize: 15, lineHeight: 22 },
   linesBlock: { gap: 12 },
   lineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   lineLeft: { flex: 1 },

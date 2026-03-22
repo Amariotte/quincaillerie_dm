@@ -185,8 +185,6 @@ export async function getfetchOperations(token: string): Promise<listOperations>
   return  d ;
 }
 
-
-
 export async function getfetchReglements(token: string): Promise<listReglements> {
   
     if (isFakeModeEnabled()) {

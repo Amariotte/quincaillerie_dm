@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchDevisById } from '@/services/api-service';
 import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
+import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { devis, listDevis, statusDevisColorMap } from '@/types/devis.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -115,7 +115,7 @@ export default function ProformaDetailScreen() {
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {new Date(devis.dateDevis).toLocaleDateString('fr-FR')}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {formatDate(devis.dateDevis)}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[styles.statusText, { color: statusColor }]}>{devis.status}</Text>

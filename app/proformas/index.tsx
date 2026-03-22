@@ -4,7 +4,7 @@ import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -103,7 +103,7 @@ export default function ProformasScreen() {
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} devis{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} devis</Text>
               <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>  
           </View>
@@ -113,7 +113,7 @@ export default function ProformasScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher un devis ou un client"
+              placeholder="Rechercher un devis ou un sous-compte"
               placeholderTextColor={mutedColor}
               style={[styles.searchInput, { color: textColor }]}
             />
@@ -186,7 +186,7 @@ export default function ProformasScreen() {
             <EmptyResultsCard
               iconName="cloud-off"
               title="Erreur de chargement"
-              subtitle="Impossible de récupérer les factures. Vérifiez votre connexion."
+              subtitle="Impossible de récupérer les devis. Vérifiez votre connexion."
               cardColor={cardColor}
               titleColor={textColor}
               subtitleColor={mutedColor}
@@ -196,7 +196,7 @@ export default function ProformasScreen() {
           {!isLoading && !isError && filteredInvoices.length === 0 && (
             <EmptyResultsCard
               iconName="inventory-2"
-              title="Aucune facture trouvée"
+              title="Aucun devis trouvé"
               subtitle="Essayez une autre recherche ou filtre."
               cardColor={cardColor}
               titleColor={textColor}
@@ -228,7 +228,7 @@ export default function ProformasScreen() {
                     <View style={styles.invoiceMetaRow}>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{new Date(proforma.dateDevis).toLocaleDateString('fr-FR')}</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
                       </View>
 
                       <View>

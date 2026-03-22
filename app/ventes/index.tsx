@@ -5,7 +5,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactures } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -104,24 +104,24 @@ export default function FacturesScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-        <AppHeader showBack title="Liste des factures" subtitle="Suivi des factures et des échéances" />
+        <AppHeader showBack title="Liste des ventes" subtitle="Suivi des ventes et des échéances" />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les factures</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} facture{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les ventes</Text>
+              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} vente{totalCount > 1 ? 's' : ''}</Text>
               <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Factures non soldées</Text>
-              <Text style={[styles.statCount, { color: tintColor }]}>{unsettledCount} facture{unsettledCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Ventes non soldées</Text>
+              <Text style={[styles.statCount, { color: tintColor }]}>{unsettledCount} vente{unsettledCount > 1 ? 's' : ''}</Text>
               <Text style={[styles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Factures échues</Text>
-              <Text style={[styles.statCount, { color: '#dc2626' }]}>{overdueCount} facture{overdueCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.statLabel, { color: mutedColor }]}>Ventes échues</Text>
+              <Text style={[styles.statCount, { color: '#dc2626' }]}>{overdueCount} vente{overdueCount > 1 ? 's' : ''}</Text>
               <Text style={[styles.statValue, { color: '#dc2626' }]}>{formatAmount(overdueAmount)}</Text>
             </View>
           </View>
@@ -131,7 +131,7 @@ export default function FacturesScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher une facture ou un client"
+              placeholder="Rechercher une vente ou un sous-compte"
               placeholderTextColor={mutedColor}
               style={[styles.searchInput, { color: textColor }]}
             />
@@ -204,7 +204,7 @@ export default function FacturesScreen() {
             <EmptyResultsCard
               iconName="cloud-off"
               title="Erreur de chargement"
-              subtitle="Impossible de récupérer les factures. Vérifiez votre connexion."
+              subtitle="Impossible de récupérer les ventes. Vérifiez votre connexion."
               cardColor={cardColor}
               titleColor={textColor}
               subtitleColor={mutedColor}
@@ -214,7 +214,7 @@ export default function FacturesScreen() {
           {!isLoading && !isError && filteredInvoices.length === 0 && (
             <EmptyResultsCard
               iconName="inventory-2"
-              title="Aucune facture trouvée"
+              title="Aucune vente trouvée"
               subtitle="Essayez une autre recherche ou filtre."
               cardColor={cardColor}
               titleColor={textColor}
@@ -245,12 +245,14 @@ export default function FacturesScreen() {
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>
+                          {formatDate(invoice.dateVente)}
+                        </Text>
                       </View>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
                       </View>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
@@ -261,7 +263,7 @@ export default function FacturesScreen() {
                     <View style={styles.invoiceBottomRow}>
                       <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
                       <TouchableOpacity
-                        onPress={() => router.push(`/factures/${invoice.id}` as never)}
+                        onPress={() => router.push(`/ventes/${invoice.id}` as never)}
                         style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
                         <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>

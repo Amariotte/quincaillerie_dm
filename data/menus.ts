@@ -7,7 +7,7 @@ export type menuItem = {
 };
 
 export const menuItems = [
-  { id: 'factures', title: 'Factures', icon: 'receipt', tint: '#4f46e5' },
+  { id: 'ventes', title: 'Ventes', icon: 'receipt', tint: '#4f46e5' },
   { id: 'proformas', title: 'Proformas', icon: 'description', tint: '#ef4444' },
   { id: 'bons', title: 'Bons de livraison', icon: 'local-shipping', tint: '#f59e0b' },
   { id: 'reglements', title: 'Règlements', icon: 'account-balance-wallet', tint: '#7c3aed' },

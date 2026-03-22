@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { fetchSoldeCompte, getfetchRecentMouvements, getStats } from '@/services/api-service';
 import { BALANCE_CACHE_KEY, getCacheData, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
-import { formatAmount } from '@/tools/tools';
+import { formatAmount, formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { stat } from '@/types/other.type';
 import { SoldeResponse } from '@/types/solde.type';
@@ -147,8 +147,8 @@ export default function HomeScreen() {
   }, [loadBalance, loadRecentMouvements, loadStatData]);
 
   const handleMenuPress = (itemId: string) => {
-    if (itemId === 'factures') {
-      router.push('/factures' as never);
+    if (itemId === 'ventes') {
+      router.push('/ventes' as never);
       return;
     }
 
@@ -253,7 +253,7 @@ export default function HomeScreen() {
       </View>
       <View style={styles.transactionContent}>
         <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
-        <Text style={[styles.transactionDate, { color: mutedColor }]}>{mouvement.dateOp}</Text>
+        <Text style={[styles.transactionDate, { color: mutedColor }]}>{formatDate(mouvement.dateOp)}</Text>
       </View>
       <View style={styles.transactionRight}>
         <Text style={[styles.transactionAmount, { color: textColor }]}>{formatAmount(mouvement.montant)}</Text>

@@ -4,6 +4,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getfetchMouvements } from '@/services/api-service';
 import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
+import { formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -165,7 +166,7 @@ export default function TransactionsScreen() {
 
   const handleTransactionPress = (tx: listMouvements['data'][number]) => {
     if (tx.libType === 'Vente') {
-      router.push(`/factures/${tx.id}` as never);
+      router.push(`/ventes/${tx.id}` as never);
       return;
     }
 
@@ -244,7 +245,7 @@ export default function TransactionsScreen() {
                             </View>
                           </View>
                           <View style={styles.txBottomRow}>
-                            <Text style={[styles.txDate, { color: mutedColor }]}>{tx.dateOp}</Text>
+                            <Text style={[styles.txDate, { color: mutedColor }]}>{formatDate(tx.dateOp)}</Text>
                             <Text style={[styles.txAmount, { color: sc }]}>{tx.montant}</Text>
                           </View>
                         </TouchableOpacity>

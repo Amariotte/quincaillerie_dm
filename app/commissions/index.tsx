@@ -5,33 +5,23 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchCommissions } from '@/services/api-service';
 import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listCommissions } from '@/types/commissions.type';
 import { factureStatus } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
-
-const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Echue'];
-const MAIN_ACCOUNT_FILTER = 'Compte principal';
-
-const formatDisplayDate = (value?: Date | string | null) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString('fr-FR');
-};
-
 
 
 export default function CommissionsScreen() {
@@ -167,30 +157,7 @@ export default function CommissionsScreen() {
           </ScrollView>
  )}
 
-{statusFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            {statusFilters.map((status) => {
-              const isActive = status === activeStatus;
-
-              return (
-                <TouchableOpacity
-                  key={status}
-                  onPress={() => setActiveStatus(status)}
-                  style={[
-                    styles.filterChip,
-                    {
-                      backgroundColor: isActive ? tintColor : cardColor,
-                      borderColor: isActive ? tintColor : borderColor,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
- )}
-          {isLoading && (
+    {isLoading && (
             <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
           )}
 
@@ -232,13 +199,10 @@ export default function CommissionsScreen() {
                   </View>
 
                   <View style={styles.invoiceMetaRow}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Date de vente</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(commission.descVente)}</Text>
-                    </View>
+                   
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Date commission</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(commission.dateCom)}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(commission.dateCom)}</Text>
                     </View>
                     <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Code la vente</Text>
@@ -247,7 +211,7 @@ export default function CommissionsScreen() {
 
                      <View>
                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Date de la vente</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(commission.dateVente)}</Text>
                     </View>
                   </View>
 

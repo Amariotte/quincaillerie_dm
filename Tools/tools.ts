@@ -14,12 +14,6 @@ export const formatAmount = (amount: number | string | null | undefined) => {
 export const MAIN_ACCOUNT_FILTER = 'Compte principal';
 
 
-export const formatDisplayDate = (value?: Date | string | null) => {
-  if (!value) return '—';
-  const dt = new Date(value);
-  return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('fr-FR');
-};
-
   
  export const isFakeModeEnabled = (): boolean => {
     return process.env.EXPO_PUBLIC_MODE_FAKE_DATA === 'true';
@@ -142,4 +136,12 @@ export const matchesDateRange = (
   const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
 
   return afterStart && beforeEnd;
+};
+
+export const formatDate = (pDate: Date | string | null | undefined) => {
+  if (!pDate) return '—';
+  const date = new Date(pDate);
+  if (isNaN(date.getTime())) return '—';
+  const hasTime = date.getHours() > 0 || date.getMinutes() > 0 || date.getSeconds() > 0;
+  return hasTime ? date.toLocaleString('fr-FR') : date.toLocaleDateString('fr-FR');
 };

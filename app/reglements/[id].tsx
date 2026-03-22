@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglementById } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { formatAmount, formatDisplayDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
+import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { listReglements, reglement, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -168,8 +168,8 @@ export default function ReglementDetailScreen() {
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {formatDisplayDate(reglement.dateReg)}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'encaissement : {formatDisplayDate(reglement.dateEncaissement)}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'encaissement : {reglement.dateEncaissement ? formatDate(reglement.dateEncaissement) : '—'}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[styles.statusText, { color: statusColor }]}>{reglement.statusEncaisse}</Text>
@@ -222,7 +222,7 @@ export default function ReglementDetailScreen() {
                     <View style={styles.lineLeft}>
                       <Text style={[styles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
                       <Text style={[styles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Date document : {formatDisplayDate(line.dateDoc)}</Text>
+                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
                       <Text style={[styles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
                     </View>
                     <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>

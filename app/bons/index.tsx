@@ -5,7 +5,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonLivraisons } from '@/services/api-service';
 import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { matchesDateRange, toComparableDate } from '@/tools/tools';
+import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
 import { listBonLivraisons } from '@/types/bon-livraisons.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -81,7 +81,6 @@ export default function BonsScreen() {
   });
 
   const totalCount = filteredBons.length;
-  const totalLines = filteredBons.reduce((sum, bon) => sum + (bon.details?.length ?? 0), 0);
   
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
@@ -94,10 +93,6 @@ export default function BonsScreen() {
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
               <Text style={[styles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
-            </View>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Lignes de livraison</Text>
-              <Text style={[styles.statCount, { color: tintColor }]}>{totalLines} ligne{totalLines > 1 ? 's' : ''}</Text>
             </View>
           </View>
 
@@ -157,7 +152,6 @@ export default function BonsScreen() {
               scrollEnabled={false}
               contentContainerStyle={styles.listBlock}
               renderItem={({ item: bon }) => {
-                const detailsCount = bon.details?.length ?? 0;
 
                 return (
                   <TouchableOpacity
@@ -177,11 +171,11 @@ export default function BonsScreen() {
                     <View style={styles.invoiceMetaRow}>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Créé le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{new Date(bon.dateBL).toLocaleDateString('fr-FR')}</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(bon.dateBL)}</Text>
                       </View>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Livraison</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateLivraison ? new Date(bon.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateLivraison ? formatDate(bon.dateLivraison) : '—'}</Text>
                       </View>
                     </View>
 
@@ -204,7 +198,7 @@ export default function BonsScreen() {
                         onPress={() => router.push(`/bons/${bon.id}` as never)}
                         style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail ({detailsCount})</Text>
+                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

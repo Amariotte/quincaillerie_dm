@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglements } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listReglements, statusEncaisse, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -278,7 +278,7 @@ const paymentModeFilters = [
                     <View style={styles.invoiceMetaRow}>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? new Date(reglement.dateReg).toLocaleDateString('fr-FR') : '—'}</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
                       </View>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>

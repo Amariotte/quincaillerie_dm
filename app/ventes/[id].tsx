@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactureById } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
+import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { facture, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -105,7 +105,7 @@ export default function FactureDetailScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
       <View style={styles.fixedHeader}>
-        <AppHeader showBack title="Détail facture" subtitle={invoice.codeVente} />
+        <AppHeader showBack title="Détail de la vente" subtitle={invoice.codeVente} />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
@@ -137,8 +137,8 @@ export default function FactureDetailScreen() {
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {new Date(invoice.dateVente).toLocaleDateString('fr-FR')}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEchVente ? new Date(invoice.dateEchVente).toLocaleDateString('fr-FR') : '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {formatDate(invoice.dateVente)}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>

@@ -5,39 +5,24 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchOperations } from '@/services/api-service';
 import { getCacheData, OPERATIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listOperations, typeMouvementColorMap, typeOperation } from '@/types/operations.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
 const statusFilters: Array<'Toutes' | typeOperation> = ['Toutes', 'Encaissement', 'Décaissement'];
-
-const formatDisplayDate = (value?: Date | string | null) => {
-  if (!value) return '—';
-
-  const slashParts = String(value).trim().split('/');
-  if (slashParts.length === 3) {
-    const [day, month, year] = slashParts;
-    if (day && month && year) {
-      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-    }
-  }
-
-  const dt = new Date(value);
-  return Number.isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('fr-FR');
-};
 
 export default function OperationsScreen() {
   const router = useRouter();
@@ -148,7 +133,7 @@ export default function OperationsScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher une opération ou un client"
+              placeholder="Rechercher une opération ou sous-compte"
               placeholderTextColor={mutedColor}
               style={[styles.searchInput, { color: textColor }]}
             />
@@ -244,6 +229,9 @@ export default function OperationsScreen() {
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
               contentContainerStyle={styles.listBlock}
+              ItemSeparatorComponent={() => (
+                <View style={[styles.separator, { backgroundColor: borderColor, marginVertical: 8 }]} />
+              )}
               renderItem={({ item: operation }) => {
                 const statusColor = typeMouvementColorMap[operation.libType ?? 'Décaissement'];
 
@@ -261,15 +249,32 @@ export default function OperationsScreen() {
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDisplayDate(operation.dateOp)}</Text>
+                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
+                        <Text style={[styles.metaValue, { color: textColor }]}>
+                          {formatDate(operation.dateOp)}
+                        </Text>
                       </View>
+                      {operation.nomModePaiement && (
+                        <View>
+                          <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode paiement</Text>
+                          <Text style={[styles.metaValue, { color: textColor }]}>{operation.nomModePaiement}</Text>
+                        </View>
+                      )}
+                      {operation.libRubrique && (
+                        <View>
+                          <Text style={[styles.metaLabel, { color: mutedColor }]}>Rubrique</Text>
+                          <Text style={[styles.metaValue, { color: textColor }]}>{operation.libRubrique}</Text>
+                        </View>
+                      )}
                     </View>
 
                     <View style={styles.invoiceBottomRow}>
                       <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(operation.montantOp)}</Text>
                       <TouchableOpacity
-                        onPress={() => router.push(`/operations/${operation.id}` as never)}
+                        onPress={() => router.push({
+                          pathname: `/operations/${operation.id}`,
+                          params: { operation: JSON.stringify(operation) }
+                        } as never)}
                         style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
                         <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
