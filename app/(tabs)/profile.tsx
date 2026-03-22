@@ -58,13 +58,14 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 22 }}>
+        <AppHeader title="Profil" subtitle="Informations et préférences du compte" showBack />
+      </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          <AppHeader title="Profil" subtitle="Informations et préférences du compte" showBack />
-
           <View style={[styles.profileHero, { backgroundColor: cardColor }]}> 
             <TouchableOpacity
               activeOpacity={0.85}
@@ -88,6 +89,7 @@ export default function ProfileScreen() {
             <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
               <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
               {[
+                { label: 'Code', value: user.code, icon: 'badge' as const },
                 { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'badge' as const },
                 { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake' as const },
                 { label: 'Adresse', value: user.adresse, icon: 'place' as const },

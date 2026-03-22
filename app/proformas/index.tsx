@@ -9,13 +9,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
@@ -95,10 +95,11 @@ export default function ProformasScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Liste des devis" subtitle="Suivi des devis et proformas" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Liste des devis" subtitle="Suivi des devis et proformas" />
-
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
@@ -217,7 +218,7 @@ export default function ProformasScreen() {
                     <View style={styles.invoiceTopRow}>
                       <View style={styles.invoiceRefBlock}>
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
-                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>

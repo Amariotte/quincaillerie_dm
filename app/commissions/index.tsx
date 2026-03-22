@@ -12,13 +12,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
@@ -107,10 +107,11 @@ export default function CommissionsScreen() {
   
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Liste des commissions" subtitle="Suivi des commissions" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Liste des commissions" subtitle="Suivi des commissions" />
-
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les commissions</Text>
@@ -226,7 +227,7 @@ export default function CommissionsScreen() {
                     <View style={styles.invoiceRefBlock}>
                       <Text style={[styles.invoiceRef, { color: textColor }]}>{commission.codeCom}</Text>
                       <Text style={[styles.invoiceClient, { color: textColor }]}>Vente: {commission.codeVente ?? '—'}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{commission.nomSousCompte ?? MAIN_ACCOUNT_FILTER}</Text>
+                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                     </View>
                   </View>
 

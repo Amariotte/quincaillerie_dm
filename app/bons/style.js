@@ -79,8 +79,22 @@ const styles = StyleSheet.create({
   lineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   lineLeft: { flex: 1 },
   lineLabel: { fontSize: 14, fontWeight: '700' },
+  lineSubLabel: { fontSize: 12, marginTop: 4 },
   lineMeta: { fontSize: 12, marginTop: 4 },
   lineTotal: { fontSize: 14, fontWeight: '800' },
+  loadingBanner: {
+    ...sharedComponents.cardRadius20Padding16,
+    alignItems: 'center',
+    gap: 10,
+  },
+  loadingText: {
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    textAlign: 'center',
+  },
   summaryCard: {
     ...sharedComponents.cardRadius20Padding16,
     gap: 10,

@@ -16,10 +16,11 @@ export default function ExploreScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader title="Explorer" subtitle="Vue rapide des points d'attention" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader title="Explorer" subtitle="Vue rapide des points d'attention" />
-
           <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.heroLabel, { color: mutedColor }]}>Vue opérationnelle</Text>
             <Text style={[styles.heroTitle, { color: textColor }]}>Priorités du jour</Text>

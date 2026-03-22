@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglementById } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { formatAmount, formatDisplayDate } from '@/tools/tools';
+import { formatAmount, formatDisplayDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { listReglements, reglement, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -76,10 +76,11 @@ export default function ReglementDetailScreen() {
   if (isLoading && !reglement) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail règlement" subtitle="Chargement en cours" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail règlement" subtitle="Chargement en cours" />
-
             <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="large" color={tintColor} />
               <Text style={[styles.emptyTitle, { color: textColor }]}>Chargement du règlement</Text>
@@ -94,10 +95,11 @@ export default function ReglementDetailScreen() {
   if (!reglement) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail règlement" subtitle="Document introuvable" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail règlement" subtitle="Document introuvable" />
-
             <EmptyResultsCard
               iconName="error-outline"
               title="Règlement introuvable"
@@ -135,10 +137,11 @@ export default function ReglementDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Détail règlement" subtitle={reglement.codeReg} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail règlement" subtitle={reglement.codeReg} />
-
           {isLoading ? (
             <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />
@@ -148,7 +151,7 @@ export default function ReglementDetailScreen() {
 
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{reglement.nomSousCompte}</Text>
+              <Text style={[styles.clientName, { color: textColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                 <View style={styles.headerActionsRow}>
       
                   <TouchableOpacity

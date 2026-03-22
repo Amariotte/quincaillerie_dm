@@ -21,6 +21,7 @@ const apiConfig = {
     operations: '/operations',
     bonAchats: '/bon-achats',
     devis: '/devis',
+    bonLivraisons: '/bon-livraisons',
 
   },
 };

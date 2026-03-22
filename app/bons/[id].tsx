@@ -1,0 +1,213 @@
+import { AppHeader } from '@/components/app-header';
+import { EmptyResultsCard } from '@/components/empty-results-card';
+import { useAuthContext } from '@/hooks/auth-context';
+import { useAppTheme } from '@/hooks/use-app-theme';
+import { getfetchBonLivraisonById } from '@/services/api-service';
+import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style.js';
+
+
+export default function BonLivraisonDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const { userToken } = useAuthContext();
+  const [bonLivraison, setBonLivraison] = useState<bonLivraison | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const routeId = Array.isArray(id) ? id[0] : id;
+
+  useEffect(() => {
+    const loadBonLivraison = async () => {
+      try {
+        const cachedBonLivraisons = await getCacheData<listBonLivraisons>(BONS_LIVRAISONS_LIST_CACHE_KEY);
+        const bonLivraison = cachedBonLivraisons?.data.find((item) => item.id === routeId);
+        setBonLivraison(bonLivraison ?? null);
+
+        if (!userToken || !routeId) {
+          return;
+        }
+
+        const data = await getfetchBonLivraisonById(userToken, routeId);
+        if (data) {
+          setBonLivraison(data);
+
+          const currentData = cachedBonLivraisons?.data ?? [];
+          const existsInCache = currentData.some((item) => item.id === data.id);
+          const updatedData = existsInCache
+            ? currentData.map((item) => (item.id === data.id ? data : item))
+            : [data, ...currentData];
+
+          await setCacheData(BONS_LIVRAISONS_LIST_CACHE_KEY, {
+            meta: cachedBonLivraisons?.meta ?? { page: 1, next: 1, totalPages: 1, total: updatedData.length, size: updatedData.length },
+            data: updatedData,
+          });
+        }
+
+      } catch {
+        setBonLivraison(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBonLivraison();
+  }, [routeId, userToken]);
+
+  const bl = bonLivraison;
+
+  if (isLoading && !bl) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={styles.fixedHeader}>
+          <AppHeader showBack title="Détail bon de livraison" subtitle="Chargement en cours" />
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.container}>
+            <View style={[styles.headerCard, { backgroundColor: cardColor, alignItems: 'center' }]}> 
+              <ActivityIndicator size="large" color={tintColor} />
+              <Text style={[styles.metaLabel, { color: mutedColor, textAlign: 'center' }]}>Chargement du bon de livraison...</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (!bl) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={styles.fixedHeader}>
+          <AppHeader showBack title="Détail bon de livraison" subtitle="Document introuvable" />
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.container}>
+            <EmptyResultsCard
+              iconName="error-outline"
+              title="Bon introuvable"
+              subtitle="Ce bon de livraison n'existe pas ou a été supprimé."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  const blLines = bl.details ?? [];
+  const totalDeliveredQuantity = blLines.reduce((sum, line) => sum + (line.qteLivree || 0), 0);
+  const receiverIdentity = bl.nomRecepteur?.trim() || '—';
+  const receiverDocument = bl.numPieceRecepteur?.trim() || '—';
+  const receiverDocumentType = bl.libTypePiece?.trim() || '—';
+  const deliveryDescription = bl.descBL?.trim() || bl.descRecepBL?.trim() || 'Aucune description disponible';
+
+  const openTicket = async () => {
+    Alert.alert(
+      'Informations de livraison',
+      [
+        `Code: ${bl.codeBL}`,
+        `Date: ${new Date(bl.dateBL).toLocaleDateString('fr-FR')}`,
+        `Livraison: ${bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}`,
+        `Livreur: ${bl.nomLivreur?.trim() || '—'}`,
+        `Récepteur: ${receiverIdentity}`,
+        `Lieu: ${bl.lieuLivraison?.trim() || '—'}`,
+      ].join('\n')
+    );
+  };
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={styles.fixedHeader}>
+        <AppHeader showBack title="Détail bon de livraison" subtitle={bl.codeBL} />
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
+          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={styles.headerTopRow}>
+              <View style={styles.headerActionsRow}>
+                <TouchableOpacity
+                  onPress={openTicket}
+                  style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                >
+                  <MaterialIcons name="receipt-long" size={16} color={tintColor} />
+                  <View style={[styles.infoBubble, { backgroundColor: tintColor }]}> 
+                    <Text style={styles.infoBubbleText}>i</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {new Date(bl.dateBL).toLocaleDateString('fr-FR')}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date livraison : {bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
+            </View>
+            
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {bl.nomAgence ?? '—'}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Véhicule : {bl.vehiculeLivreur ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Livreur : {bl.nomLivreur ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Lieu livraison : {bl.lieuLivraison ?? '—'}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>Nom récepteur : {receiverIdentity}</Text>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>{receiverDocumentType} : {receiverDocument}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaLabel, { color: mutedColor }]}>{deliveryDescription}</Text>
+            </View>
+           
+          </View>
+
+          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
+            <View style={styles.linesBlock}>
+              {blLines.length === 0 ? (
+                <Text style={[styles.metaLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune ligne de livraison disponible pour ce document.</Text>
+              ) : (
+                blLines.map((line) => (
+                  <View key={line.id} style={styles.lineRow}>
+                    <View style={styles.lineLeft}>
+                      <Text style={[styles.lineLabel, { color: textColor }]}>{line.designation}</Text>
+                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Référence: {line.reference || '—'}</Text>
+                    </View>
+                    <Text style={[styles.lineTotal, { color: textColor }]}>{line.qteLivree}</Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+
+          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Code document</Text>
+              <Text style={[styles.summaryValue, { color: textColor }]}>{bl.codeBL}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Articles livrés</Text>
+              <Text style={[styles.summaryValue, { color: textColor }]}>{blLines.length}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Quantité totale</Text>
+              <Text style={[styles.summaryValue, { color: textColor }]}>{totalDeliveredQuantity}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Récepteur</Text>
+              <Text style={[styles.summaryValue, { color: textColor }]}>{receiverIdentity}</Text>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.summaryRow}>
+              <Text style={[styles.totalLabel, { color: textColor }]}>Livraison enregistrée</Text>
+              <Text style={[styles.totalValue, { color: tintColor }]}>{bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : 'En attente'}</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

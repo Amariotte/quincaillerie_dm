@@ -132,18 +132,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   menuGrid: {
-    rowGap: 12,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
     marginBottom: 20,
   },
-  menuRow: {
-    justifyContent: 'space-between',
+  menuStrip: {
+    backgroundColor: 'transparent',
+  },
+  menuSeparator: {
+    width: 10,
   },
   menuCard: {
-    width: '23.5%',
-    minHeight: 106,
+    width: 108,
+    minHeight: 88,
     borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#000000',
@@ -153,15 +157,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   menuIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   menuLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',
   },
@@ -180,6 +184,15 @@ const styles = StyleSheet.create({
   },
   transactionList: {
     gap: 10,
+  },
+  transactionSectionBlock: {
+    gap: 10,
+  },
+  transactionSectionHeader: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   transactionCard: {
     flexDirection: 'row',

@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactureById } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount } from '@/tools/tools';
+import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { facture, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -63,10 +63,11 @@ export default function FactureDetailScreen() {
   if (!invoice) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={styles.fixedHeader}>
+          <AppHeader showBack title="Détail facture" subtitle="Document introuvable" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail facture" subtitle="Document introuvable" />
-
             <EmptyResultsCard
               iconName="error-outline"
               title="Vente introuvable"
@@ -103,13 +104,14 @@ export default function FactureDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={styles.fixedHeader}>
+        <AppHeader showBack title="Détail facture" subtitle={invoice.codeVente} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail facture" subtitle={invoice.codeVente} />
-
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{invoice.nomSousCompte}</Text>
+              <Text style={[styles.clientName, { color: textColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
               {hasFneUrl ? (
                 <View style={styles.headerActionsRow}>
                   <TouchableOpacity
@@ -153,7 +155,7 @@ export default function FactureDetailScreen() {
           </View>
 
           <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles ({invoice.nbProduits})</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
             <View style={styles.linesBlock}>
               {invoiceLines.map((line) => (
                 <View key={line.id} style={styles.lineRow}>

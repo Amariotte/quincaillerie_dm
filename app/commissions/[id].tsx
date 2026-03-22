@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchCommissionById } from '@/services/api-service';
 import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount } from '@/tools/tools';
+import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { commission, listCommissions } from '@/types/commissions.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -61,10 +61,11 @@ export default function CommissionDetailScreen() {
   if (!commission) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail commission" subtitle="Document introuvable" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail commission" subtitle="Document introuvable" />
-
             <EmptyResultsCard
               iconName="error-outline"
               title="Commission introuvable"
@@ -87,13 +88,14 @@ export default function CommissionDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Détail commission" subtitle={commission.codeCom} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail commission" subtitle={commission.codeCom} />
-
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{commission.nomSousCompte}</Text>
+              <Text style={[styles.clientName, { color: textColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                 <View style={styles.headerActionsRow}>
       
                   <TouchableOpacity

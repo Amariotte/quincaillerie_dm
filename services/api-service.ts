@@ -1,7 +1,8 @@
 import apiConfig from '@/config/api';
-import { bonAchatsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, proformasFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
+import { bonAchatsFakeData, bonLivraisonsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, proformasFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
 import { isFakeModeEnabled } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
+import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
 import { commission, listCommissions } from '@/types/commissions.type';
 import { devis, listDevis } from '@/types/devis.type';
 import { facture, listFactures } from '@/types/factures.type';
@@ -61,7 +62,6 @@ export async function getfetchProduits(token: string): Promise<listProduits> {
     }
   
   const data = await getJsonAuth<listProduits>(`${apiConfig.endpoints.produits}`, token);
-  alert(JSON.stringify(data));
   return data;
 }
 
@@ -194,7 +194,6 @@ export async function getfetchReglements(token: string): Promise<listReglements>
     }
   
   const data = await getJsonAuth<listReglements>(`${apiConfig.endpoints.reglements}`, token);
-  alert(JSON.stringify(data));
   return data;
 }
 
@@ -232,5 +231,27 @@ export async function getfetchCommissions(token: string): Promise<listCommission
     }
   
   const data = await getJsonAuth<listCommissions>(`${apiConfig.endpoints.commissions}`, token);
+  return data;
+}
+
+export async function getfetchBonLivraisons(token: string): Promise<listBonLivraisons> {
+  
+    if (isFakeModeEnabled()) {
+      return bonLivraisonsFakeData;
+    }
+  
+  const data = await getJsonAuth<listBonLivraisons>(`${apiConfig.endpoints.bonLivraisons}`, token);
+  return data;
+}
+
+export async function getfetchBonLivraisonById(token: string, id: string): Promise<bonLivraison | null> {
+  
+    if (isFakeModeEnabled()) {
+      return bonLivraisonsFakeData.data.filter(bonLivraison => bonLivraison.id === id).length > 0
+        ? bonLivraisonsFakeData.data.filter(bonLivraison => bonLivraison.id === id)[0]
+        : null;
+    }
+  
+  const data = await getJsonAuth<bonLivraison>(`${apiConfig.endpoints.bonLivraisons}/${id}`, token);
   return data;
 }

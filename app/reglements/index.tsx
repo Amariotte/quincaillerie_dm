@@ -4,7 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglements } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { buildSousCompteFilters, formatAmount, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
+import { buildSousCompteFilters, formatAmount, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listReglements, statusEncaisse, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -124,10 +124,11 @@ const paymentModeFilters = [
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Liste des règlements" subtitle="Suivi des paiements et soldes restants" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Liste des règlements" subtitle="Suivi des paiements et soldes restants" />
-
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les règlements</Text>
@@ -267,7 +268,7 @@ const paymentModeFilters = [
                     <View style={styles.invoiceTopRow}>
                       <View style={styles.invoiceRefBlock}>
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
-                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte}</Text>
+                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>

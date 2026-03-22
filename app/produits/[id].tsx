@@ -23,9 +23,11 @@ export default function ProduitDetailScreen() {
   if (!product) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail produit" subtitle="Produit introuvable" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail produit" subtitle="Produit introuvable" />
             <View style={[styles.emptyCard, { backgroundColor: cardColor }]}>
               <MaterialIcons name="error-outline" size={30} color="#dc2626" />
               <Text style={[styles.emptyTitle, { color: textColor }]}>Produit introuvable</Text>
@@ -39,10 +41,11 @@ export default function ProduitDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Détail produit" subtitle={product.reference} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail produit" subtitle={product.reference} />
-
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
             <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
             <View style={styles.productTextBlock}>

@@ -1,4 +1,5 @@
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
+import { bonLivraison, listBonLivraisons } from "@/types/bon-livraisons.type";
 import { commission, listCommissions } from "@/types/commissions.type";
 import { devis, listDevis } from "@/types/devis.type";
 import { detailsFacture, listFactures } from "@/types/factures.type";
@@ -398,6 +399,9 @@ export const bonAchats: bonAchat[] = [
 export const proformas: devis[] = [
 ];
 
+export const bonLivraisons: bonLivraison[] = [
+];
+
 export const reglementsFakeData: listReglements = {
   meta: metaFakeData,
   data : reglements
@@ -422,6 +426,11 @@ export const reglementsFakeData: listReglements = {
   export const proformasFakeData: listDevis = {
   meta: metaFakeData,
   data : proformas
+  };
+
+  export const bonLivraisonsFakeData: listBonLivraisons = {
+  meta: metaFakeData,
+  data : bonLivraisons
   };
 
 

@@ -5,15 +5,53 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { fetchSoldeCompte, getfetchRecentMouvements, getStats } from '@/services/api-service';
 import { BALANCE_CACHE_KEY, getCacheData, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
 import { formatAmount } from '@/tools/tools';
-import { listMouvements } from '@/types/mouvements.type';
+import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { stat } from '@/types/other.type';
 import { SoldeResponse } from '@/types/solde.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './styles.js';
+
+type PeriodSection = {
+  key: string;
+  title: string;
+  data: listMouvements['data'];
+};
+
+function parseMouvementDate(value: string): Date | null {
+  const direct = new Date(value);
+  if (!Number.isNaN(direct.getTime())) {
+    return direct;
+  }
+
+  const normalized = value.trim();
+  const slashMatch = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!slashMatch) {
+    return null;
+  }
+
+  const day = Number(slashMatch[1]);
+  const monthIndex = Number(slashMatch[2]) - 1;
+  const year = Number(slashMatch[3]);
+  const parsed = new Date(year, monthIndex, day);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function isSameDay(first: Date, second: Date): boolean {
+  return (
+    first.getFullYear() === second.getFullYear() &&
+    first.getMonth() === second.getMonth() &&
+    first.getDate() === second.getDate()
+  );
+}
 
 
 export default function HomeScreen() {
@@ -207,11 +245,11 @@ export default function HomeScreen() {
   const renderRecentMouvement = ({ item: mouvement }: { item: listMouvements['data'][number] }) => (
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={() => router.push(`/transactions/${mouvement.id}` as never)}
+      onPress={() => handleRecentMouvementPress(mouvement)}
       style={[styles.transactionCard, { backgroundColor: cardColor }]}
     >
-      <View style={[styles.transactionIcon, { backgroundColor: `${tintColor}15` }]}>
-        <MaterialIcons name="sync-alt" size={20} color={tintColor} />
+      <View style={[styles.transactionIcon, { backgroundColor: `${(typeMouvementColorMap[mouvement.libType] || tintColor)}15` }]}> 
+        <MaterialIcons name="sync-alt" size={20} color={typeMouvementColorMap[mouvement.libType] || tintColor} />
       </View>
       <View style={styles.transactionContent}>
         <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
@@ -223,12 +261,94 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  const groupedRecentSections = useMemo<PeriodSection[]>(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const beforeYesterday = new Date(today);
+    beforeYesterday.setDate(today.getDate() - 2);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const buckets: Record<string, listMouvements['data']> = {
+      today: [],
+      yesterday: [],
+      beforeYesterday: [],
+      thisMonth: [],
+      older: [],
+    };
+
+    for (const tx of recentMouvements.data) {
+      const txDate = parseMouvementDate(tx.dateOp);
+
+      if (!txDate) {
+        buckets.older.push(tx);
+        continue;
+      }
+
+      if (isSameDay(txDate, today)) {
+        buckets.today.push(tx);
+        continue;
+      }
+
+      if (isSameDay(txDate, yesterday)) {
+        buckets.yesterday.push(tx);
+        continue;
+      }
+
+      if (isSameDay(txDate, beforeYesterday)) {
+        buckets.beforeYesterday.push(tx);
+        continue;
+      }
+
+      if (txDate >= monthStart && txDate <= now) {
+        buckets.thisMonth.push(tx);
+        continue;
+      }
+
+      buckets.older.push(tx);
+    }
+
+    return [
+      { key: 'today', title: "Aujourd'hui", data: buckets.today },
+      { key: 'yesterday', title: 'Hier', data: buckets.yesterday },
+      { key: 'beforeYesterday', title: 'Avant-hier', data: buckets.beforeYesterday },
+      { key: 'thisMonth', title: 'Ce mois', data: buckets.thisMonth },
+      { key: 'older', title: 'Plus anciens', data: buckets.older },
+    ].filter((section) => section.data.length > 0);
+  }, [recentMouvements.data]);
+
+  const handleRecentMouvementPress = (mouvement: listMouvements['data'][number]) => {
+    if (mouvement.libType === 'Vente') {
+      router.push(`/factures/${mouvement.id}` as never);
+      return;
+    }
+
+    if (mouvement.libType === 'Réglement') {
+      router.push(`/reglements/${mouvement.id}` as never);
+      return;
+    }
+
+    if (mouvement.libType === 'Commission') {
+      router.push(`/commissions/${mouvement.id}` as never);
+      return;
+    }
+
+    if (mouvement.libType === 'Décaissement') {
+      router.push('/operations' as never);
+      return;
+    }
+
+    Alert.alert('Détail indisponible', 'Aucun écran de détail n\'est associé à ce type pour le moment.');
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        <AppHeader title="Tableau de bord" subtitle="Vue globale de vos opérations" isOffline={isOfflineMode} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader title="Tableau de bord" subtitle="Vue globale de vos opérations" isOffline={isOfflineMode} />
-
           <View style={[styles.balanceCard, { backgroundColor: cardColor }]}> 
             <View style={styles.balanceRow}>
               <View>
@@ -268,10 +388,11 @@ export default function HomeScreen() {
             data={menuItems}
             keyExtractor={(item) => item.id}
             renderItem={renderMenuItem}
-            numColumns={4}
-            scrollEnabled={false}
-            columnWrapperStyle={styles.menuRow}
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.menuGrid}
+            style={styles.menuStrip}
+            ItemSeparatorComponent={() => <View style={styles.menuSeparator} />}
           />
 
           <View style={styles.transactionsHeader}>
@@ -291,13 +412,18 @@ export default function HomeScreen() {
                 <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune transaction recente</Text>
               </View>
             ) : (
-              <FlatList
-                data={recentMouvements.data}
-                keyExtractor={(item) => String(item.id)}
-                renderItem={renderRecentMouvement}
-                scrollEnabled={false}
-                ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-              />
+              groupedRecentSections.map((section) => (
+                <View key={section.key} style={styles.transactionSectionBlock}>
+                  <Text style={[styles.transactionSectionHeader, { color: textColor }]}>{section.title}</Text>
+                  <FlatList
+                    data={section.data}
+                    keyExtractor={(item) => `${section.key}-${String(item.id)}`}
+                    renderItem={renderRecentMouvement}
+                    scrollEnabled={false}
+                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                  />
+                </View>
+              ))
             )}
           </View>
         </View>

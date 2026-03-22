@@ -3,8 +3,8 @@ import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchDevisById } from '@/services/api-service';
-import { DEVIS_LIST_CACHE_KEY, FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
-import { formatAmount } from '@/tools/tools';
+import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { devis, listDevis, statusDevisColorMap } from '@/types/devis.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -24,7 +24,7 @@ export default function ProformaDetailScreen() {
   useEffect(() => {
     const loadProformas = async () => {
       try {
-        const cachedProformas = await getCacheData<listDevis>(FACTURES_LIST_CACHE_KEY);
+        const cachedProformas = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
         const proforma = cachedProformas?.data.find((item) => item.id === id);
         setProforma(proforma ?? null);
 
@@ -63,10 +63,11 @@ export default function ProformaDetailScreen() {
   if (!devis) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail de la proforma" subtitle="Document introuvable" />
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.container}>
-            <AppHeader showBack title="Détail de la proforma" subtitle="Document introuvable" />
-
             <EmptyResultsCard
               iconName="error-outline"
               title="Proforma introuvable"
@@ -91,13 +92,14 @@ export default function ProformaDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Détail de la proforma" subtitle={devis.codeDevis} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Détail de la proforma" subtitle={devis.codeDevis} />
-
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{devis.nomSousCompte}</Text>
+              <Text style={[styles.clientName, { color: textColor }]}>{devis.nomSousCompte?.trim() ? devis.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                 <View style={styles.headerActionsRow}>
                 
                   <TouchableOpacity
@@ -129,7 +131,7 @@ export default function ProformaDetailScreen() {
           </View>
 
           <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles ({devis.nbProduits})</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
             <View style={styles.linesBlock}>
               {invoiceLines.map((line) => (
                 <View key={line.id} style={styles.lineRow}>

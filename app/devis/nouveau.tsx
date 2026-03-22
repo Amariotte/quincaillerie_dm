@@ -4,13 +4,13 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -145,10 +145,11 @@ export default function NouveauDevisScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+        <AppHeader showBack title="Nouveau devis" subtitle="Préparez une proposition commerciale claire" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
-          <AppHeader showBack title="Nouveau devis" subtitle="Préparez une proposition commerciale claire" />
-
           <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.heroLabel, { color: mutedColor }]}>Client sélectionné</Text>
             <Text style={[styles.heroTitle, { color: textColor }]}>{selectedClient?.name}</Text>

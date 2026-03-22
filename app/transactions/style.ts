@@ -41,6 +41,19 @@ const styles = StyleSheet.create({
   listBlock: {
     gap: 12,
   },
+  sectionBlock: {
+    gap: 10,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 6,
+  },
+  sectionRows: {
+    gap: 10,
+  },
   txCard: {
     ...sharedComponents.cardRadius20Padding16,
     gap: 10,
