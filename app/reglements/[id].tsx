@@ -12,8 +12,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
-
 
 export default function ReglementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -192,41 +190,41 @@ export default function ReglementDetailScreen() {
            
           </View>
 
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant du règlement</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant du règlement</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant réparti</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(totalAllocatedAmount)}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant réparti</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(totalAllocatedAmount)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Nombre de lignes</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{reglementLines.length}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Nombre de lignes</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{reglementLines.length}</Text>
             </View>
-            <View style={styles.separator} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Statut d'encaissement</Text>
-              <Text style={[styles.totalValue, { color: statusColor }]}>{paymentStatus}</Text>
+            <View style={sharedStyles.separator} />
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Statut d'encaissement</Text>
+              <Text style={[sharedStyles.totalValue, { color: statusColor }]}>{paymentStatus}</Text>
             </View>
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Répartition du règlement</Text>
-            <View style={styles.linesBlock}>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Répartition du règlement</Text>
+            <View style={sharedStyles.linesBlock}>
               {reglementLines.length === 0 ? (
                 <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce règlement.</Text>
               ) : (
                 reglementLines.map((line) => (
-                  <View key={line.id} style={styles.lineRow}>
-                    <View style={styles.lineLeft}>
-                      <Text style={[styles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
+                  <View key={line.id} style={sharedStyles.lineRow}>
+                    <View style={sharedStyles.lineLeft}>
+                      <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
                     </View>
-                    <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
+                    <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
                   </View>
                 ))
               )}

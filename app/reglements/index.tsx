@@ -20,9 +20,6 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style.js';
-
-const styles = stylesRaw as any;
 
 export default function ReglementsScreen() {
   const router = useRouter();
@@ -170,7 +167,7 @@ const paymentModeFilters = [
           />
 
          {(sousCompteFilters.length > 2) && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {sousCompteFilters.map((client) => {
 
               const isActive = client === activeClient;
@@ -181,14 +178,14 @@ const paymentModeFilters = [
                   key={client}
                   onPress={() => setActiveClient(client)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{client}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{client}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -196,7 +193,7 @@ const paymentModeFilters = [
           )}
           
           {(statusFilters.length > 2) && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {statusFilters.map((status) => {
               const isActive = status === activeStatus;
 
@@ -205,14 +202,14 @@ const paymentModeFilters = [
                   key={status}
                   onPress={() => setActiveStatus(status)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -220,7 +217,7 @@ const paymentModeFilters = [
           )}
 
           {(paymentModeFilters.length > 2) && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {paymentModeFilters.map((mode) => {
               const isActive = mode === activePaymentMode;
 
@@ -229,14 +226,14 @@ const paymentModeFilters = [
                   key={mode}
                   onPress={() => setActivePaymentMode(mode)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{mode}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{mode}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -261,24 +258,24 @@ const paymentModeFilters = [
               data={filteredReglements}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: reglement }) => {
                 const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
                 const statusColor = statusEncaisseColorMap[reglement.statusEncaisse ?? 'Non encaissé'] || tintColor;
 
                 return (
-                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
-                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                  <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
+                        <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                        <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+                        <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
@@ -289,20 +286,20 @@ const paymentModeFilters = [
                       </View>
                     </View>
 
-                    <View style={styles.metaModeRow}>
+                    <View style={sharedStyles.metaModeRow}>
                       <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode de paiement</Text>
                       <Text style={[sharedStyles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
                     </View>
 
-                    <View style={styles.invoiceBottomRow}>
-                      <View style={styles.amountBlock}>
-                        <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
+                    <View style={sharedStyles.invoiceBottomRow}>
+                      <View style={sharedStyles.amountBlock}>
+                        <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(reglement.montantReg)}</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => router.push(`/reglements/${reglement.id}` as never)}
-                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

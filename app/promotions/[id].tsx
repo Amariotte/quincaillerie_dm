@@ -4,15 +4,13 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchPromotions } from '@/services/api-service';
 import { getCacheData, PROMOTIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared';
 import { formatDate } from '@/tools/tools';
 import { listPromotions, promotion, statusPromotionColorMap } from '@/types/promotions.type';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style.js';
-
-const styles = stylesRaw as any;
 
 export default function PromotionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,16 +63,16 @@ export default function PromotionDetailScreen() {
 
   if (isLoading && !promotion) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail promotion" subtitle="Chargement en cours" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="large" color={tintColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Chargement de la promotion</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Chargement de la promotion</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
             </View>
           </View>
         </ScrollView>
@@ -84,12 +82,12 @@ export default function PromotionDetailScreen() {
 
   if (!promotion) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail promotion" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Promotion introuvable"
@@ -110,51 +108,51 @@ export default function PromotionDetailScreen() {
   const durationText = startDate !== '—' && endDate !== '—' ? `${startDate} → ${endDate}` : 'Période non définie';
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Détail promotion" subtitle={promotion.id} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           {isLoading ? (
-            <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />
-              <Text style={[styles.loadingText, { color: mutedColor }]}>Mise à jour des données en cours...</Text>
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Mise à jour des données en cours...</Text>
             </View>
           ) : null}
 
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{promotion.nomProduit || 'Produit non renseigné'}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                <Text style={[styles.statusText, { color: statusColor }]}>{promotion.status}</Text>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{promotion.nomProduit || 'Produit non renseigné'}</Text>
+              <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                <Text style={[sharedStyles.statusText, { color: statusColor }]}>{promotion.status}</Text>
               </View>
             </View>
 
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Code: {promotion.id}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Volume max: {promotion.nbMax} unité{promotion.nbMax > 1 ? 's' : ''}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Code: {promotion.id}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Volume max: {promotion.nbMax} unité{promotion.nbMax > 1 ? 's' : ''}</Text>
             </View>
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Description</Text>
-            <Text style={[styles.summaryLabel, { color: mutedColor }]}>{promotion.description || 'Aucune description disponible.'}</Text>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Description</Text>
+            <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>{promotion.description || 'Aucune description disponible.'}</Text>
           </View>
 
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Date de début</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{startDate}</Text>
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Date de début</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{startDate}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Date de fin</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{endDate}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Date de fin</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{endDate}</Text>
             </View>
-            <View style={styles.separator} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Période</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{durationText}</Text>
+            <View style={sharedStyles.separator} />
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Période</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{durationText}</Text>
             </View>
           </View>
         </View>

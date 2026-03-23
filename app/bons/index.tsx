@@ -22,7 +22,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
 
 export default function BonsScreen() {
   const router = useRouter();
@@ -159,18 +158,18 @@ export default function BonsScreen() {
                   <TouchableOpacity
                     activeOpacity={0.85}
                     onPress={() => router.push(`/bons/${bon.id}` as never)}
-                    style={[styles.invoiceCard, { backgroundColor: cardColor }]}
+                    style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
                   > 
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>{bon.codeBL}</Text>
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{bon.codeBL}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${tintColor}18` }]}>
                         <Text style={[sharedStyles.statusText, { color: tintColor }]}>Livraison</Text>
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Créé le</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(bon.dateBL)}</Text>
@@ -181,7 +180,7 @@ export default function BonsScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
@@ -192,15 +191,15 @@ export default function BonsScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceBottomRow}>
-                      <Text style={[styles.invoiceClient, { color: mutedColor, flex: 1 }]} numberOfLines={1}>
+                    <View style={sharedStyles.invoiceBottomRow}>
+                      <Text style={[sharedStyles.invoiceClient, { color: mutedColor, flex: 1 }]} numberOfLines={1}>
                         {bon.lieuLivraison?.trim() ? `Lieu: ${bon.lieuLivraison}` : 'Lieu non renseigné'}
                       </Text>
                       <TouchableOpacity
                         onPress={() => router.push(`/bons/${bon.id}` as never)}
-                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

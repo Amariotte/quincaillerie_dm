@@ -11,7 +11,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
 
 
 export default function BonLivraisonDetailScreen() {
@@ -165,46 +164,46 @@ export default function BonLivraisonDetailScreen() {
            
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
-            <View style={styles.linesBlock}>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Articles</Text>
+            <View style={sharedStyles.linesBlock}>
               {blLines.length === 0 ? (
                 <Text style={[sharedStyles.metaCaption, { color: mutedColor, textAlign: 'center' }]}>Aucune ligne de livraison disponible pour ce document.</Text>
               ) : (
                 blLines.map((line) => (
-                  <View key={line.id} style={styles.lineRow}>
-                    <View style={styles.lineLeft}>
-                      <Text style={[styles.lineLabel, { color: textColor }]}>{line.designation}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Référence: {line.reference || '—'}</Text>
+                  <View key={line.id} style={sharedStyles.lineRow}>
+                    <View style={sharedStyles.lineLeft}>
+                      <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.designation}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Référence: {line.reference || '—'}</Text>
                     </View>
-                    <Text style={[styles.lineTotal, { color: textColor }]}>{line.qteLivree}</Text>
+                    <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{line.qteLivree}</Text>
                   </View>
                 ))
               )}
             </View>
           </View>
 
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Code document</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{bl.codeBL}</Text>
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Code document</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{bl.codeBL}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Articles livrés</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{blLines.length}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Articles livrés</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{blLines.length}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Quantité totale</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{totalDeliveredQuantity}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Quantité totale</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{totalDeliveredQuantity}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Récepteur</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{receiverIdentity}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Récepteur</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{receiverIdentity}</Text>
             </View>
-            <View style={styles.separator} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Livraison enregistrée</Text>
-              <Text style={[styles.totalValue, { color: tintColor }]}>{bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : 'En attente'}</Text>
+            <View style={sharedStyles.separator} />
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Livraison enregistrée</Text>
+              <Text style={[sharedStyles.totalValue, { color: tintColor }]}>{bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : 'En attente'}</Text>
             </View>
           </View>
         </View>

@@ -1,6 +1,6 @@
 import { useAuthContext } from '@/hooks/auth-context';
 import { DEMO_ACCOUNT } from '@/hooks/use-auth';
-import { sharedStyles } from '@/styles/shared.js';
+import { sharedStyles } from '@/styles/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import styles from './style.js';

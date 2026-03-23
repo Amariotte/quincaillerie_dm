@@ -22,9 +22,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style.js';
-
-const styles = stylesRaw as any;
 
 export default function BonsAchatsScreen() {
   const router = useRouter();
@@ -96,10 +93,10 @@ export default function BonsAchatsScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={styles.statsRow}>
+          <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
             </View>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Montant total</Text>
@@ -161,7 +158,7 @@ export default function BonsAchatsScreen() {
               data={filteredBons}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: bon }) => {
                 const isExpired = bon.dateExpBa ? new Date(bon.dateExpBa).getTime() < Date.now() : false;
                 const statusLabel = isExpired ? 'Expiré' : bon.etatBa === 1 ? 'Actif' : 'Inactif';
@@ -171,18 +168,18 @@ export default function BonsAchatsScreen() {
                   <TouchableOpacity
                     activeOpacity={0.85}
                     onPress={() => router.push(`/bonsAchats/${bon.id}` as never)}
-                    style={[styles.invoiceCard, { backgroundColor: cardColor }]}
+                    style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
                   > 
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>{bon.numeroBa}</Text>
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{bon.numeroBa}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Créé le</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.dateBa ? formatDate(bon.dateBa) : '—'}</Text>
@@ -193,7 +190,7 @@ export default function BonsAchatsScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
@@ -204,15 +201,15 @@ export default function BonsAchatsScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceBottomRow}>
-                      <Text style={[styles.invoiceClient, { color: mutedColor, flex: 1 }]} numberOfLines={1}>
+                    <View style={sharedStyles.invoiceBottomRow}>
+                      <Text style={[sharedStyles.invoiceClient, { color: mutedColor, flex: 1 }]} numberOfLines={1}>
                         Montant: {formatAmount(bon.montantBa)}
                       </Text>
                       <TouchableOpacity
                         onPress={() => router.push(`/bonsAchats/${bon.id}` as never)}
-                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

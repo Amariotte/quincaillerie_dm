@@ -12,10 +12,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style';
-
-const styles = stylesRaw as any;
-
 
 export default function BonAchatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -84,10 +80,10 @@ export default function BonAchatDetailScreen() {
         </View>
         <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
           <View style={sharedStyles.container}>
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="large" color={tintColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Chargement du bon d'achat</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Chargement du bon d'achat</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
             </View>
           </View>
         </ScrollView>
@@ -149,90 +145,90 @@ export default function BonAchatDetailScreen() {
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
           {isLoading ? (
-            <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />
-              <Text style={[styles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
             </View>
           ) : null}
 
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{bonAchat.numeroBa?.trim() ? bonAchat.numeroBa : 'Bon sans numero'}</Text>
-                <View style={styles.headerActionsRow}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{bonAchat.numeroBa?.trim() ? bonAchat.numeroBa : 'Bon sans numero'}</Text>
+                <View style={sharedStyles.headerActionsRow}>
       
                   <TouchableOpacity
                     onPress={openTicket}
-                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                   >
                     <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={styles.infoBubbleText}>i</Text>
+                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={sharedStyles.infoBubbleText}>i</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
              
             </View>
             
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {bonAchat.dateBa ? formatDate(bonAchat.dateBa) : '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'expiration : {bonAchat.dateExpBa ? formatDate(bonAchat.dateExpBa) : '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {bonAchat.dateBa ? formatDate(bonAchat.dateBa) : '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date d'expiration : {bonAchat.dateExpBa ? formatDate(bonAchat.dateExpBa) : '—'}</Text>
             </View>
-             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-              <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+             <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
+              <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {bonAchat.nomAgence ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Usage unique : {uniqueUseLabel}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {bonAchat.nomAgence ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Usage unique : {uniqueUseLabel}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Autres clients autorisés : {canBeUsedByOtherClients}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Limité à une agence : {restrictedToAgency}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Autres clients autorisés : {canBeUsedByOtherClients}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Limité à une agence : {restrictedToAgency}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Coût d'acquisition : {formatAmount(bonAchat.CoutBa ?? 0)}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Coût d'acquisition : {formatAmount(bonAchat.CoutBa ?? 0)}</Text>
             </View>
            
           </View>
 
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant du bon d'achat</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(bonAchat.montantBa)}</Text>
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant du bon d'achat</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(bonAchat.montantBa)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant réparti</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(totalAllocatedAmount)}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant réparti</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(totalAllocatedAmount)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Nombre de lignes</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{bonAchatLines.length}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Nombre de lignes</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{bonAchatLines.length}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Montant restant</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(remainingAmount)}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant restant</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(remainingAmount)}</Text>
             </View>
-            <View style={styles.separator} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Statut du bon</Text>
-              <Text style={[styles.totalValue, { color: statusColor }]}>{statusLabel}</Text>
+            <View style={sharedStyles.separator} />
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Statut du bon</Text>
+              <Text style={[sharedStyles.totalValue, { color: statusColor }]}>{statusLabel}</Text>
             </View>
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Répartition du bon d'achat</Text>
-            <View style={styles.linesBlock}>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Répartition du bon d'achat</Text>
+            <View style={sharedStyles.linesBlock}>
               {bonAchatLines.length === 0 ? (
-                <Text style={[styles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce bon d'achat.</Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce bon d'achat.</Text>
               ) : (
                 bonAchatLines.map((line) => (
-                  <View key={line.id} style={styles.lineRow}>
-                    <View style={styles.lineLeft}>
-                      <Text style={[styles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
+                  <View key={line.id} style={sharedStyles.lineRow}>
+                    <View style={sharedStyles.lineLeft}>
+                      <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
                     </View>
-                    <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
+                    <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
                   </View>
                 ))
               )}

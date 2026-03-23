@@ -239,12 +239,12 @@ export default function ProformasScreen() {
                     </View>
 
                     <View style={styles.invoiceBottomRow}>
-                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
+                      <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
                       <TouchableOpacity
                         onPress={() => router.push(`/proformas/${proforma.id}` as never)}
-                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

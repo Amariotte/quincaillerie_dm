@@ -145,7 +145,7 @@ useEffect(() => {
 
           <View style={sharedStyles.listBlock}>
             {isLoading ? (
-              <View style={sharedStyles.loaderBlock}>
+              <View style={styles.loaderBlock}>
                 <ActivityIndicator size="large" color={tintColor} />
               </View>
             ) : filteredProducts.length === 0 ? (
@@ -195,9 +195,11 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-
  
-  
+  loaderBlock: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
   productCard: {
     borderRadius: 20,
     padding: 16,

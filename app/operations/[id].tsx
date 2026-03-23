@@ -9,10 +9,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style.js';
-
-const styles = stylesRaw as any;
-
 
 export default function OperationDetailScreen() {
   const { id, operation: operationParam } = useLocalSearchParams<{ id: string; operation?: string }>();
@@ -36,8 +32,8 @@ export default function OperationDetailScreen() {
 
   if (!operation_item) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-        <View style={styles.fixedHeader}>
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={sharedStyles.fixedHeader}>
           <AppHeader showBack title="Détail opération" subtitle="Document introuvable" />
         </View>
         <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
@@ -77,16 +73,16 @@ export default function OperationDetailScreen() {
             <View style={[sharedStyles.statusBadge, { backgroundColor: `${typeColor}18` }]}>
               <Text style={[sharedStyles.statusText, { color: typeColor }]}>{operationType}</Text>
             </View>
-
-            <View style={styles.metaRow}>
+,
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {formatDate(operation_item.dateOp)}</Text>
             </View>
 
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {operation_item.nomAgence ?? '—'}</Text>
             </View>
 
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode paiement : {operation_item.nomModePaiement ?? '—'}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Référence : {operation_item.refOp ?? '—'}</Text>
             </View>
@@ -94,43 +90,43 @@ export default function OperationDetailScreen() {
 
           {/* Description Card */}
 
-         <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.sectionTitle, { color: textColor }]}>Rubrique</Text>
-              <Text style={[styles.descriptionText, { color: textColor }]}>{operation_item.libRubrique}</Text>
+         <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Rubrique</Text>
+              <Text style={[sharedStyles.descriptionText, { color: textColor }]}>{operation_item.libRubrique}</Text>
             </View>
 
 
           {operation_item.descOp && (
-            <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.sectionTitle, { color: textColor }]}>Description</Text>
-              <Text style={[styles.descriptionText, { color: textColor }]}>{operation_item.descOp}</Text>
+            <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Description</Text>
+              <Text style={[sharedStyles.descriptionText, { color: textColor }]}>{operation_item.descOp}</Text>
             </View>
           )}
 
           {/* Participants Card */}
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Participants</Text>
-            <View style={styles.linesBlock}>
-              <View style={styles.lineRow}>
-                <View style={styles.lineLeft}>
-                  <Text style={[styles.lineLabel, { color: textColor }]}>Solliciteur</Text>
-                  <Text style={[styles.lineMeta, { color: mutedColor }]}>{operation_item.solliciteurOp ?? '—'}</Text>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Participants</Text>
+            <View style={sharedStyles.linesBlock}>
+              <View style={sharedStyles.lineRow}>
+                <View style={sharedStyles.lineLeft}>
+                  <Text style={[sharedStyles.lineLabel, { color: textColor }]}>Solliciteur</Text>
+                  <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>{operation_item.solliciteurOp ?? '—'}</Text>
                 </View>
               </View>
-              <View style={styles.lineRow}>
-                <View style={styles.lineLeft}>
-                  <Text style={[styles.lineLabel, { color: textColor }]}>{operationType == "Encaissement" ? "Déposant" : "Bénéficiaire"}</Text>
-                  <Text style={[styles.lineMeta, { color: mutedColor }]}>{operation_item.depoOrBene ?? '—'}</Text>
+              <View style={sharedStyles.lineRow}>
+                <View style={sharedStyles.lineLeft}>
+                  <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{operationType == "Encaissement" ? "Déposant" : "Bénéficiaire"}</Text>
+                  <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>{operation_item.depoOrBene ?? '—'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Summary Card - Montant */}
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Montant de l'opération</Text>
-              <Text style={[styles.totalValue, { color: typeColor }]}>
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Montant de l'opération</Text>
+              <Text style={[sharedStyles.totalValue, { color: typeColor }]}>
                 {formatAmount(operation_item.montantOp)}
               </Text>
             </View>

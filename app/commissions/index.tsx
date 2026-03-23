@@ -22,7 +22,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
 
 
 export default function CommissionsScreen() {
@@ -190,16 +189,16 @@ export default function CommissionsScreen() {
               scrollEnabled={false}
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: commission }) => (
-                <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                  <View style={styles.invoiceTopRow}>
-                    <View style={styles.invoiceRefBlock}>
-                      <Text style={[styles.invoiceRef, { color: textColor }]}>{commission.codeCom}</Text>
-                      <Text style={[styles.invoiceClient, { color: textColor }]}>Vente: {commission.codeVente ?? '—'}</Text>
-                      <Text style={[styles.invoiceClient, { color: mutedColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+                  <View style={sharedStyles.invoiceTopRow}>
+                    <View style={sharedStyles.invoiceRefBlock}>
+                      <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{commission.codeCom}</Text>
+                      <Text style={[sharedStyles.invoiceClient, { color: textColor }]}>Vente: {commission.codeVente ?? '—'}</Text>
+                      <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                     </View>
                   </View>
 
-                  <View style={styles.invoiceMetaRow}>
+                  <View style={sharedStyles.invoiceMetaRow}>
                    
                     <View>
                       <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date commission</Text>
@@ -216,13 +215,13 @@ export default function CommissionsScreen() {
                     </View>
                   </View>
 
-                  <View style={styles.invoiceBottomRow}>
-                    <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(commission.montCom)}</Text>
+                  <View style={sharedStyles.invoiceBottomRow}>
+                    <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(commission.montCom)}</Text>
                     <TouchableOpacity
                       onPress={() => router.push(`/commissions/${commission.id}` as never)}
-                      style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                      style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                     >
-                      <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                     </TouchableOpacity>
                   </View>
                 </View>

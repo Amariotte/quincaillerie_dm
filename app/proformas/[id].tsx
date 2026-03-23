@@ -12,7 +12,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
 
 
 export default function ProformaDetailScreen() {
@@ -98,104 +97,104 @@ export default function ProformaDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{devis.nomSousCompte?.trim() ? devis.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
-                <View style={styles.headerActionsRow}>
+                <View style={sharedStyles.headerActionsRow}>
                 
                   <TouchableOpacity
                     onPress={openTicket}
-                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                   >
                     <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={styles.infoBubbleText}>i</Text>
+                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={sharedStyles.infoBubbleText}>i</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
             </View>
             
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {formatDate(devis.dateDevis)}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Émise le : {formatDate(devis.dateDevis)}</Text>
             </View>
-             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
+             <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[sharedStyles.statusText, { color: statusColor }]}>{devis.status}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {devis.nomAgence ?? '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {devis.nomAgence ?? '—'}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur saisie : {devis.operateurSaisie ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur validation : {devis.operateurValidation ?? '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur saisie : {devis.operateurSaisie ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur validation : {devis.operateurValidation ?? '—'}</Text>
             </View>
            
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
-            <View style={styles.linesBlock}>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Articles</Text>
+            <View style={sharedStyles.linesBlock}>
               {invoiceLines.map((line) => (
-                <View key={line.id} style={styles.lineRow}>
-                  <View style={styles.lineLeft}>
-                    <Text style={[styles.lineLabel, { color: textColor }]}>{line.designation}</Text>
+                <View key={line.id} style={sharedStyles.lineRow}>
+                  <View style={sharedStyles.lineLeft}>
+                    <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.designation}</Text>
                     {line.nomSuplementaire ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Supplémentaire: {line.nomSuplementaire}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Supplémentaire: {line.nomSuplementaire}</Text>
                     ) : null}
                     {line.descPackage ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Package: {line.descPackage}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Package: {line.descPackage}</Text>
                     ) : null}
-                    <Text style={[styles.lineMeta, { color: mutedColor }]}>{line.qteVendue} × {formatAmount(line.prixVenteTTC)}</Text>
+                    <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>{line.qteVendue} × {formatAmount(line.prixVenteTTC)}</Text>
                     {line.txRemise > 0 ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Tx remise: {line.txRemise}% • Remise prix: {formatAmount(line.remisePrix)}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Tx remise: {line.txRemise}% • Remise prix: {formatAmount(line.remisePrix)}</Text>
                     ) : null}
                     {line.qteGratuite > 0 ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Qté gratuite: {line.qteGratuite} • TVA: {line.txTaxe}% ({formatAmount(line.montantTaxe)})</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Qté gratuite: {line.qteGratuite} • TVA: {line.txTaxe}% ({formatAmount(line.montantTaxe)})</Text>
                     ) : null}
                     {line.montantHT > 0 || line.montantTTC > 0 ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Totaux ligne HT/TTC: {formatAmount(line.montantHT)} / {formatAmount(line.montantTTC)}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Totaux ligne HT/TTC: {formatAmount(line.montantHT)} / {formatAmount(line.montantTTC)}</Text>
                     ) : null}
                   </View>
-                  <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.montantTTC)}</Text>
+                  <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantTTC)}</Text>
                 </View>
               ))}
             </View>
           </View>
 
-          <View style={[styles.summaryCard, { backgroundColor: cardColor }]}> 
+          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
               <>
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total brut HT</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalHT)}</Text>
+                <View style={sharedStyles.summaryRow}>
+                  <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Total brut HT</Text>
+                  <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalHT)}</Text>
                 </View>
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total brut TTC</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalNetPayer)}</Text>
+                <View style={sharedStyles.summaryRow}>
+                  <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Total brut TTC</Text>
+                  <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalNetPayer)}</Text>
                 </View>
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total remise HT</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalRemCialeHT)}</Text>
+                <View style={sharedStyles.summaryRow}>
+                  <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Total remise HT</Text>
+                  <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalRemCialeHT)}</Text>
                 </View>
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total remise TTC</Text>
-                  <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalRemCialeTTC)}</Text>
+                <View style={sharedStyles.summaryRow}>
+                  <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Total remise TTC</Text>
+                  <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalRemCialeTTC)}</Text>
                 </View>
               </>
             
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>Sous-total</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalHT)}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Sous-total</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalHT)}</Text>
             </View>
 
         
 
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA</Text>
-              <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalTaxe)}</Text>
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>TVA</Text>
+              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(devis.totalTaxe)}</Text>
             </View>
-            <View style={styles.separator} />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.totalLabel, { color: textColor }]}>Total à payer</Text>
-              <Text style={[styles.totalValue, { color: tintColor }]}>{formatAmount(devis.totalNetPayer)}</Text>
+            <View style={sharedStyles.separator} />
+            <View style={sharedStyles.summaryRow}>
+              <Text style={[sharedStyles.totalLabel, { color: textColor }]}>Total à payer</Text>
+              <Text style={[sharedStyles.totalValue, { color: tintColor }]}>{formatAmount(devis.totalNetPayer)}</Text>
             </View>
           </View>
         </View>

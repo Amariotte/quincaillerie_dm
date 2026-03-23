@@ -12,7 +12,6 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
 
 
 export default function CommissionDetailScreen() {
@@ -126,21 +125,21 @@ export default function CommissionDetailScreen() {
            
           </View>
 
-          <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Répartition de la commission</Text>
-            <View style={styles.linesBlock}>
+          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Répartition de la commission</Text>
+            <View style={sharedStyles.linesBlock}>
               {commissionLines.map((line) => (
-                <View key={line.id} style={styles.lineRow}>
-                  <View style={styles.lineLeft}>
-                    <Text style={[styles.lineLabel, { color: textColor }]}>{line.codeDoc}</Text>
+                <View key={line.id} style={sharedStyles.lineRow}>
+                  <View style={sharedStyles.lineLeft}>
+                    <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc}</Text>
                     {line.codeDoc ? (
-                      <Text style={[styles.lineMeta, { color: mutedColor }]}>Type: {line.typeDoc}</Text>
+                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type: {line.typeDoc}</Text>
                     ) : null}
                     
                    
                                    
                   </View>
-                  <Text style={[styles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
+                  <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
                 </View>
               ))}
             </View>
