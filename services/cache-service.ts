@@ -14,11 +14,34 @@ export const DEVIS_LIST_CACHE_KEY = 'devis.list.cache.v1';
 export const BONS_LIVRAISONS_LIST_CACHE_KEY = 'bons.list.cache.v1';
 export const BONS_ACHATS_LIST_CACHE_KEY = 'bons-achats.list.cache.v1';
 
+let currentUserCode: string | null = null;
+
+function normalizeUserCode(userCode: string): string {
+  return userCode.trim();
+}
+
+function getScopedCacheKey(key: string): string {
+  if (!currentUserCode) {
+    return key;
+  }
+
+  return `${key}.${currentUserCode}`;
+}
+
+export function setCacheUserCode(userCode: string | null | undefined): void {
+  if (!userCode || !userCode.trim()) {
+    currentUserCode = null;
+    return;
+  }
+
+  currentUserCode = normalizeUserCode(userCode);
+}
+
 
 
 export async function getCacheData<T>(key: string): Promise<T | null> {
   try {
-    const rawValue = await AsyncStorage.getItem(key);
+    const rawValue = await AsyncStorage.getItem(getScopedCacheKey(key));
     if (!rawValue) {
       return null;
     }
@@ -30,9 +53,9 @@ export async function getCacheData<T>(key: string): Promise<T | null> {
 }
 
 export async function setCacheData<T>(key: string, value: T): Promise<void> {
-  await AsyncStorage.setItem(key, JSON.stringify(value));
+  await AsyncStorage.setItem(getScopedCacheKey(key), JSON.stringify(value));
 }
 
 export async function removeCacheData(key: string): Promise<void> {
-  await AsyncStorage.removeItem(key);
+  await AsyncStorage.removeItem(getScopedCacheKey(key));
 }

@@ -1,5 +1,6 @@
 import { userDataFake } from '@/data/datas.fake';
 import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
+import { setCacheUserCode } from '@/services/cache-service';
 import { user } from '@/types/user.type';
 import { useState } from 'react';
 
@@ -42,6 +43,7 @@ export function useAuth(): UseAuthReturn {
   const [error, setError] = useState<string | null>(null);
 
   const applyAuthenticatedState = (token: string, user: AuthState['user']) => {
+    setCacheUserCode(user?.code ?? null);
     setState({
       isLoading: false,
       isSignout: false,
@@ -51,6 +53,7 @@ export function useAuth(): UseAuthReturn {
   };
 
   const clearAuthSession = () => {
+    setCacheUserCode(null);
     setState({
       isLoading: false,
       isSignout: true,
@@ -63,6 +66,7 @@ export function useAuth(): UseAuthReturn {
   const loadUserProfile = async (token: string) => {
     try {
       const profile = await fetchConnectedUser(token);
+      setCacheUserCode(profile?.code ?? null);
       setState((prev) => ({ ...prev, user: profile }));
     } catch {
       // profil non critique, on ne bloque pas l'appli
