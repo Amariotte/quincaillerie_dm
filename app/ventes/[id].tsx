@@ -10,7 +10,7 @@ import { facture, listFactures, statusFactureColorMap } from '@/types/factures.t
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
@@ -61,6 +61,25 @@ export default function FactureDetailScreen() {
 
   const invoice = facture;
 
+  if (isLoading && !invoice) {
+    return (
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={sharedStyles.fixedHeader}>
+          <AppHeader showBack title="Détail facture" subtitle="Chargement en cours" />
+        </View>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
+              <ActivityIndicator size="large" color={tintColor} />
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Chargement de la vente</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   if (!invoice) {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
@@ -110,6 +129,13 @@ export default function FactureDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
+          {isLoading ? (
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
+              <ActivityIndicator size="small" color={tintColor} />
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
+            </View>
+          ) : null}
+
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>

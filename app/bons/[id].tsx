@@ -128,6 +128,13 @@ export default function BonLivraisonDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
+          {isLoading ? (
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
+              <ActivityIndicator size="small" color={tintColor} />
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
+            </View>
+          ) : null}
+
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={sharedStyles.headerTopRow}>
               <View style={sharedStyles.headerActionsRow}>

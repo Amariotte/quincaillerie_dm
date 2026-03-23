@@ -10,7 +10,7 @@ import { commission, listCommissions } from '@/types/commissions.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -58,6 +58,25 @@ export default function CommissionDetailScreen() {
     loadCommissions();
   }, [id, userToken]);
 
+  if (isLoading && !commission) {
+    return (
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
+          <AppHeader showBack title="Détail commission" subtitle="Chargement en cours" />
+        </View>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
+              <ActivityIndicator size="large" color={tintColor} />
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Chargement de la commission</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   if (!commission) {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
@@ -93,6 +112,13 @@ export default function CommissionDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
+          {isLoading ? (
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
+              <ActivityIndicator size="small" color={tintColor} />
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
+            </View>
+          ) : null}
+
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
