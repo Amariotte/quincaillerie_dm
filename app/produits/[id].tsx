@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/app-header';
 import { produitsFakeData } from '@/data/datas.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { sharedStyles } from '@/styles/shared';
 import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -22,16 +23,16 @@ export default function ProduitDetailScreen() {
 
   if (!product) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail produit" subtitle="Produit introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}>
               <MaterialIcons name="error-outline" size={30} color="#dc2626" />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Produit introuvable</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Ce produit n'existe pas ou a été supprimé.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Produit introuvable</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Ce produit n'existe pas ou a été supprimé.</Text>
             </View>
           </View>
         </ScrollView>
@@ -40,12 +41,12 @@ export default function ProduitDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Détail produit" subtitle={product.reference} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
             <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
             <View style={styles.productTextBlock}>
@@ -74,17 +75,6 @@ export default function ProduitDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 16,
-  },
   headerCard: {
     borderRadius: 20,
     padding: 16,
@@ -142,19 +132,5 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 15,
     fontWeight: '700',
-  },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
   },
 });

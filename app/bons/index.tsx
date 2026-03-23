@@ -5,10 +5,12 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonLivraisons } from '@/services/api-service';
 import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
 import { listBonLivraisons } from '@/types/bon-livraisons.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -83,27 +85,27 @@ export default function BonsScreen() {
   const totalCount = filteredBons.length;
   
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Bons de livraison" subtitle="Suivi des livraisons et des réceptions" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
-          <View style={styles.statsRow}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
+          <View style={sharedStyles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
             </View>
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher un bon ou un client"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -150,7 +152,7 @@ export default function BonsScreen() {
               data={filteredBons}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: bon }) => {
 
                 return (
@@ -163,30 +165,30 @@ export default function BonsScreen() {
                       <View style={styles.invoiceRefBlock}>
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{bon.codeBL}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: `${tintColor}18` }]}>
-                        <Text style={[styles.statusText, { color: tintColor }]}>Livraison</Text>
+                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${tintColor}18` }]}>
+                        <Text style={[sharedStyles.statusText, { color: tintColor }]}>Livraison</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Créé le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(bon.dateBL)}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Créé le</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(bon.dateBL)}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Livraison</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateLivraison ? formatDate(bon.dateLivraison) : '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Livraison</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.dateLivraison ? formatDate(bon.dateLivraison) : '—'}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Livreur</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.nomLivreur || '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Livreur</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.nomLivreur || '—'}</Text>
                       </View>
                     </View>
 

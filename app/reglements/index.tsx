@@ -19,7 +19,9 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 export default function ReglementsScreen() {
   const router = useRouter();
@@ -277,17 +279,17 @@ const paymentModeFilters = [
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Date</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Référence</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
                       </View>
                     </View>
 
                     <View style={styles.metaModeRow}>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode de paiement</Text>
+                      <Text style={[styles.metaCaption, { color: mutedColor }]}>Mode de paiement</Text>
                       <Text style={[styles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
                     </View>
 

@@ -8,7 +8,9 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 
 export default function OperationDetailScreen() {

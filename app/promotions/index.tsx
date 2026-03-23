@@ -19,7 +19,9 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 export default function PromotionsScreen() {
   const router = useRouter();
@@ -210,18 +212,18 @@ export default function PromotionsScreen() {
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Début</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Début</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{promotion.dateDebut ? formatDate(promotion.dateDebut) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Fin</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Fin</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{promotion.dateFin ? formatDate(promotion.dateFin) : '—'}</Text>
                       </View>
                     </View>
                     
                       {promotion.nbMax > 0 ? (
                          <View style={styles.metaModeRow}>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Volume maximum</Text>
+                      <Text style={[styles.metaCaption, { color: mutedColor }]}>Volume maximum</Text>
                       <Text style={[styles.metaValue, { color: textColor }]}>{promotion.nbMax} unité{promotion.nbMax > 1 ? 's' : ''}</Text>
                     </View>
                       ) : null}

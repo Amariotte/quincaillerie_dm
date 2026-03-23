@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { updatePasswordApi } from '@/services/user-service';
+import { sharedStyles } from '@/styles/shared.js';
 import React, { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -54,18 +55,18 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Mot de passe" subtitle="Sécurisez votre accès utilisateur" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           
       
 
              {!!errorMessage && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorMessage}>{errorMessage}</Text>
+              <Text style={sharedStyles.errorMessage}>{errorMessage}</Text>
             </View>
           )}          
           

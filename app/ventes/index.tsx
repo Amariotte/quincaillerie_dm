@@ -5,6 +5,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactures } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -102,38 +103,38 @@ export default function FacturesScreen() {
   const overdueAmount = overdueInvoices.reduce((sum, facture) => sum + facture.soldeVente, 0);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des ventes" subtitle="Suivi des ventes et des échéances" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
-          <View style={styles.statsRow}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
+          <View style={sharedStyles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les ventes</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} vente{totalCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les ventes</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} vente{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Ventes non soldées</Text>
-              <Text style={[styles.statCount, { color: tintColor }]}>{unsettledCount} vente{unsettledCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Ventes non soldées</Text>
+              <Text style={[sharedStyles.statCount, { color: tintColor }]}>{unsettledCount} vente{unsettledCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Ventes échues</Text>
-              <Text style={[styles.statCount, { color: '#dc2626' }]}>{overdueCount} vente{overdueCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: '#dc2626' }]}>{formatAmount(overdueAmount)}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Ventes échues</Text>
+              <Text style={[sharedStyles.statCount, { color: '#dc2626' }]}>{overdueCount} vente{overdueCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: '#dc2626' }]}>{formatAmount(overdueAmount)}</Text>
             </View>
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher une vente ou un sous-compte"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -150,7 +151,7 @@ export default function FacturesScreen() {
           />
 
  {sousCompteFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {sousCompteFilters.map((sousCompte) => {
               const isActive = sousCompte === activeClient;
 
@@ -159,14 +160,14 @@ export default function FacturesScreen() {
                   key={sousCompte}
                   onPress={() => setActiveClient(sousCompte)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -174,7 +175,7 @@ export default function FacturesScreen() {
  )}
 
 {statusFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {statusFilters.map((status) => {
               const isActive = status === activeStatus;
 
@@ -183,14 +184,14 @@ export default function FacturesScreen() {
                   key={status}
                   onPress={() => setActiveStatus(status)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -227,7 +228,7 @@ export default function FacturesScreen() {
               data={filteredInvoices}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: invoice }) => {
                 const statusColor = statusFactureColorMap[invoice.status];
 
@@ -238,24 +239,24 @@ export default function FacturesScreen() {
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
                         <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>
                           {formatDate(invoice.dateVente)}
                         </Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Échéance</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Articles</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
                       </View>
                     </View>

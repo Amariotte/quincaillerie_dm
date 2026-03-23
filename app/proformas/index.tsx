@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
 
 import { getfetchDevis } from '@/services/api-service';
+import { sharedStyles } from '@/styles/shared';
 import { devisStatus, listDevis, statusDevisColorMap } from '@/types/devis.type';
 const statusFilters: Array<'Toutes' | devisStatus> = ['Toutes', 'En saisie', 'Validé', 'Transformé'];
 
@@ -94,28 +95,28 @@ export default function ProformasScreen() {
   const totalAmount = filteredInvoices.reduce((sum, proforma) => sum + proforma.totalNetPayer, 0);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des devis" subtitle="Suivi des devis et proformas" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} devis</Text>
-              <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} devis</Text>
+              <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>  
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher un devis ou un sous-compte"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -132,7 +133,7 @@ export default function ProformasScreen() {
           />
 
  {sousCompteFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {sousCompteFilters.map((sousCompte) => {
               const isActive = sousCompte === activeClient;
 
@@ -141,14 +142,14 @@ export default function ProformasScreen() {
                   key={sousCompte}
                   onPress={() => setActiveClient(sousCompte)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -156,7 +157,7 @@ export default function ProformasScreen() {
  )}
 
 {statusFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {statusFilters.map((status) => {
               const isActive = status === activeStatus;
 
@@ -165,14 +166,14 @@ export default function ProformasScreen() {
                   key={status}
                   onPress={() => setActiveStatus(status)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{status}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -209,7 +210,7 @@ export default function ProformasScreen() {
               data={filteredInvoices}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: proforma }) => {
                 const statusColor = statusDevisColorMap[proforma.status];
 
@@ -218,22 +219,22 @@ export default function ProformasScreen() {
                     <View style={styles.invoiceTopRow}>
                       <View style={styles.invoiceRefBlock}>
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
-                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                        <Text style={[sharedStyles.clientName, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                        <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+                        <Text style={[sharedStyles.statusText, { color: statusColor }]}>{proforma.status}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Émise le</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
                       </View>
 
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Articles</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Articles</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
                       </View>
                     </View>
 

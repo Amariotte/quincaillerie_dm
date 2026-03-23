@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonLivraisonById } from '@/services/api-service';
 import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -62,15 +63,15 @@ export default function BonLivraisonDetailScreen() {
 
   if (isLoading && !bl) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-        <View style={styles.fixedHeader}>
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={sharedStyles.fixedHeader}>
           <AppHeader showBack title="Détail bon de livraison" subtitle="Chargement en cours" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <View style={[styles.headerCard, { backgroundColor: cardColor, alignItems: 'center' }]}> 
               <ActivityIndicator size="large" color={tintColor} />
-              <Text style={[styles.metaLabel, { color: mutedColor, textAlign: 'center' }]}>Chargement du bon de livraison...</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor, textAlign: 'center' }]}>Chargement du bon de livraison...</Text>
             </View>
           </View>
         </ScrollView>
@@ -80,12 +81,12 @@ export default function BonLivraisonDetailScreen() {
 
   if (!bl) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-        <View style={styles.fixedHeader}>
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={sharedStyles.fixedHeader}>
           <AppHeader showBack title="Détail bon de livraison" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Bon introuvable"
@@ -122,12 +123,12 @@ export default function BonLivraisonDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-      <View style={styles.fixedHeader}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+      <View style={sharedStyles.fixedHeader}>
         <AppHeader showBack title="Détail bon de livraison" subtitle={bl.codeBL} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
               <View style={styles.headerActionsRow}>
@@ -144,22 +145,22 @@ export default function BonLivraisonDetailScreen() {
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {new Date(bl.dateBL).toLocaleDateString('fr-FR')}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date livraison : {bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {new Date(bl.dateBL).toLocaleDateString('fr-FR')}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date livraison : {bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
             </View>
             
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {bl.nomAgence ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {bl.nomAgence ?? '—'}</Text>
             </View>
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Véhicule : {bl.vehiculeLivreur ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Livreur : {bl.nomLivreur ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Lieu livraison : {bl.lieuLivraison ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Nom récepteur : {receiverIdentity}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>{receiverDocumentType} : {receiverDocument}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Véhicule : {bl.vehiculeLivreur ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Livreur : {bl.nomLivreur ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Lieu livraison : {bl.lieuLivraison ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Nom récepteur : {receiverIdentity}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>{receiverDocumentType} : {receiverDocument}</Text>
             </View>
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>{deliveryDescription}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>{deliveryDescription}</Text>
             </View>
            
           </View>
@@ -168,7 +169,7 @@ export default function BonLivraisonDetailScreen() {
             <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
             <View style={styles.linesBlock}>
               {blLines.length === 0 ? (
-                <Text style={[styles.metaLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune ligne de livraison disponible pour ce document.</Text>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor, textAlign: 'center' }]}>Aucune ligne de livraison disponible pour ce document.</Text>
               ) : (
                 blLines.map((line) => (
                   <View key={line.id} style={styles.lineRow}>

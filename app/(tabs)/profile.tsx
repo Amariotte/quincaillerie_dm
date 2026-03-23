@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { AuthButton } from '@/components/auth-button';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { sharedStyles } from '@/styles/shared';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -57,12 +58,12 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 20, paddingTop: 22 }}>
         <AppHeader title="Profil" subtitle="Informations et préférences du compte" showBack />
       </View>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={sharedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
@@ -260,12 +261,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
+ 
   container: {
     flex: 1,
     padding: 24,

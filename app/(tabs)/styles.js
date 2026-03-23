@@ -1,10 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { sharedLayout } from '../../styles/shared';
 
 const styles = StyleSheet.create({
-  safeArea: {
-    ...sharedLayout.safeArea,
-  },
+ 
   scrollContent: {
     paddingBottom: 28,
   },

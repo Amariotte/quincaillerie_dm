@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchProduits } from '@/services/api-service';
 import { getCacheData, PRODUITS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared';
 import { formatAmount } from '@/tools/tools';
 import { listProduits } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -100,12 +101,12 @@ useEffect(() => {
   }, [loadProduits]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des produits" subtitle="Prix et familles" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
@@ -194,17 +195,6 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 16,
-  },
   searchBox: {
     borderRadius: 18,
     paddingHorizontal: 14,

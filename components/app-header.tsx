@@ -1,14 +1,14 @@
-import COLORS from '@/constants/colors';
 import { useAuthContext } from '@/hooks/auth-context';
+import COLORS from '@/styles/colors';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type AppHeaderProps = {

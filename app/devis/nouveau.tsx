@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/app-header';
 import { quoteClients, quoteProducts } from '@/data/fakeDatas/devis.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { sharedStyles } from '@/styles/shared';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import {
@@ -171,12 +172,12 @@ export default function NouveauDevisScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Nouveau devis" subtitle="Préparez une proposition commerciale claire" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.heroLabel, { color: mutedColor }]}>Client sélectionné</Text>
             <Text style={[styles.heroTitle, { color: textColor }]}>{selectedClient?.name}</Text>
@@ -402,17 +403,7 @@ export default function NouveauDevisScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  container: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
-  },
+
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',

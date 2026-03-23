@@ -1,11 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { sharedComponents, sharedLayout } from '../../styles/shared';
+import { sharedStyles } from '../../styles/shared';
 
 const styles = StyleSheet.create({
-  safeArea: { ...sharedLayout.safeArea },
-  scrollContent: { ...sharedLayout.scrollContentBottom32 },
-  container: { ...sharedLayout.containerHorizontal18Top12Gap16 },
-
+ 
   offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -19,15 +16,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  searchBox: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   searchInput: {
     flex: 1,
     fontSize: 15,
@@ -38,9 +26,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  listBlock: {
-    gap: 12,
-  },
   sectionBlock: {
     gap: 10,
   },
@@ -55,7 +40,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   txCard: {
-    ...sharedComponents.cardRadius20Padding16,
+    ...sharedStyles.cardRadius20Padding16,
     gap: 10,
     shadowColor: '#000000',
     shadowOpacity: 0.05,
@@ -75,10 +60,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   statusBadge: {
-    ...sharedComponents.statusBadge,
+    ...sharedStyles.statusBadge,
   },
   statusText: {
-    ...sharedComponents.statusText,
+    ...sharedStyles.statusText,
   },
   txBottomRow: {
     flexDirection: 'row',
@@ -93,20 +78,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
 
   updatedAt: {
     fontSize: 12,
@@ -127,6 +98,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
-});
+} as any);
 
 export default styles;

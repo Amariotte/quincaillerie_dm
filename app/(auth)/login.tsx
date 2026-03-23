@@ -1,9 +1,10 @@
 import { useAuthContext } from '@/hooks/auth-context';
 import { DEMO_ACCOUNT } from '@/hooks/use-auth';
+import { sharedStyles } from '@/styles/shared.js';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import styles from './style.js';
- 
+
 import {
   Image,
   Keyboard,
@@ -89,7 +90,7 @@ export default function LoginScreen() {
 
           {error && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorMessage}>{error}</Text>
+              <Text style={sharedStyles.errorMessage}>{error}</Text>
             </View>
           )}
 

@@ -1,19 +1,10 @@
-import COLORS from '@/constants/colors';
 import { StyleSheet } from 'react-native';
-import { sharedComponents, sharedLayout } from '../../styles/shared';
+import { sharedStyles } from '../../styles/shared';
 
 const styles = StyleSheet.create({
-  safeArea: {
-    ...sharedLayout.safeArea,
-  },
-  scrollContent: {
-    ...sharedLayout.scrollContentBottom32,
-  },
-  container: {
-    ...sharedLayout.containerHorizontal18Top12Gap18,
-  },
+ 
   card: {
-    ...sharedComponents.cardRadius22Padding18,
+    ...sharedStyles.cardRadius22Padding18,
   },
   label: {
     fontSize: 12,
@@ -39,12 +30,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonText: {
-    ...sharedComponents.buttonTextPrimary,
+    ...sharedStyles.buttonTextPrimary,
   },
 
 
   heroCard: {
-    ...sharedComponents.cardRadius22Padding18,
+    ...sharedStyles.cardRadius22Padding18,
   },
   heroLabel: {
     fontSize: 12,
@@ -99,11 +90,6 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
   },
 
-  errorMessage: {
-    color: COLORS.errorColor,
-    fontSize: 14,
-    fontWeight: '500',
-  },
 
 });
 

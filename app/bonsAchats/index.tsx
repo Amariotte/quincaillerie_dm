@@ -5,11 +5,13 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonAchats } from '@/services/api-service';
 import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
 import { listBonAchats } from '@/types/bon-achats.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
+
 import {
   ActivityIndicator,
   FlatList,
@@ -20,7 +22,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 export default function BonsAchatsScreen() {
   const router = useRouter();
@@ -86,12 +90,12 @@ export default function BonsAchatsScreen() {
   const totalAmount = filteredBons.reduce((sum, bon) => sum + bon.montantBa, 0);
   
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Bons d'achat" subtitle="Suivi des bons d'achat" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
@@ -180,22 +184,22 @@ export default function BonsAchatsScreen() {
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Créé le</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Créé le</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateBa ? formatDate(bon.dateBa) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'expiration</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Date d'expiration</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateExpBa ? formatDate(bon.dateExpBa) : '—'}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Agence</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaLabel, { color: mutedColor }]}>Usage unique</Text>
+                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Usage unique</Text>
                         <Text style={[styles.metaValue, { color: textColor }]}>{bon.uniqueUse ? 'Oui' : 'Non'}</Text>
                       </View>
                     </View>

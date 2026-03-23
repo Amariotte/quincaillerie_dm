@@ -20,7 +20,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 const statusFilters: Array<'Toutes' | typeOperation> = ['Toutes', 'Encaissement', 'Décaissement'];
 

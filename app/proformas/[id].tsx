@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchDevisById } from '@/services/api-service';
 import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { devis, listDevis, statusDevisColorMap } from '@/types/devis.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -62,12 +63,12 @@ export default function ProformaDetailScreen() {
 
   if (!devis) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail de la proforma" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Proforma introuvable"
@@ -91,15 +92,15 @@ export default function ProformaDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Détail de la proforma" subtitle={devis.codeDevis} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{devis.nomSousCompte?.trim() ? devis.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{devis.nomSousCompte?.trim() ? devis.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                 <View style={styles.headerActionsRow}>
                 
                   <TouchableOpacity
@@ -118,7 +119,7 @@ export default function ProformaDetailScreen() {
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {formatDate(devis.dateDevis)}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-              <Text style={[styles.statusText, { color: statusColor }]}>{devis.status}</Text>
+              <Text style={[sharedStyles.statusText, { color: statusColor }]}>{devis.status}</Text>
             </View>
             <View style={styles.metaRow}>
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {devis.nomAgence ?? '—'}</Text>

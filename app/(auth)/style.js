@@ -1,13 +1,13 @@
 
-import COLORS from '@/constants/colors';
 import { StyleSheet } from 'react-native';
-import { sharedLayout } from '../../styles/shared';
+import COLORS from '../../styles/colors';
+import { sharedStyles } from '../../styles/shared';
 
 
 const styles = StyleSheet.create({
 
   safeArea: {
-    ...sharedLayout.safeArea,
+    ...sharedStyles.safeArea,
     backgroundColor: COLORS.primaryColor,
   },
 
@@ -66,11 +66,7 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
   },
 
-  errorMessage: {
-    color: COLORS.errorColor,
-    fontSize: 14,
-    fontWeight: '500',
-  },
+ 
 
   buttonText: {
     color: 'white',

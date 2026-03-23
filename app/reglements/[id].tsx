@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglementById } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { listReglements, reglement, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -75,16 +76,16 @@ export default function ReglementDetailScreen() {
 
   if (isLoading && !reglement) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail règlement" subtitle="Chargement en cours" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="large" color={tintColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Chargement du règlement</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Chargement du règlement</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Les informations détaillées sont en cours de récupération.</Text>
             </View>
           </View>
         </ScrollView>
@@ -94,12 +95,12 @@ export default function ReglementDetailScreen() {
 
   if (!reglement) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail règlement" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Règlement introuvable"
@@ -136,12 +137,12 @@ export default function ReglementDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Détail règlement" subtitle={reglement.codeReg} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           {isLoading ? (
             <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />
@@ -151,7 +152,7 @@ export default function ReglementDetailScreen() {
 
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                 <View style={styles.headerActionsRow}>
       
                   <TouchableOpacity
@@ -172,7 +173,7 @@ export default function ReglementDetailScreen() {
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'encaissement : {reglement.dateEncaissement ? formatDate(reglement.dateEncaissement) : '—'}</Text>
             </View>
              <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-              <Text style={[styles.statusText, { color: statusColor }]}>{reglement.statusEncaisse}</Text>
+              <Text style={[sharedStyles.statusText, { color: statusColor }]}>{reglement.statusEncaisse}</Text>
             </View>
             <View style={styles.metaRow}>
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {reglement.nomAgence ?? '—'}</Text>
@@ -215,7 +216,7 @@ export default function ReglementDetailScreen() {
             <Text style={[styles.sectionTitle, { color: textColor }]}>Répartition du règlement</Text>
             <View style={styles.linesBlock}>
               {reglementLines.length === 0 ? (
-                <Text style={[styles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce règlement.</Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce règlement.</Text>
               ) : (
                 reglementLines.map((line) => (
                   <View key={line.id} style={styles.lineRow}>

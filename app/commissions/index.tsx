@@ -5,6 +5,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchCommissions } from '@/services/api-service';
 import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listCommissions } from '@/types/commissions.type';
 import { factureStatus } from '@/types/factures.type';
@@ -96,28 +97,28 @@ export default function CommissionsScreen() {
   const totalAmount = filteredCommissions.reduce((sum, commission) => sum + commission.montCom, 0);
   
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des commissions" subtitle="Suivi des commissions" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={styles.statsRow}>
             <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Toutes les commissions</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} commission{totalCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les commissions</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} commission{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher une commission ou un client"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -134,7 +135,7 @@ export default function CommissionsScreen() {
           />
 
  {sousCompteFilters.length > 2 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
             {sousCompteFilters.map((sousCompte) => {
               const isActive = sousCompte === activeClient;
 
@@ -143,14 +144,14 @@ export default function CommissionsScreen() {
                   key={sousCompte}
                   onPress={() => setActiveClient(sousCompte)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{sousCompte}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -201,17 +202,17 @@ export default function CommissionsScreen() {
                   <View style={styles.invoiceMetaRow}>
                    
                     <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Date commission</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(commission.dateCom)}</Text>
+                      <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date commission</Text>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(commission.dateCom)}</Text>
                     </View>
                     <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Code la vente</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{commission.codeVente ?? '—'}</Text>
+                      <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Code la vente</Text>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>{commission.codeVente ?? '—'}</Text>
                     </View>
 
                      <View>
-                      <Text style={[styles.metaLabel, { color: mutedColor }]}>Date de la vente</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{formatDate(commission.dateVente)}</Text>
+                      <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date de la vente</Text>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(commission.dateVente)}</Text>
                     </View>
                   </View>
 

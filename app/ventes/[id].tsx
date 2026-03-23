@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchFactureById } from '@/services/api-service';
 import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { facture, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -62,12 +63,12 @@ export default function FactureDetailScreen() {
 
   if (!invoice) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-        <View style={styles.fixedHeader}>
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+        <View style={sharedStyles.fixedHeader}>
           <AppHeader showBack title="Détail facture" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Vente introuvable"
@@ -103,15 +104,15 @@ export default function FactureDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-      <View style={styles.fixedHeader}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+      <View style={sharedStyles.fixedHeader}>
         <AppHeader showBack title="Détail de la vente" subtitle={invoice.codeVente} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
               {hasFneUrl ? (
                 <View style={styles.headerActionsRow}>
                   <TouchableOpacity
@@ -140,16 +141,16 @@ export default function FactureDetailScreen() {
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Émise le : {formatDate(invoice.dateVente)}</Text>
               <Text style={[styles.metaLabel, { color: mutedColor }]}>Échéance : {invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
             </View>
-             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-              <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
+             <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
+              <Text style={[sharedStyles.statusText, { color: statusColor }]}>{invoice.status}</Text>
             </View>
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {invoice.nomAgence ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Caisse : {invoice.nomCaisse ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {invoice.nomAgence ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Caisse : {invoice.nomCaisse ?? '—'}</Text>
             </View>
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur saisie : {invoice.operateurSaisie ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur validation : {invoice.operateurValidation ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur saisie : {invoice.operateurSaisie ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur validation : {invoice.operateurValidation ?? '—'}</Text>
             </View>
            
           </View>

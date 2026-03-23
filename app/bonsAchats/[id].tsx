@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonAchatById } from '@/services/api-service';
 import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,7 +12,9 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
+import stylesRaw from './style';
+
+const styles = stylesRaw as any;
 
 
 export default function BonAchatDetailScreen() {
@@ -75,12 +78,12 @@ export default function BonAchatDetailScreen() {
 
   if (isLoading && !bonAchat) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail bon d'achat" subtitle="Chargement en cours" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="large" color={tintColor} />
               <Text style={[styles.emptyTitle, { color: textColor }]}>Chargement du bon d'achat</Text>
@@ -94,12 +97,12 @@ export default function BonAchatDetailScreen() {
 
   if (!bonAchat) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
           <AppHeader showBack title="Détail bon d'achat" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Bon d'achat introuvable"
@@ -139,12 +142,12 @@ export default function BonAchatDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Détail bon d'achat" subtitle={bonAchat.numeroBa} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           {isLoading ? (
             <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />

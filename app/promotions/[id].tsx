@@ -10,7 +10,9 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
+import stylesRaw from './style.js';
+
+const styles = stylesRaw as any;
 
 export default function PromotionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

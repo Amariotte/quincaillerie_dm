@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/app-header';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { sharedStyles } from '@/styles/shared.js';
 import React, { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,12 +47,12 @@ export default function AccountQrScreen() {
   const qrRows = useMemo(() => createQrRowsFromCode(userCode), [userCode]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Mon code QR" subtitle="Partage rapide du compte connecté" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           <View style={[styles.heroCard, { backgroundColor: cardColor }]}> 
             <Text style={[styles.heroLabel, { color: mutedColor }]}>Titulaire</Text>
             <Text style={[styles.heroName, { color: textColor }]}>{user?.nom ?? 'Utilisateur'}</Text>

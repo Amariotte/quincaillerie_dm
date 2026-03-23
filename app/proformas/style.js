@@ -1,18 +1,13 @@
 
 
 import { StyleSheet } from 'react-native';
-import { sharedComponents, sharedLayout } from '../../styles/shared';
+import { sharedStyles } from '../../styles/shared';
 
 
 const styles = StyleSheet.create({
-  safeArea: { ...sharedLayout.safeArea },
 
-  scrollContent: { ...sharedLayout.scrollContentBottom32 },
-
-  container: { ...sharedLayout.containerHorizontal18Top12Gap16 },
- 
   headerCard: {
-    ...sharedComponents.cardRadius20Padding16,
+    ...sharedStyles.cardRadius20Padding16,
     gap: 10,
     shadowColor: '#000000',
     shadowOpacity: 0.05,
@@ -26,7 +21,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  clientName: { fontSize: 18, fontWeight: '800' },
   headerActionsRow: {
     flexDirection: 'row',
     gap: 8,
@@ -62,11 +56,10 @@ const styles = StyleSheet.create({
   metaRow: { gap: 4 },
   metaLabel: { fontSize: 13 },
   statusBadge: {
-    ...sharedComponents.statusBadge,
+    ...sharedStyles.statusBadge,
   },
-  statusText: { ...sharedComponents.statusText },
   linesCard: {
-    ...sharedComponents.cardRadius20Padding16,
+    ...sharedStyles.cardRadius20Padding16,
     gap: 12,
   },
   sectionTitle: { fontSize: 17, fontWeight: '800' },
@@ -77,7 +70,7 @@ const styles = StyleSheet.create({
   lineMeta: { fontSize: 12, marginTop: 4 },
   lineTotal: { fontSize: 14, fontWeight: '800' },
   summaryCard: {
-    ...sharedComponents.cardRadius20Padding16,
+    ...sharedStyles.cardRadius20Padding16,
     gap: 10,
   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -103,14 +96,7 @@ const styles = StyleSheet.create({
   headerTextBlock: {
     flex: 1,
   },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  pageSubtitle: {
-    fontSize: 13,
-    marginTop: 4,
-  },
+  
   statsRow: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -126,69 +112,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  statLabel: {
-    fontSize: 13,
-  },
-  statCount: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    marginTop: 6,
-  },
-  searchBox: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-  },
-  periodRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  periodInputBox: {
-    flex: 1,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  
   periodInput: {
     flex: 1,
     fontSize: 14,
   },
-  filterRow: {
-    gap: 10,
-    paddingRight: 10,
-  },
-  filterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-  },
-  filterLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  listBlock: {
-    gap: 12,
-  },
+ 
   invoiceCard: {
-    ...sharedComponents.cardRadius20Padding16,
+    ...sharedStyles.cardRadius20Padding16,
     gap: 14,
     shadowColor: '#000000',
     shadowOpacity: 0.05,
@@ -216,14 +147,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
-  },
-  metaLabel: {
-    fontSize: 12,
-  },
-  metaValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 4,
   },
   invoiceBottomRow: {
     flexDirection: 'row',
