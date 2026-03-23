@@ -61,25 +61,14 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: 'center',
   },
 
- headerCard: {
-    ...sharedStyles.cardRadius20Padding16,
-    gap: 10,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
+ 
   headerTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 10,
   },
-  headerActionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+ 
  
   headerActionText: {
     fontSize: 12,
@@ -193,19 +182,7 @@ statsRow: {
     gap: 12,
   },
 
-   offlineBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  offlineText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
+   
 
    filterChip: {
     borderRadius: 999,
