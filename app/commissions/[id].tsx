@@ -7,10 +7,9 @@ import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/servic
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { commission, listCommissions } from '@/types/commissions.type.js';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -101,10 +100,6 @@ export default function CommissionDetailScreen() {
 
   const commissionLines = commission.details ?? [];
 
-  const openTicket = async () => {
-      return;
-    };
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
@@ -122,19 +117,6 @@ export default function CommissionDetailScreen() {
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
-                <View style={sharedStyles.headerActionsRow}>
-      
-                  <TouchableOpacity
-                    onPress={openTicket}
-                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
-                  >
-                    <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={sharedStyles.infoBubbleText}>i</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-             
             </View>
             
             <View style={sharedStyles.metaRow}>

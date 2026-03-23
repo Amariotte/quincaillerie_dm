@@ -114,14 +114,6 @@ export default function FactureDetailScreen() {
     await Linking.openURL(invoice.fneUrl);
   };
 
-  const openTicket = async () => {
-    if (!hasFneUrl || !invoice.fneUrl) {
-      return;
-    }
-
-    await Linking.openURL(invoice.fneUrl);
-  };
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={sharedStyles.fixedHeader}>
@@ -143,15 +135,6 @@ export default function FactureDetailScreen() {
                 <View style={styles.headerActionsRow}>
                   <TouchableOpacity
                     onPress={openNormalizedInvoice}
-                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
-                  >
-                    <MaterialIcons name="visibility" size={16} color={tintColor} />
-                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={styles.infoBubbleText}>i</Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={openTicket}
                     style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                   >
                     <MaterialIcons name="receipt-long" size={16} color={tintColor} />

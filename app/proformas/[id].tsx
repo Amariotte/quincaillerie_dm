@@ -7,10 +7,9 @@ import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cac
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { devis, listDevis, statusDevisColorMap } from '@/types/devis.type';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -104,11 +103,6 @@ export default function ProformaDetailScreen() {
   const statusColor = statusDevisColorMap[devis.status];
   const invoiceLines = devis.details ?? [];
 
- 
-  const openTicket = async () => {
-      return;
-  };
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
@@ -126,18 +120,6 @@ export default function ProformaDetailScreen() {
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{devis.nomSousCompte?.trim() ? devis.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
-                <View style={sharedStyles.headerActionsRow}>
-                
-                  <TouchableOpacity
-                    onPress={openTicket}
-                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
-                  >
-                    <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={sharedStyles.infoBubbleText}>i</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
             </View>
             
             <View style={sharedStyles.metaRow}>

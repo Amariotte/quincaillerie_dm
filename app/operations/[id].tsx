@@ -25,8 +25,6 @@ export default function OperationDetailScreen() {
     }
     return null;
   });
-  const [isLoading, setIsLoading] = useState(!operationParam);
-
 
   const operation_item = operationParam ? JSON.parse(operationParam) as operation : operationData;
 

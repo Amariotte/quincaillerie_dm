@@ -7,10 +7,9 @@ import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/servic
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BonAchatDetailScreen() {
@@ -123,20 +122,6 @@ export default function BonAchatDetailScreen() {
   const restrictedToAgency = bonAchat.uniqueAgence ? 'Oui' : 'Non';
   const uniqueUseLabel = bonAchat.uniqueUse ? 'Oui' : 'Non';
 
-  const openTicket = async () => {
-    Alert.alert(
-      'Informations du bon d\'achat',
-      [
-        `Numéro: ${bonAchat.numeroBa}`,
-        `Date: ${bonAchat.dateBa ? formatDate(bonAchat.dateBa) : '—'}`,
-        `Date d'expiration: ${bonAchat.dateExpBa ? formatDate(bonAchat.dateExpBa) : '—'}`,
-        `Agence: ${bonAchat.nomAgence ?? '—'}`,
-        `Montant: ${formatAmount(bonAchat.montantBa)}`,
-        `Statut: ${statusLabel}`,
-      ].join('\n')
-    );
-  };
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
@@ -154,19 +139,6 @@ export default function BonAchatDetailScreen() {
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
             <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{bonAchat.numeroBa?.trim() ? bonAchat.numeroBa : 'Bon sans numero'}</Text>
-                <View style={sharedStyles.headerActionsRow}>
-      
-                  <TouchableOpacity
-                    onPress={openTicket}
-                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
-                  >
-                    <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={sharedStyles.infoBubbleText}>i</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-             
             </View>
             
             <View style={sharedStyles.metaRow}>

@@ -6,10 +6,9 @@ import { getfetchBonLivraisonById } from '@/services/api-service';
 import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -107,19 +106,7 @@ export default function BonLivraisonDetailScreen() {
   const receiverDocumentType = bl.libTypePiece?.trim() || '—';
   const deliveryDescription = bl.descBL?.trim() || bl.descRecepBL?.trim() || 'Aucune description disponible';
 
-  const openTicket = async () => {
-    Alert.alert(
-      'Informations de livraison',
-      [
-        `Code: ${bl.codeBL}`,
-        `Date: ${new Date(bl.dateBL).toLocaleDateString('fr-FR')}`,
-        `Livraison: ${bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}`,
-        `Livreur: ${bl.nomLivreur?.trim() || '—'}`,
-        `Récepteur: ${receiverIdentity}`,
-        `Lieu: ${bl.lieuLivraison?.trim() || '—'}`,
-      ].join('\n')
-    );
-  };
+
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
@@ -136,20 +123,7 @@ export default function BonLivraisonDetailScreen() {
           ) : null}
 
           <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={sharedStyles.headerTopRow}>
-              <View style={sharedStyles.headerActionsRow}>
-                <TouchableOpacity
-                  onPress={openTicket}
-                  style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
-                >
-                  <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                  <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}> 
-                    <Text style={sharedStyles.infoBubbleText}>i</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-            
+           
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {new Date(bl.dateBL).toLocaleDateString('fr-FR')}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date livraison : {bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
