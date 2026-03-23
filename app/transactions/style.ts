@@ -2,8 +2,18 @@ import { StyleSheet } from 'react-native';
 import { sharedStyles } from '../../styles/shared';
 
 const styles = StyleSheet.create({
- 
- 
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  offlineText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
 
   loaderBlock: {
     paddingVertical: 48,
@@ -57,6 +67,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-} as any);
+});
 
 export default styles;

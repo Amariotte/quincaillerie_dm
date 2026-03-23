@@ -18,7 +18,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
 
 import { getfetchDevis } from '@/services/api-service';
 import { sharedStyles } from '@/styles/shared';
@@ -215,10 +214,10 @@ export default function ProformasScreen() {
                 const statusColor = statusDevisColorMap[proforma.status];
 
                 return (
-                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
+                  <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
                         <Text style={[sharedStyles.clientName, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
@@ -226,7 +225,7 @@ export default function ProformasScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Émise le</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
@@ -238,7 +237,7 @@ export default function ProformasScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceBottomRow}>
+                    <View style={sharedStyles.invoiceBottomRow}>
                       <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
                       <TouchableOpacity
                         onPress={() => router.push(`/proformas/${proforma.id}` as never)}

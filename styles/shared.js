@@ -13,11 +13,7 @@ export const sharedStyles = StyleSheet.create({
     paddingTop: 12,
     gap: 16,
   },
-  containerHorizontal18Top12Gap18x: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    gap: 18,
-  },
+ 
 
    fixedHeader: {
       paddingHorizontal: 18,
@@ -221,6 +217,7 @@ statsRow: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  
   infoBubbleText: {
     color: '#ffffff',
     fontSize: 9,
@@ -297,24 +294,29 @@ statsRow: {
   lineSubLabel: { fontSize: 12, marginTop: 4 },
   lineMeta: { fontSize: 12, marginTop: 4 },
   lineTotal: { fontSize: 14, fontWeight: '800' },
+
   loadingBanner: {
-    ...sharedStyles.cardRadius20Padding16,
+    borderRadius: 20,
+    padding: 16,
     alignItems: 'center',
     gap: 10,
   },
   
   summaryCard: {
-    ...cardRadius20Padding16,
+    borderRadius: 20,
+    padding: 16,
     gap: 10,
   },
 
     linesCard: {
-    ...cardRadius20Padding16,
+    borderRadius: 20,
+    padding: 16,
     gap: 12,
   },
  
   invoiceCard: {
-    ...cardRadius20Padding16,
+    borderRadius: 20,
+    padding: 16,
     gap: 14,
     shadowColor: '#000000',
     shadowOpacity: 0.05,

@@ -20,9 +20,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import stylesRaw from './style';
-
-const styles = stylesRaw as any;
+import styles from './style';
 
 type PeriodSection = {
   key: string;
@@ -73,6 +71,7 @@ export default function TransactionsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [query, setQuery] = useState('');
+  const normalizedQuery = useMemo(() => query.trim().toLowerCase(), [query]);
 
   const loadMouvements = useCallback(async () => {
     if (!userToken) {
@@ -103,12 +102,18 @@ export default function TransactionsScreen() {
     loadMouvements();
   }, [loadMouvements]);
 
-  const filtered = mouvements.data.filter((t) =>
-    t.libType.toLowerCase().includes(query.toLowerCase()) ||
-    t.nomAgence.toLowerCase().includes(query.toLowerCase()) ||
-    t.nomSousCompte.toLowerCase().includes(query.toLowerCase()) ||
-    t.codeOp.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    if (!normalizedQuery) {
+      return mouvements.data;
+    }
+
+    return mouvements.data.filter((t) =>
+      t.libType.toLowerCase().includes(normalizedQuery) ||
+      t.nomAgence.toLowerCase().includes(normalizedQuery) ||
+      t.nomSousCompte.toLowerCase().includes(normalizedQuery) ||
+      t.codeOp.toLowerCase().includes(normalizedQuery)
+    );
+  }, [mouvements.data, normalizedQuery]);
 
   const groupedSections = useMemo<PeriodSection[]>(() => {
     const now = new Date();
@@ -213,7 +218,7 @@ export default function TransactionsScreen() {
               onChangeText={setQuery}
               placeholder="Rechercher une transaction"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -222,13 +227,13 @@ export default function TransactionsScreen() {
               <ActivityIndicator size="large" color={tintColor} />
             </View>
           ) : filtered.length === 0 ? (
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}>
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}>
               <MaterialIcons name="inbox" size={40} color={mutedColor} />
               <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucune transaction</Text>
               <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
             </View>
           ) : (
-            <View style={styles.listBlock}>
+            <View style={sharedStyles.listBlock}>
               {groupedSections.map((section) => (
                 <View key={section.key} style={styles.sectionBlock}>
                   <Text style={[styles.sectionHeader, { color: textColor }]}>{section.title}</Text>
@@ -244,7 +249,7 @@ export default function TransactionsScreen() {
                         >
                           <View style={styles.txTopRow}>
                             <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>{tx.libType} {tx.codeOp}</Text>
-                            <View style={[styles.statusBadge, { backgroundColor: `${sc}18` }]}>
+                            <View style={[sharedStyles.statusBadge, { backgroundColor: `${sc}18` }]}>
                             </View>
                           </View>
                           <View style={styles.txBottomRow}>
