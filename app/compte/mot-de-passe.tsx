@@ -1,5 +1,4 @@
 import { AppHeader } from '@/components/app-header';
-import COLORS from '@/constants/colors';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { updatePasswordApi } from '@/services/user-service';
@@ -61,6 +60,17 @@ export default function ChangePasswordScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
+          
+      
+
+             {!!errorMessage && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorMessage}>{errorMessage}</Text>
+            </View>
+          )}          
+          
+        
+          
           <View style={[styles.card, { backgroundColor: cardColor }]}> 
             <Text style={[styles.label, { color: mutedColor }]}>Mot de passe actuel</Text>
             <TextInput
@@ -101,9 +111,7 @@ export default function ChangePasswordScreen() {
               style={[styles.input, { color: textColor, borderColor }]}
             />
 
-            {!!errorMessage && (
-              <Text style={[styles.errorText, { color: COLORS.errorColor }]}>{errorMessage}</Text>
-            )}
+          
 
             <TouchableOpacity
               onPress={handleSubmit}

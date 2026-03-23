@@ -50,7 +50,7 @@ export async function getfetchPromotions(token: string): Promise<listPromotions>
     if (isFakeModeEnabled()) {
       return promotionsFakeData;
     }
-  
+
   const data = await getJsonAuth<listPromotions>(`${apiConfig.endpoints.promotions}`, token);
   return data;
 }

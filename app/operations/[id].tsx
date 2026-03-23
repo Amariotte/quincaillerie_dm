@@ -91,7 +91,7 @@ export default function OperationDetailScreen() {
 
           {/* Description Card */}
 
-<View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
+         <View style={[styles.linesCard, { backgroundColor: cardColor }]}> 
               <Text style={[styles.sectionTitle, { color: textColor }]}>Rubrique</Text>
               <Text style={[styles.descriptionText, { color: textColor }]}>{operation_item.libRubrique}</Text>
             </View>
@@ -116,7 +116,7 @@ export default function OperationDetailScreen() {
               </View>
               <View style={styles.lineRow}>
                 <View style={styles.lineLeft}>
-                  <Text style={[styles.lineLabel, { color: textColor }]}>Déposant / Bénéficiaire</Text>
+                  <Text style={[styles.lineLabel, { color: textColor }]}>{operationType == "Encaissement" ? "Déposant" : "Bénéficiaire"}</Text>
                   <Text style={[styles.lineMeta, { color: mutedColor }]}>{operation_item.depoOrBene ?? '—'}</Text>
                 </View>
               </View>

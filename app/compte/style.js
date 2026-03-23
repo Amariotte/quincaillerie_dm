@@ -1,3 +1,4 @@
+import COLORS from '@/constants/colors';
 import { StyleSheet } from 'react-native';
 import { sharedComponents, sharedLayout } from '../../styles/shared';
 
@@ -86,6 +87,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
+  },
+
+  errorContainer: {
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+
+  errorMessage: {
+    color: COLORS.errorColor,
+    fontSize: 14,
+    fontWeight: '500',
   },
 
 });

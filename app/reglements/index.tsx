@@ -148,7 +148,7 @@ const paymentModeFilters = [
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Rechercher un règlement ou un client"
+              placeholder="Rechercher un règlement ou un sous-compte"
               placeholderTextColor={mutedColor}
               style={[styles.searchInput, { color: textColor }]}
             />

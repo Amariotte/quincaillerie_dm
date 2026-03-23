@@ -19,22 +19,6 @@ export type promotion = {
 };
 
 
-export type detailsFacture = {
-  id: string;
-  codeProduit: string;
-  nomProduit: string;
-  detailsPackage?: string;
-  qteFacturee: number;
-  prixHT?: number;
-  prixTTC: number;
-  qteGratuite?: number;
-  tauxRemise?: number;
-  prixRemise?: number;
-  remise?: number;
-  tauxTVA?: number;
-  montantTVA?: number;
-};
-
 
 export type listPromotions = {
   meta: meta;

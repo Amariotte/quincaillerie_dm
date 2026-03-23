@@ -246,7 +246,14 @@ export default function OperationsScreen() {
                         <Text style={[styles.statusText, { color: statusColor }]}>{operation.libType}</Text>
                       </View>
                     </View>
-
+                    
+  <View style={styles.invoiceMetaRow}>
+                      <View>
+                          <Text style={[styles.metaLabel, { color: mutedColor }]}>Rubrique</Text>
+                          <Text style={[styles.metaValue, { color: textColor }]}>{operation.libRubrique}</Text>
+                        </View>
+                      
+                    </View>
                     <View style={styles.invoiceMetaRow}>
                       <View>
                         <Text style={[styles.metaLabel, { color: mutedColor }]}>Date</Text>
@@ -258,12 +265,6 @@ export default function OperationsScreen() {
                         <View>
                           <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode paiement</Text>
                           <Text style={[styles.metaValue, { color: textColor }]}>{operation.nomModePaiement}</Text>
-                        </View>
-                      )}
-                      {operation.libRubrique && (
-                        <View>
-                          <Text style={[styles.metaLabel, { color: mutedColor }]}>Rubrique</Text>
-                          <Text style={[styles.metaValue, { color: textColor }]}>{operation.libRubrique}</Text>
                         </View>
                       )}
                     </View>

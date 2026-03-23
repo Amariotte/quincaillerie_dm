@@ -162,6 +162,9 @@ useEffect(() => {
                 keyExtractor={(item) => String(item.id)}
                 scrollEnabled={false}
                 contentContainerStyle={styles.listBlock}
+                initialNumToRender={20}
+                maxToRenderPerBatch={20}
+                windowSize={10}
                 renderItem={({ item: product }) => (
                   <TouchableOpacity
                     activeOpacity={0.85}

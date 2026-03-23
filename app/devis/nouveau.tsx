@@ -2,15 +2,16 @@ import { AppHeader } from '@/components/app-header';
 import { quoteClients, quoteProducts } from '@/data/fakeDatas/devis.fake';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,6 +23,8 @@ type QuoteLine = {
   discountAmount: number;
   vatRate: number;
 };
+
+type QuoteProduct = (typeof quoteProducts)[number];
 
 const formatAmount = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
 
@@ -49,12 +52,28 @@ export default function NouveauDevisScreen() {
   const [quoteTitle, setQuoteTitle] = useState('Fournitures chantier résidence Kintambo');
   const [validityDays, setValidityDays] = useState('15');
   const [notes, setNotes] = useState('Livraison en deux vagues selon disponibilité du stock.');
+  const [productSearch, setProductSearch] = useState('');
   const [lines, setLines] = useState<QuoteLine[]>([
     { productId: 'prod-1', quantity: 12, freeQuantity: 1, discountRate: 5, discountAmount: 0, vatRate: 16 },
     { productId: 'prod-4', quantity: 20, freeQuantity: 0, discountRate: 0, discountAmount: 1500, vatRate: 16 },
   ]);
 
   const selectedClient = quoteClients.find((client) => client.id === selectedClientId) ?? quoteClients[0];
+  const productById = useMemo(() => new Map(quoteProducts.map((product) => [product.id, product])), []);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = productSearch.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return quoteProducts;
+    }
+
+    return quoteProducts.filter((product) =>
+      product.label.toLowerCase().includes(normalizedQuery) ||
+      product.unit.toLowerCase().includes(normalizedQuery) ||
+      product.id.toLowerCase().includes(normalizedQuery)
+    );
+  }, [productSearch]);
 
   const addProduct = (productId: string) => {
     setLines((currentLines) => {
@@ -121,22 +140,30 @@ export default function NouveauDevisScreen() {
     );
   };
 
-  const subtotal = lines.reduce((sum, line) => {
-    const product = quoteProducts.find((item) => item.id === line.productId);
-    if (!product) {
-      return sum;
+  const linePricingByProductId = useMemo(() => {
+    const map = new Map<string, { product: QuoteProduct; pricing: ReturnType<typeof getLinePricing> }>();
+
+    for (const line of lines) {
+      const product = productById.get(line.productId);
+      if (!product) {
+        continue;
+      }
+      map.set(line.productId, { product, pricing: getLinePricing(product.price, line) });
     }
 
-    return sum + getLinePricing(product.price, line).net;
-  }, 0);
-  const tax = lines.reduce((sum, line) => {
-    const product = quoteProducts.find((item) => item.id === line.productId);
-    if (!product) {
-      return sum;
-    }
+    return map;
+  }, [lines, productById]);
 
-    return sum + getLinePricing(product.price, line).vat;
-  }, 0);
+  const subtotal = useMemo(
+    () => Array.from(linePricingByProductId.values()).reduce((sum, item) => sum + item.pricing.net, 0),
+    [linePricingByProductId]
+  );
+
+  const tax = useMemo(
+    () => Array.from(linePricingByProductId.values()).reduce((sum, item) => sum + item.pricing.vat, 0),
+    [linePricingByProductId]
+  );
+
   const total = subtotal + tax;
 
   const handleSubmit = () => {
@@ -216,10 +243,26 @@ export default function NouveauDevisScreen() {
 
           <View style={styles.sectionBlock}>
             <Text style={[styles.sectionTitle, { color: textColor }]}>Catalogue rapide</Text>
-            <View style={styles.productsGrid}>
-              {quoteProducts.map((product) => (
+            <TextInput
+              value={productSearch}
+              onChangeText={setProductSearch}
+              style={[styles.input, styles.catalogSearchInput, { color: textColor, borderColor, backgroundColor: cardColor }]}
+              placeholder="Rechercher un produit (libellé, unité, code)"
+              placeholderTextColor={mutedColor}
+            />
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={(item) => item.id}
+              style={styles.productsList}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+              initialNumToRender={12}
+              maxToRenderPerBatch={24}
+              windowSize={7}
+              removeClippedSubviews
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+              renderItem={({ item: product }) => (
                 <TouchableOpacity
-                  key={product.id}
                   onPress={() => addProduct(product.id)}
                   style={[styles.productCard, { backgroundColor: cardColor }]}
                 >
@@ -231,21 +274,28 @@ export default function NouveauDevisScreen() {
                     <Text style={[styles.addButtonText, { color: tintColor }]}>Ajouter</Text>
                   </View>
                 </TouchableOpacity>
-              ))}
-            </View>
+              )}
+              ListEmptyComponent={
+                <View style={[styles.productCard, { backgroundColor: cardColor }]}> 
+                  <Text style={[styles.productLabel, { color: textColor }]}>Aucun produit trouvé</Text>
+                  <Text style={[styles.productMeta, { color: mutedColor }]}>Essayez avec un autre mot-clé.</Text>
+                </View>
+              }
+            />
           </View>
 
           <View style={styles.sectionBlock}>
             <Text style={[styles.sectionTitle, { color: textColor }]}>Lignes du devis</Text>
             <View style={styles.linesBlock}>
               {lines.map((line) => {
-                const product = quoteProducts.find((item) => item.id === line.productId);
+                const lineData = linePricingByProductId.get(line.productId);
+                const product = lineData?.product;
 
                 if (!product) {
                   return null;
                 }
 
-                const linePricing = getLinePricing(product.price, line);
+                const linePricing = lineData?.pricing ?? getLinePricing(product.price, line);
 
                 return (
                   <View key={line.productId} style={[styles.lineCard, { backgroundColor: cardColor }]}> 
@@ -457,6 +507,12 @@ const styles = StyleSheet.create({
   },
   productsGrid: {
     gap: 12,
+  },
+  catalogSearchInput: {
+    marginBottom: 0,
+  },
+  productsList: {
+    maxHeight: 420,
   },
   productCard: {
     borderRadius: 20,

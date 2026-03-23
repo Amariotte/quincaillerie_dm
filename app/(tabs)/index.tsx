@@ -320,7 +320,7 @@ export default function HomeScreen() {
 
   const handleRecentMouvementPress = (mouvement: listMouvements['data'][number]) => {
     if (mouvement.libType === 'Vente') {
-      router.push(`/factures/${mouvement.id}` as never);
+      router.push(`/ventes/${mouvement.id}` as never);
       return;
     }
 
