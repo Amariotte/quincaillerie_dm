@@ -172,8 +172,8 @@ export default function HomeScreen() {
       return;
     }
 
-    if (itemId === 'achats') {
-      router.push('/achats' as never);
+    if (itemId === 'bonsAchats') {
+      router.push('/bonsAchats' as never);
       return;
     }
 

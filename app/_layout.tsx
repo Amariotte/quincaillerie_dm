@@ -33,8 +33,8 @@ function RootLayoutNav() {
       ) : (
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="factures/index" options={{ headerShown: false }} />
-          <Stack.Screen name="factures/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="ventes/index" options={{ headerShown: false }} />
+          <Stack.Screen name="ventes/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="proformas/index" options={{ headerShown: false }} />
           <Stack.Screen name="proformas/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="bons/index" options={{ headerShown: false }} />
@@ -43,8 +43,8 @@ function RootLayoutNav() {
           <Stack.Screen name="reglements/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="produits/index" options={{ headerShown: false }} />
           <Stack.Screen name="produits/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="achats/index" options={{ headerShown: false }} />
-          <Stack.Screen name="achats/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="bonsAchats/index" options={{ headerShown: false }} />
+          <Stack.Screen name="bonsAchats/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="transactions/index" options={{ headerShown: false }} />
           <Stack.Screen name="transactions/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="promotions/index" options={{ headerShown: false }} />
@@ -58,7 +58,6 @@ function RootLayoutNav() {
           <Stack.Screen name="devis/nouveau" options={{ headerShown: false }} />
           <Stack.Screen name="compte/qr" options={{ headerShown: false }} />
           <Stack.Screen name="compte/mot-de-passe" options={{ headerShown: false }} />
-          <Stack.Screen name="compte/synchronisation" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{

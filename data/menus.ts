@@ -12,7 +12,7 @@ export const menuItems = [
   { id: 'bons', title: 'Bons de livraison', icon: 'local-shipping', tint: '#f59e0b' },
   { id: 'reglements', title: 'Règlements', icon: 'account-balance-wallet', tint: '#7c3aed' },
   { id: 'produits', title: 'Produits', icon: 'shopping-bag', tint: '#10b981' },
-  { id: 'achats', title: "Bon d'achats", icon: 'description', tint: '#fb7185' },
+  { id: 'bonsAchats', title: "Bon d'achats", icon: 'description', tint: '#fb7185' },
   { id: 'transactions', title: 'Transactions', icon: 'payments', tint: '#22c55e' },
   { id: 'promotions', title: 'Promotions', icon: 'redeem', tint: '#f97316' },
   { id: 'operations', title: 'Opérations', icon: 'trending-down', tint: '#eab308' },
