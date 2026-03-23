@@ -85,73 +85,8 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 16, fontWeight: '800' },
   totalValue: { fontSize: 18, fontWeight: '900' },
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  headerTextBlock: {
-    flex: 1,
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  pageSubtitle: {
-    fontSize: 13,
-    marginTop: 4,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  statLabel: {
-    fontSize: 13,
-  },
-  statCount: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    marginTop: 6,
-  },
  
-  
-  filterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-  },
-  filterLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  listBlock: {
-    gap: 12,
-  },
+
   invoiceCard: {
     ...sharedStyles.cardRadius20Padding16,
     gap: 14,

@@ -404,30 +404,7 @@ export default function NouveauDevisScreen() {
 
 const styles = StyleSheet.create({
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  headerTextBlock: {
-    flex: 1,
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  pageSubtitle: {
-    fontSize: 13,
-    marginTop: 4,
-  },
+
   heroCard: {
     borderRadius: 24,
     padding: 18,

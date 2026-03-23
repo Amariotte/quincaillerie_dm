@@ -92,7 +92,7 @@ export default function BonsScreen() {
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
               <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
             </View>

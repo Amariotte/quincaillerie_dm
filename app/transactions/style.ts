@@ -3,23 +3,7 @@ import { sharedStyles } from '../../styles/shared';
 
 const styles = StyleSheet.create({
  
-  offlineBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  offlineText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-  },
+ 
 
   loaderBlock: {
     paddingVertical: 48,
@@ -59,12 +43,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  statusBadge: {
-    ...sharedStyles.statusBadge,
-  },
-  statusText: {
-    ...sharedStyles.statusText,
-  },
+
   txBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -78,26 +57,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-
-  updatedAt: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
-
-  refreshButton: {
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  refreshText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
 } as any);
 
 export default styles;

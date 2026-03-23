@@ -103,8 +103,8 @@ export default function CommissionsScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={styles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+          <View style={sharedStyles.statsRow}>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les commissions</Text>
               <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} commission{totalCount > 1 ? 's' : ''}</Text>
               <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
@@ -188,7 +188,7 @@ export default function CommissionsScreen() {
               data={filteredCommissions}
               keyExtractor={(item) => String(item.id)}
               scrollEnabled={false}
-              contentContainerStyle={styles.listBlock}
+              contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: commission }) => (
                 <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
                   <View style={styles.invoiceTopRow}>

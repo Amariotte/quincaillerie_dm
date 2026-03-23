@@ -4,6 +4,7 @@ import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchReglements } from '@/services/api-service';
 import { getCacheData, REGLEMENTS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared.js';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listReglements, statusEncaisse, statusEncaisseColorMap } from '@/types/reglements.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -125,34 +126,34 @@ const paymentModeFilters = [
   const unsettledAmount = unsettledReglements.reduce((sum, reglement) => sum + reglement.montantReg, 0);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des règlements" subtitle="Suivi des paiements et soldes restants" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
-          <View style={styles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les règlements</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{totalCount} règlement{totalCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
+          <View style={sharedStyles.statsRow}>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les règlements</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} règlement{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
            
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Règlements non encaissés</Text>
-              <Text style={[styles.statCount, { color: '#dc2626' }]}>{unsettledCount} règlement{unsettledCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.statValue, { color: '#dc2626' }]}>{formatAmount(unsettledAmount)}</Text>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Règlements non encaissés</Text>
+              <Text style={[sharedStyles.statCount, { color: '#dc2626' }]}>{unsettledCount} règlement{unsettledCount > 1 ? 's' : ''}</Text>
+              <Text style={[sharedStyles.statValue, { color: '#dc2626' }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher un règlement ou un sous-compte"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -244,16 +245,16 @@ const paymentModeFilters = [
           {isLoading ? (
             <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
           ) : isError ? (
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
               <MaterialIcons name="cloud-off" size={28} color={mutedColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Impossible de récupérer les règlements.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Impossible de récupérer les règlements.</Text>
             </View>
           ) : filteredReglements.length === 0 ? (
-            <View style={[styles.emptyCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
               <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Aucun règlement trouvé</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucun règlement trouvé</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
             </View>
           ) : (
             <FlatList
@@ -263,7 +264,7 @@ const paymentModeFilters = [
               contentContainerStyle={styles.listBlock}
               renderItem={({ item: reglement }) => {
                 const statusLabel = reglement.statusEncaisse ?? 'Non encaissé';
-   const statusColor = statusEncaisseColorMap[reglement.statusEncaisse ?? 'Non encaissé'] || tintColor;
+                const statusColor = statusEncaisseColorMap[reglement.statusEncaisse ?? 'Non encaissé'] || tintColor;
 
                 return (
                   <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
@@ -272,25 +273,25 @@ const paymentModeFilters = [
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{reglement.codeReg}</Text>
                         <Text style={[styles.invoiceClient, { color: mutedColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Date</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Référence</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Référence</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{reglement.refReg || '-'}</Text>
                       </View>
                     </View>
 
                     <View style={styles.metaModeRow}>
-                      <Text style={[styles.metaCaption, { color: mutedColor }]}>Mode de paiement</Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
+                      <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode de paiement</Text>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>{reglement.nomModePaiement || '—'}</Text>
                     </View>
 
                     <View style={styles.invoiceBottomRow}>

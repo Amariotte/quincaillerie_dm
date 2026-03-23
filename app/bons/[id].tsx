@@ -69,7 +69,7 @@ export default function BonLivraisonDetailScreen() {
         </View>
         <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
           <View style={sharedStyles.container}>
-            <View style={[styles.headerCard, { backgroundColor: cardColor, alignItems: 'center' }]}> 
+            <View style={[sharedStyles.headerCard, { backgroundColor: cardColor, alignItems: 'center' }]}> 
               <ActivityIndicator size="large" color={tintColor} />
               <Text style={[sharedStyles.metaCaption, { color: mutedColor, textAlign: 'center' }]}>Chargement du bon de livraison...</Text>
             </View>
@@ -129,37 +129,37 @@ export default function BonLivraisonDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
-              <View style={styles.headerActionsRow}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
+              <View style={sharedStyles.headerActionsRow}>
                 <TouchableOpacity
                   onPress={openTicket}
-                  style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                  style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                 >
                   <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                  <View style={[styles.infoBubble, { backgroundColor: tintColor }]}> 
-                    <Text style={styles.infoBubbleText}>i</Text>
+                  <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}> 
+                    <Text style={sharedStyles.infoBubbleText}>i</Text>
                   </View>
                 </TouchableOpacity>
               </View>
             </View>
             
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {new Date(bl.dateBL).toLocaleDateString('fr-FR')}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date livraison : {bl.dateLivraison ? new Date(bl.dateLivraison).toLocaleDateString('fr-FR') : '—'}</Text>
             </View>
             
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {bl.nomAgence ?? '—'}</Text>
             </View>
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Véhicule : {bl.vehiculeLivreur ?? '—'}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Livreur : {bl.nomLivreur ?? '—'}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Lieu livraison : {bl.lieuLivraison ?? '—'}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Nom récepteur : {receiverIdentity}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>{receiverDocumentType} : {receiverDocument}</Text>
             </View>
-            <View style={styles.metaRow}>
+            <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>{deliveryDescription}</Text>
             </View>
            

@@ -94,33 +94,33 @@ export default function CommissionDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
-                <View style={styles.headerActionsRow}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>{commission.nomSousCompte?.trim() ? commission.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                <View style={sharedStyles.headerActionsRow}>
       
                   <TouchableOpacity
                     onPress={openTicket}
-                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                   >
                     <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={styles.infoBubbleText}>i</Text>
+                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={sharedStyles.infoBubbleText}>i</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
              
             </View>
             
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {new Date(commission.dateCom).toLocaleDateString('fr-FR')}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Code la vente : {commission.codeVente ?? '—'}</Text>
-                       <Text style={[styles.metaLabel, { color: mutedColor }]}>Date de la vente : {commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {new Date(commission.dateCom).toLocaleDateString('fr-FR')}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Code la vente : {commission.codeVente ?? '—'}</Text>
+                       <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date de la vente : {commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
 
             </View>
              
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {commission.nomAgence ?? '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {commission.nomAgence ?? '—'}</Text>
             </View>
           
            

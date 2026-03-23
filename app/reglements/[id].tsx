@@ -144,50 +144,50 @@ export default function ReglementDetailScreen() {
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
           {isLoading ? (
-            <View style={[styles.loadingBanner, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
               <ActivityIndicator size="small" color={tintColor} />
-              <Text style={[styles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
+              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Chargement des informations en cours...</Text>
             </View>
           ) : null}
 
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>{reglement.nomSousCompte?.trim() ? reglement.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
-                <View style={styles.headerActionsRow}>
+                <View style={sharedStyles.headerActionsRow}>
       
                   <TouchableOpacity
                     onPress={openTicket}
-                    style={[styles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
+                    style={[sharedStyles.headerActionButton, { backgroundColor: `${tintColor}18` }]}
                   >
                     <MaterialIcons name="receipt-long" size={16} color={tintColor} />
-                    <View style={[styles.infoBubble, { backgroundColor: tintColor }]}>
-                      <Text style={styles.infoBubbleText}>i</Text>
+                    <View style={[sharedStyles.infoBubble, { backgroundColor: tintColor }]}>
+                      <Text style={sharedStyles.infoBubbleText}>i</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
              
             </View>
             
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date d'encaissement : {reglement.dateEncaissement ? formatDate(reglement.dateEncaissement) : '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {reglement.dateReg ? formatDate(reglement.dateReg) : '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date d'encaissement : {reglement.dateEncaissement ? formatDate(reglement.dateEncaissement) : '—'}</Text>
             </View>
-             <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
+             <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
               <Text style={[sharedStyles.statusText, { color: statusColor }]}>{reglement.statusEncaisse}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {reglement.nomAgence ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Caisse : {reglement.nomCompte ?? '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {reglement.nomAgence ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Caisse : {reglement.nomCompte ?? '—'}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence : {paymentReference}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode de paiement : {paymentMode}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Référence : {paymentReference}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode de paiement : {paymentMode}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Opérateur saisie : {reglement.operateurSaisie ?? '—'}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur saisie : {reglement.operateurSaisie ?? '—'}</Text>
             </View>
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>{paymentDescription}</Text>
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>{paymentDescription}</Text>
             </View>
            
           </View>

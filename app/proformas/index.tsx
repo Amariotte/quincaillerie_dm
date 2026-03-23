@@ -101,8 +101,8 @@ export default function ProformasScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={styles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+          <View style={sharedStyles.statsRow}>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
               <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} devis</Text>
               <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
@@ -221,7 +221,7 @@ export default function ProformasScreen() {
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
                         <Text style={[sharedStyles.clientName, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[sharedStyles.statusText, { color: statusColor }]}>{proforma.status}</Text>
                       </View>
                     </View>

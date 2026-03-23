@@ -38,6 +38,54 @@ export const sharedStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
+  headerCard: {
+    ...sharedStyles.cardRadius20Padding16,
+    gap: 10,
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  
+  headerActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerActionButton: {
+    position: 'relative',
+    borderRadius: 12,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+ headerCard: {
+    ...sharedStyles.cardRadius20Padding16,
+    gap: 10,
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+ 
+  headerActionText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
   statusText: {
     fontSize: 12,
     fontWeight: '800',
@@ -145,6 +193,19 @@ statsRow: {
     gap: 12,
   },
 
+   offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  offlineText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
 
    filterChip: {
     borderRadius: 999,
@@ -171,5 +232,32 @@ statsRow: {
 
     clientName: { fontSize: 18, fontWeight: '800' },
 
- 
+   infoBubble: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBubbleText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '800',
+    lineHeight: 11,
+  },
+  metaRow: { gap: 4 },
+
+    loadingText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
 });

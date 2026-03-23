@@ -6,58 +6,7 @@ import { sharedStyles } from '../../styles/shared';
 
 const styles = StyleSheet.create({
  
-  headerCard: {
-    ...sharedStyles.cardRadius20Padding16,
-    gap: 10,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-  },
-  headerActionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerActionButton: {
-    position: 'relative',
-    borderRadius: 12,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerActionText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  infoBubble: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 14,
-    height: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoBubbleText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: '800',
-    lineHeight: 11,
-  },
-  metaRow: { gap: 4 },
-  metaLabel: { fontSize: 13 },
-  statusBadge: {
-    ...sharedStyles.statusBadge,
-  },
+
   linesCard: {
     ...sharedStyles.cardRadius20Padding16,
     gap: 12,
@@ -79,62 +28,8 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: '#e5e7eb', marginVertical: 4 },
   totalLabel: { fontSize: 16, fontWeight: '800' },
   totalValue: { fontSize: 18, fontWeight: '900' },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
-  loadingBanner: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  loadingText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  headerTextBlock: {
-    flex: 1,
-  },
- 
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  
- 
 
-  listBlock: {
-    gap: 12,
-  },
+
   invoiceCard: {
     ...sharedStyles.cardRadius20Padding16,
     gap: 14,

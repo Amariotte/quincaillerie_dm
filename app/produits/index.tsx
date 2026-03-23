@@ -107,14 +107,14 @@ useEffect(() => {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher un produit ou une famille"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -123,29 +123,29 @@ useEffect(() => {
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item}
-            contentContainerStyle={styles.filterRow}
+            contentContainerStyle={sharedStyles.filterRow}
             renderItem={({ item: famille }) => {
               const isActive = famille === activeFamille;
               return (
                 <TouchableOpacity
                   onPress={() => setActiveFamille(famille)}
                   style={[
-                    styles.filterChip,
+                    sharedStyles.filterChip,
                     {
                       backgroundColor: isActive ? tintColor : cardColor,
                       borderColor: isActive ? tintColor : borderColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.filterText, { color: isActive ? '#ffffff' : textColor }]}>{famille}</Text>
+                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{famille}</Text>
                 </TouchableOpacity>
               );
             }}
           />
 
-          <View style={styles.listBlock}>
+          <View style={sharedStyles.listBlock}>
             {isLoading ? (
-              <View style={styles.loaderBlock}>
+              <View style={sharedStyles.loaderBlock}>
                 <ActivityIndicator size="large" color={tintColor} />
               </View>
             ) : filteredProducts.length === 0 ? (
@@ -162,7 +162,7 @@ useEffect(() => {
                 data={filteredProducts}
                 keyExtractor={(item) => String(item.id)}
                 scrollEnabled={false}
-                contentContainerStyle={styles.listBlock}
+                contentContainerStyle={sharedStyles.listBlock}
                 initialNumToRender={20}
                 maxToRenderPerBatch={20}
                 windowSize={10}
@@ -195,40 +195,9 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-  searchBox: {
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-  },
-  filterRow: {
-    gap: 10,
-    paddingRight: 10,
-  },
-  filterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  listBlock: {
-    gap: 12,
-  },
-  loaderBlock: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
+
+ 
+  
   productCard: {
     borderRadius: 20,
     padding: 16,

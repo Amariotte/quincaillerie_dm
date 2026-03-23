@@ -7,56 +7,6 @@ import { sharedStyles } from '../../styles/shared';
 const styles = StyleSheet.create({
 
   
-  headerCard: {
-    ...sharedStyles.cardRadius20Padding16,
-    gap: 10,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-  },
-
-  headerActionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerActionButton: {
-    position: 'relative',
-    borderRadius: 12,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerActionText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  infoBubble: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 14,
-    height: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoBubbleText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: '800',
-    lineHeight: 11,
-  },
-  metaRow: { gap: 4 },
-  
   linesCard: {
     ...sharedStyles.cardRadius20Padding16,
     gap: 12,
@@ -89,11 +39,7 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 16, fontWeight: '800' },
   totalValue: { fontSize: 18, fontWeight: '900' },
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+  
   backButton: {
     width: 44,
     height: 44,
@@ -102,20 +48,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  headerTextBlock: {
-    flex: 1,
-  },
- 
-  statCard: {
-    flex: 1,
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
+  
+
  
   invoiceCard: {
     ...sharedStyles.cardRadius20Padding16,

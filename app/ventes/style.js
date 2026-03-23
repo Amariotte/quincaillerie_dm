@@ -78,11 +78,6 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 16, fontWeight: '800' },
   totalValue: { fontSize: 18, fontWeight: '900' },
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   backButton: {
     width: 44,
     height: 44,

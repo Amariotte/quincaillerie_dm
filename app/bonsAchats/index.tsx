@@ -97,24 +97,24 @@ export default function BonsAchatsScreen() {
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
           <View style={styles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
               <Text style={[styles.statCount, { color: textColor }]}>{totalCount} bon{totalCount > 1 ? 's' : ''}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
-              <Text style={[styles.statLabel, { color: mutedColor }]}>Montant total</Text>
-              <Text style={[styles.statCount, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Montant total</Text>
+              <Text style={[sharedStyles.statCount, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               placeholder="Rechercher un bon"
               placeholderTextColor={mutedColor}
-              style={[styles.searchInput, { color: textColor }]}
+              style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
 
@@ -177,30 +177,30 @@ export default function BonsAchatsScreen() {
                       <View style={styles.invoiceRefBlock}>
                         <Text style={[styles.invoiceRef, { color: textColor }]}>{bon.numeroBa}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                        <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
+                        <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Créé le</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateBa ? formatDate(bon.dateBa) : '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Créé le</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.dateBa ? formatDate(bon.dateBa) : '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Date d'expiration</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.dateExpBa ? formatDate(bon.dateExpBa) : '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date d'expiration</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.dateExpBa ? formatDate(bon.dateExpBa) : '—'}</Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Agence</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.nomAgence || '—'}</Text>
                       </View>
                       <View>
-                        <Text style={[styles.metaCaption, { color: mutedColor }]}>Usage unique</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{bon.uniqueUse ? 'Oui' : 'Non'}</Text>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Usage unique</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{bon.uniqueUse ? 'Oui' : 'Non'}</Text>
                       </View>
                     </View>
 

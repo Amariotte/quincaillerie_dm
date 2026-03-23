@@ -4,6 +4,7 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getfetchMouvements } from '@/services/api-service';
 import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
+import { sharedStyles } from '@/styles/shared';
 import { formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -192,12 +193,12 @@ export default function TransactionsScreen() {
 
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Transactions" subtitle="50 derniers mouvements financiers" />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           {isOfflineMode && (
             <View style={[styles.offlineBanner, { backgroundColor: offlineBg }]}>
               <MaterialIcons name="cloud-off" size={16} color={offlineText} />
@@ -205,7 +206,7 @@ export default function TransactionsScreen() {
             </View>
           )}
 
-          <View style={[styles.searchBox, { backgroundColor: cardColor, borderColor }]}>
+          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
@@ -223,8 +224,8 @@ export default function TransactionsScreen() {
           ) : filtered.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: cardColor }]}>
               <MaterialIcons name="inbox" size={40} color={mutedColor} />
-              <Text style={[styles.emptyTitle, { color: textColor }]}>Aucune transaction</Text>
-              <Text style={[styles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucune transaction</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
             </View>
           ) : (
             <View style={styles.listBlock}>

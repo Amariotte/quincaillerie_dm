@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { operation, typeMouvementColorMap } from '@/types/operations.type';
 import { useLocalSearchParams } from 'expo-router';
@@ -39,8 +40,8 @@ export default function OperationDetailScreen() {
         <View style={styles.fixedHeader}>
           <AppHeader showBack title="Détail opération" subtitle="Document introuvable" />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.container}>
+        <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
+          <View style={sharedStyles.container}>
             <EmptyResultsCard
               iconName="error-outline"
               title="Opération introuvable"
@@ -59,35 +60,35 @@ export default function OperationDetailScreen() {
   const typeColor = typeMouvementColorMap[operationType];
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}> 
-      <View style={styles.fixedHeader}>
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+      <View style={sharedStyles.fixedHeader}>
         <AppHeader showBack title="Détail de l'opération" subtitle={operation_item.codeOp} />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={sharedStyles.container}>
           {/* Header Card - Informations principales */}
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={styles.headerTopRow}>
-              <Text style={[styles.clientName, { color: textColor }]}>
+          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
+            <View style={sharedStyles.headerTopRow}>
+              <Text style={[sharedStyles.clientName, { color: textColor }]}>
                 {operation_item.nomSousCompte?.trim() ? operation_item.nomSousCompte : MAIN_ACCOUNT_FILTER}
               </Text>
             </View>
             
-            <View style={[styles.statusBadge, { backgroundColor: `${typeColor}18` }]}>
-              <Text style={[styles.statusText, { color: typeColor }]}>{operationType}</Text>
+            <View style={[sharedStyles.statusBadge, { backgroundColor: `${typeColor}18` }]}>
+              <Text style={[sharedStyles.statusText, { color: typeColor }]}>{operationType}</Text>
             </View>
 
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Date : {formatDate(operation_item.dateOp)}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {formatDate(operation_item.dateOp)}</Text>
             </View>
 
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Agence : {operation_item.nomAgence ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {operation_item.nomAgence ?? '—'}</Text>
             </View>
 
             <View style={styles.metaRow}>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Mode paiement : {operation_item.nomModePaiement ?? '—'}</Text>
-              <Text style={[styles.metaLabel, { color: mutedColor }]}>Référence : {operation_item.refOp ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode paiement : {operation_item.nomModePaiement ?? '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Référence : {operation_item.refOp ?? '—'}</Text>
             </View>
           </View>
 
