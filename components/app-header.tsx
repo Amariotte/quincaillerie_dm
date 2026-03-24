@@ -46,7 +46,7 @@ export function AppHeader({ title, subtitle, showBack = false, isOffline = false
           </TouchableOpacity>
         ) : null}
         <View style={styles.textBlock}>
-          <Text style={[styles.appName, { color: headerSubtextColor }]}>Gediscom</Text>
+          <Text style={[styles.appName, { color: headerSubtextColor }]}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
           <Text style={[styles.pageTitle, { color: headerTextColor }]}>{title}</Text>
           <Text style={[styles.pageSubtitle, { color: headerSubtextColor }]} numberOfLines={1}>
             {subtitle ?? defaultSubtitle}

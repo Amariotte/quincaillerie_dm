@@ -213,13 +213,6 @@ export default function TransactionsScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
-          {isOfflineMode && (
-            <View style={[styles.offlineBanner, { backgroundColor: offlineBg }]}>
-              <MaterialIcons name="cloud-off" size={16} color={offlineText} />
-              <Text style={[styles.offlineText, { color: offlineText }]}>Mode déconnecté</Text>
-            </View>
-          )}
-
           <View style={sharedStyles.statsRow}>
             {orderedMouvementTypes.slice(0, 2).map((type) => {
               const totalDisplay = getTypeTotalDisplay(type);
@@ -276,8 +269,6 @@ export default function TransactionsScreen() {
                       tintColor={tintColor}
                     />
 
-
-
           {typeFilters.length > 2 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
               {typeFilters.map((type) => {
@@ -301,7 +292,6 @@ export default function TransactionsScreen() {
               })}
             </ScrollView>
           )}
-
 
 
           {isLoading && mouvements.data.length === 0 ? (

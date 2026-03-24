@@ -1,16 +1,15 @@
 import { AppHeader } from '@/components/app-header';
-import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonAchatById, getfetchBonAchats } from '@/services/api-service';
 import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
-import { formatAmount, formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
+import { formatAmount, formatDate } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   ActivityIndicator,
@@ -38,8 +37,6 @@ export default function BonsAchatsScreen() {
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   const [query, setQuery] = useState('');
-  const [startDateQuery, setStartDateQuery] = useState('');
-  const [endDateQuery, setEndDateQuery] = useState('');
   const [selectedBonId, setSelectedBonId] = useState<string | null>(null);
   const [selectedBonDetail, setSelectedBonDetail] = useState<bonAchat | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -97,22 +94,24 @@ export default function BonsAchatsScreen() {
   }, [userToken]);
 
 
-  const filteredBons = bonAchats.data.filter((bon) => {
+  const filteredBons = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const matchesQuery =
-      normalizedQuery.length === 0
-      || bon.numeroBa.toLowerCase().includes(normalizedQuery)
-      || (bon.nomAgence ?? '').toLowerCase().includes(normalizedQuery);
-    const issueComparable = toComparableDate(bon.dateBa);
-    const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+    return bonAchats.data.filter((bon) => {
+      const matchesQuery =
+        normalizedQuery.length === 0
+        || bon.numeroBa.toLowerCase().includes(normalizedQuery)
+        || (bon.nomAgence ?? '').toLowerCase().includes(normalizedQuery);
 
-    return matchesQuery && matchesDate;
-
-  });
+      return matchesQuery;
+    });
+  }, [bonAchats.data, query]);
 
   const totalCount = filteredBons.length;
   const totalAmount = filteredBons.reduce((sum, bon) => sum + bon.montantBa, 0);
-  const selectedBon = filteredBons.find((bon) => String(bon.id) === selectedBonId) ?? filteredBons[0] ?? null;
+  const selectedBon = useMemo(
+    () => filteredBons.find((bon) => String(bon.id) === selectedBonId) ?? filteredBons[0] ?? null,
+    [filteredBons, selectedBonId],
+  );
 
   useEffect(() => {
     if (filteredBons.length === 0) {
@@ -138,7 +137,7 @@ export default function BonsAchatsScreen() {
         return;
       }
 
-      const previewBon = filteredBons.find((bon) => String(bon.id) === selectedBonId) ?? null;
+      const previewBon = selectedBon;
 
       if (isMounted) {
         setSelectedBonDetail(previewBon);
@@ -174,7 +173,7 @@ export default function BonsAchatsScreen() {
     return () => {
       isMounted = false;
     };
-  }, [filteredBons, selectedBonId, userToken]);
+  }, [selectedBon, selectedBonId, userToken]);
 
   const selectedBonData = selectedBonDetail && String(selectedBonDetail.id) === selectedBonId
     ? selectedBonDetail
@@ -208,18 +207,6 @@ export default function BonsAchatsScreen() {
               style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
-
-          <DateRangePicker
-            startDateValue={startDateQuery}
-            endDateValue={endDateQuery}
-            onChangeStartDate={setStartDateQuery}
-            onChangeEndDate={setEndDateQuery}
-            cardColor={cardColor}
-            borderColor={borderColor}
-            textColor={textColor}
-            mutedColor={mutedColor}
-            tintColor={tintColor}
-          />
 
           {isLoading && (
             <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
@@ -272,7 +259,7 @@ export default function BonsAchatsScreen() {
                       onPress={() => setSelectedBonId(String(bon.id))}
                       style={[styles.ticketCard, styles.horizontalTicketCard, isSelected && styles.horizontalTicketCardActive]}
                     >
-                      <View style={styles.ticketShadow} />
+                      {!isSelected && <View style={styles.ticketShadow} />}
                       <View style={styles.ticketBody}>
                         <View style={styles.ticketLeftPanel}>
                           <View style={styles.ticketHeaderRow}>

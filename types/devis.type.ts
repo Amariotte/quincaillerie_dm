@@ -52,6 +52,7 @@ export type detailsDevis = {
   reference: string;
   descPackage: string;
   designation: string;
+  idProduit: string;
 }
 
 export type listDevis = {
@@ -59,16 +60,11 @@ export type listDevis = {
   data: devis[];
 };
 
-export type QuoteClient = {
-  id: string;
-  name: string;
-  sector: string;
-};
 
-export type QuoteProduct = {
-  id: string;
-  label: string;
-  unit: string;
-  price: number;
+export type devisLigneEdit = {
+  idDevis?: string;
+  idDevisLigne?: string;
+  qteDevis: number;
+  idProduit: string;
 };
 

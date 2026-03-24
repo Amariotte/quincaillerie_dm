@@ -1,12 +1,13 @@
 import { AppHeader } from '@/components/app-header';
 import { AuthButton } from '@/components/auth-button';
+import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { sharedStyles } from '@/styles/shared';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -21,6 +22,17 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, isLoading } = useAuthContext();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const [popupState, setPopupState] = useState<{
+    visible: boolean;
+    type: FeedbackPopupType;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
 
   const avatarUri = useMemo(() => {
     const identity = user?.email ?? user?.nom ?? 'utilisateur';
@@ -58,6 +70,30 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const openPopup = (type: FeedbackPopupType) => {
+    const popupContent: Record<FeedbackPopupType, { title: string; message: string }> = {
+      error: {
+        title: 'Erreur détectée',
+        message: 'Une erreur est survenue lors du traitement. Veuillez réessayer dans quelques instants.',
+      },
+      success: {
+        title: 'Opération réussie',
+        message: 'Votre modification a bien été prise en compte et enregistrée avec succès.',
+      },
+      info: {
+        title: 'Information utile',
+        message: 'Ce popup est un module réutilisable pour afficher des messages informatifs dans l’application.',
+      },
+    };
+
+    setPopupState({
+      visible: true,
+      type,
+      title: popupContent[type].title,
+      message: popupContent[type].message,
+    });
   };
 
   return (
@@ -248,6 +284,34 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
+          <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Tests des popups</Text>
+            <Text style={[styles.popupTestDescription, { color: mutedColor }]}>Déclenchez les différents types de messages pour vérifier le module.</Text>
+
+            <View style={styles.popupActionsRow}>
+              <TouchableOpacity
+                onPress={() => openPopup('error')}
+                style={[styles.popupActionChip, { backgroundColor: '#fee2e2' }]}
+              >
+                <Text style={[styles.popupActionText, { color: '#b91c1c' }]}>Erreur</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => openPopup('success')}
+                style={[styles.popupActionChip, { backgroundColor: '#dcfce7' }]}
+              >
+                <Text style={[styles.popupActionText, { color: '#15803d' }]}>Succès</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => openPopup('info')}
+                style={[styles.popupActionChip, { backgroundColor: '#d1fae5' }]}
+              >
+                <Text style={[styles.popupActionText, { color: tintColor }]}>Info</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Logout Button */}
           <AuthButton
             title={isLoading ? 'Déconnexion...' : 'Se déconnecter'}
@@ -259,6 +323,14 @@ export default function ProfileScreen() {
           />
         </View>
       </ScrollView>
+
+      <FeedbackPopup
+        visible={popupState.visible}
+        type={popupState.type}
+        title={popupState.title}
+        message={popupState.message}
+        onClose={() => setPopupState((prev) => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }
@@ -419,5 +491,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     marginTop: 2,
+  },
+  popupTestDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  popupActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  popupActionChip: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  popupActionText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

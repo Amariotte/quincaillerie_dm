@@ -25,11 +25,11 @@ export default function ProduitsScreen() {
   const [query, setQuery] = useState('');
   const [produits, setProduits] = useState<listProduits>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [activeFamille, setActiveFamille] = useState('Toutes');
-   const [isLoading, setIsLoading] = useState(true);
-   const [isRefreshing, setIsRefreshing] = useState(false);
-   const [isError, setIsError] = useState(false);
-   const [isOfflineMode, setIsOfflineMode] = useState(false);
-    const { userToken } = useAuthContext();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const { userToken } = useAuthContext();
   const MAIN_ACCOUNT_FILTER = 'Non définie';
 
    const filteredProducts = useMemo(() => {
@@ -38,8 +38,7 @@ export default function ProduitsScreen() {
         product.designation.toLowerCase().includes(query.toLowerCase()) ||
         product.reference.toLowerCase().includes(query.toLowerCase());
       
-  
-        const matchesFamille = activeFamille === 'Toutes' ? true : product.nomfamille === activeFamille;
+      const matchesFamille = activeFamille === 'Toutes' ? true : product.nomfamille === activeFamille;
 
       return matchesQuery && matchesFamille;
     });
@@ -57,15 +56,17 @@ export default function ProduitsScreen() {
       
       // Try to load from cache first
       const cachedData = await getCacheData<listProduits>(PRODUITS_LIST_CACHE_KEY);
+
       if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
         setProduits(cachedData);
       }
 
       // Fetch from API to update
       const data = await getfetchProduits(userToken);
+
+      alert(JSON.stringify(data));
       setProduits(data);
       setIsOfflineMode(false);
-      await setCacheData(PRODUITS_LIST_CACHE_KEY, data);
     } catch {
       setProduits({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
       setIsError(true);

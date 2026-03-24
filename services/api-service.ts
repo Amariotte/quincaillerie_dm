@@ -4,7 +4,7 @@ import { isModeDemoEnabled } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
 import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
 import { commission, listCommissions } from '@/types/commissions.type';
-import { devis, listDevis } from '@/types/devis.type';
+import { devis, devisLigneEdit, listDevis } from '@/types/devis.type';
 import { facture, listFactures } from '@/types/factures.type';
 import { listMouvements } from '@/types/mouvements.type';
 import { listOperations } from '@/types/operations.type';
@@ -13,7 +13,7 @@ import { listProduits } from '@/types/produits.type';
 import { listPromotions } from '@/types/promotions.type';
 import { listReglements, reglement } from '@/types/reglements.type';
 import { SoldeResponse } from '@/types/solde.type';
-import { getJsonAuth } from './api-client';
+import { getJsonAuth, postJsonAuth } from './api-client';
 
 const LIMIT_RECENT_TRANSACTIONS = 20;
 
@@ -173,6 +173,21 @@ export async function getfetchDevisById(token: string, id: string): Promise<devi
 
   return  d ;
 }
+
+export async function postDevisLigne(token: string, ligne: devisLigneEdit): Promise<devis | null> {
+  if (isModeDemoEnabled()) {
+    const found = proformasFakeData.data.find(d => d.id === ligne.idDevis);
+    return found ?? null;
+  }
+
+  const d = await postJsonAuth<devis, devisLigneEdit>(
+    `${apiConfig.endpoints.devis}/${ligne.idDevis}`,
+    token,
+    ligne
+  );
+  return d;
+}
+
 
 
 export async function getfetchOperations(token: string): Promise<listOperations> {

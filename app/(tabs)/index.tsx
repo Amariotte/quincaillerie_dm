@@ -360,7 +360,7 @@ export default function HomeScreen() {
         <MaterialIcons name="sync-alt" size={20} color={typeMouvementColorMap[mouvement.libType] || tintColor} />
       </View>
       <View style={styles.transactionContent}>
-        <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} {mouvement.codeOp}</Text>
+        <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} n° {mouvement.codeOp}</Text>
         <Text style={[styles.transactionDate, { color: mutedColor }]}>{formatDate(mouvement.dateOp)}</Text>
       </View>
       <View style={styles.transactionRight}>

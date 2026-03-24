@@ -13,7 +13,7 @@ export default function AuthIndex() {
         <View style={styles.centeredLogoWrapper}>
           <View style={styles.logoContainer}>
             <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
-            <Text style={styles.brandName}>Gedsicom</Text>
+            <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
           </View>
         </View>
 

@@ -1,12 +1,13 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
 import { AuthProvider, useAuthContext } from '@/hooks/auth-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { setUnauthorizedHandler } from '@/services/api-client';
-import { useEffect } from 'react';
+import { setApiErrorPopupHandler, setUnauthorizedHandler } from '@/services/api-client';
+import { useEffect, useState } from 'react';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -15,6 +16,19 @@ export const unstable_settings = {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { userToken, clearAuthSession } = useAuthContext();
+  const segments = useSegments();
+  const isAuthRoute = segments[0] === '(auth)';
+  const [apiPopupState, setApiPopupState] = useState<{
+    visible: boolean;
+    type: FeedbackPopupType;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    type: 'error',
+    title: '',
+    message: '',
+  });
 
   useEffect(() => {
     setUnauthorizedHandler(clearAuthSession);
@@ -23,6 +37,26 @@ function RootLayoutNav() {
       setUnauthorizedHandler(null);
     };
   }, [clearAuthSession]);
+
+  useEffect(() => {
+    if (isAuthRoute) {
+      setApiErrorPopupHandler(null);
+      return;
+    }
+
+    setApiErrorPopupHandler((payload) => {
+      setApiPopupState({
+        visible: true,
+        type: payload.type,
+        title: payload.title,
+        message: payload.message,
+      });
+    });
+
+    return () => {
+      setApiErrorPopupHandler(null);
+    };
+  }, [isAuthRoute]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -68,6 +102,13 @@ function RootLayoutNav() {
         </Stack>
       )}
       <StatusBar style="auto" />
+      <FeedbackPopup
+        visible={apiPopupState.visible}
+        type={apiPopupState.type}
+        title={apiPopupState.title}
+        message={apiPopupState.message}
+        onClose={() => setApiPopupState((prev) => ({ ...prev, visible: false }))}
+      />
     </ThemeProvider>
   );
 }

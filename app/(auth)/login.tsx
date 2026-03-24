@@ -86,7 +86,7 @@ export default function LoginScreen() {
       <View style={styles.loginContainer}>
         <View style={styles.logoContainer}>
           <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.brandName}>Gediscom</Text>
+          <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
         </View>
 
         <View style={styles.formBlock}>
@@ -104,7 +104,7 @@ export default function LoginScreen() {
               validationErrors.login && styles.inputRowError,
             ]}
           >
-            <FontAwesome name="user" size={18} color="white" style={styles.inputIcon} />
+            <FontAwesome name="user" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
             <TextInput
               placeholder="Nom d'utilisateur"
               placeholderTextColor={COLORS.accentColor}
@@ -134,7 +134,7 @@ export default function LoginScreen() {
               validationErrors.password && styles.inputRowError,
             ]}
           >
-            <FontAwesome name="lock" size={18} color="white" style={styles.inputIcon} />
+            <FontAwesome name="lock" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
             <TextInput
               ref={passwordInputRef}
               placeholder="Mot de passe"
@@ -160,7 +160,7 @@ export default function LoginScreen() {
               <FontAwesome
                 name={isPasswordVisible ? 'eye-slash' : 'eye'}
                 size={18}
-                color="white"
+                color={COLORS.primaryColor}
               />
             </TouchableOpacity>
           </View>

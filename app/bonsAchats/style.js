@@ -30,6 +30,8 @@ const styles = StyleSheet.create({
   },
   horizontalTicketCardActive: {
     transform: [{ scale: 1.01 }],
+    borderWidth: 2,
+    borderColor: '#16a34a',
   },
   ticketShadow: {
     position: 'absolute',

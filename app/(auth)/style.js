@@ -1,16 +1,17 @@
 import { StyleSheet } from 'react-native';
 import COLORS from '../../styles/colors';
+import { Colors } from '../../styles/theme';
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primaryColor,
+    backgroundColor: Colors.light.background,
   },
 
   welcomeContainer: {
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 28,
     paddingHorizontal: 24,
   },
 
@@ -31,30 +32,31 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 24,
   },
 
   logo: {
-    width: 180,
-    height: 180,
+    width: 250,
+    height: 250,
   },
 
   brandName: {
-    marginTop: -6,
-    fontSize: 36,
+    marginTop: -40,
+    fontSize: 45,
     fontWeight: '700',
-    color: 'white',
+    color: COLORS.primaryColor,
   },
 
   welcomeButton: {
-    width: '80%',
+    width: '70%',
     borderRadius: 999,
     paddingVertical: 14,
-    backgroundColor: COLORS.brandButtonColor,
+    backgroundColor: COLORS.primaryColor,
     alignItems: 'center',
   },
 
   welcomeButtonText: {
-    color: COLORS.secondaryColor,
+    color: COLORS.whiteColor,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -62,10 +64,19 @@ const styles = StyleSheet.create({
   formBlock: {
     width: '80%',
     marginTop: 8,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    backgroundColor: '#ffffff',
+    shadowColor: '#206A5D',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
 
   loginLabel: {
-    color: 'white',
+    color: COLORS.primaryColor,
     fontSize: 16,
     fontWeight: '600',
     marginTop: 10,
@@ -76,7 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: 'white',
+    borderBottomColor: '#b8cfc2',
     marginBottom: 6,
     paddingBottom: 5,
   },
@@ -91,7 +102,7 @@ const styles = StyleSheet.create({
   },
 
   inputIcon: {
-    color: 'white',
+    color: COLORS.primaryColor,
     fontSize: 18,
     marginRight: 8,
     width: 20,
@@ -100,7 +111,7 @@ const styles = StyleSheet.create({
 
   loginInput: {
     flex: 1,
-    color: 'white',
+    color: COLORS.secondaryColor,
     fontSize: 15,
     paddingVertical: 2,
   },
@@ -127,21 +138,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: 'white',
+    backgroundColor: '#fff7f7',
     borderWidth: 1,
     borderColor: COLORS.errorColor,
   },
 
   loginButton: {
     marginTop: 14,
-    backgroundColor: COLORS.brandButtonColor,
+    backgroundColor: COLORS.primaryColor,
     borderRadius: 999,
     paddingVertical: 10,
     alignItems: 'center',
   },
 
   loginButtonText: {
-    color: COLORS.secondaryColor,
+    color: COLORS.whiteColor,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -154,23 +165,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  registerRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  registerText: {
-    color: 'white',
-    fontSize: 15,
-  },
-
-  registerLink: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: '700',
-  },
 
   guestButton: {
     alignSelf: 'center',
@@ -178,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 18,
     paddingVertical: 9,
-    backgroundColor: COLORS.secondaryColor,
+    backgroundColor: COLORS.primaryColor,
   },
 
   guestButtonText: {
@@ -201,7 +195,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#eef5f0',
+    borderWidth: 1,
+    borderColor: '#d6e5db',
   },
 
   buttonDisabled: {

@@ -1,8 +1,8 @@
 import { getApiUrl } from '@/config/api';
 import { errorApi } from '@/types/errorAPI.type';
-import { Alert } from 'react-native';
 
 let unauthorizedHandler: (() => void | Promise<void>) | null = null;
+let apiErrorPopupHandler: ((payload: { type: 'error' | 'info'; title: string; message: string }) => void) | null = null;
 let isHandlingUnauthorized = false;
 let lastApiPopupKey = '';
 let lastApiPopupAt = 0;
@@ -21,7 +21,14 @@ function showApiErrorPopup(title: string, message: string) {
 
   lastApiPopupKey = popupKey;
   lastApiPopupAt = now;
-  Alert.alert(title, message);
+
+  if (apiErrorPopupHandler) {
+    apiErrorPopupHandler({
+      type: 'error',
+      title,
+      message,
+    });
+  }
 }
 
 function extractApiError(rawBody: string, status: number): errorApi | null {
@@ -72,6 +79,12 @@ function extractApiError(rawBody: string, status: number): errorApi | null {
 
 export function setUnauthorizedHandler(handler: (() => void | Promise<void>) | null) {
   unauthorizedHandler = handler;
+}
+
+export function setApiErrorPopupHandler(
+  handler: ((payload: { type: 'error' | 'info'; title: string; message: string }) => void) | null
+) {
+  apiErrorPopupHandler = handler;
 }
 
 async function requestJson<T>(endpoint: string, init?: RequestInit): Promise<T> {

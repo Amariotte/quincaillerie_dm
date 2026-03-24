@@ -16,7 +16,6 @@ export const menuItems = [
   { id: 'promotions', title: 'Promotions', icon: 'redeem', tint: '#f97316' },
   { id: 'operations', title: 'Opérations', icon: 'trending-down', tint: '#eab308' },
   { id: 'commissions', title: 'Commissions', icon: 'percent', tint: '#ec4899' },
-  { id: 'cartes', title: 'Cartes', icon: 'credit-card', tint: '#3b82f6' },
   { id: 'devis', title: 'Faire un devis', icon: 'request-quote', tint: '#d97706', featured: true },
 ];
 
