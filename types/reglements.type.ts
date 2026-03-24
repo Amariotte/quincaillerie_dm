@@ -37,6 +37,7 @@ export type detailsTransaction = {
   dateEchDoc: Date;
   dateDoc: Date;
   idDoc: string;
+  nomClient?: string;
   codeDoc: string;
   typeDoc: typeDetails;
 };

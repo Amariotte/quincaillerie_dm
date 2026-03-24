@@ -122,7 +122,7 @@ export default function CommissionDetailScreen() {
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {new Date(commission.dateCom).toLocaleDateString('fr-FR')}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Code la vente : {commission.codeVente ?? '—'}</Text>
-                       <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date de la vente : {commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date de la vente : {commission.dateVente ? new Date(commission.dateVente).toLocaleDateString('fr-FR') : '—'}</Text>
 
             </View>
              
@@ -143,6 +143,7 @@ export default function CommissionDetailScreen() {
                     {line.codeDoc ? (
                       <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type: {line.typeDoc}</Text>
                     ) : null}
+                     {line.nomClient && ( <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Propriétaire : {line.nomClient}</Text> )}
                     
                    
                                    

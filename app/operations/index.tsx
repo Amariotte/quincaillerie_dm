@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -32,6 +33,7 @@ export default function OperationsScreen() {
 
   const [operations, setOperations] = useState<listOperations>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
@@ -74,6 +76,26 @@ export default function OperationsScreen() {
     loadOperations();
   }, [loadOperations]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      if (!userToken) {
+        setIsRefreshing(false);
+        return;
+      }
+      const data = await getfetchOperations(userToken);
+      setOperations(data);
+      setIsOfflineMode(false);
+      await setCacheData(OPERATIONS_LIST_CACHE_KEY, data);
+      setIsError(false);
+    } catch {
+      setIsError(true);
+      setIsOfflineMode(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [userToken]);
+
   const sousCompteFilters = buildSousCompteFilters(
     operations.data,
     (operation) => operation.nomSousCompte,
@@ -109,7 +131,7 @@ export default function OperationsScreen() {
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des opérations" subtitle="Suivi des opérations" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 

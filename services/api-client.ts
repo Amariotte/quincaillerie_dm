@@ -4,8 +4,25 @@ import { Alert } from 'react-native';
 
 let unauthorizedHandler: (() => void | Promise<void>) | null = null;
 let isHandlingUnauthorized = false;
+let lastApiPopupKey = '';
+let lastApiPopupAt = 0;
+
+const API_POPUP_COOLDOWN_MS = 1500;
 
 type HttpApiError = Error & { status: number; errorApi?: errorApi };
+
+function showApiErrorPopup(title: string, message: string) {
+  const now = Date.now();
+  const popupKey = `${title}|${message}`;
+
+  if (lastApiPopupKey === popupKey && now - lastApiPopupAt < API_POPUP_COOLDOWN_MS) {
+    return;
+  }
+
+  lastApiPopupKey = popupKey;
+  lastApiPopupAt = now;
+  Alert.alert(title, message);
+}
 
 function extractApiError(rawBody: string, status: number): errorApi | null {
   if (!rawBody?.trim()) {
@@ -58,50 +75,62 @@ export function setUnauthorizedHandler(handler: (() => void | Promise<void>) | n
 }
 
 async function requestJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
-
+  try {
     const response = await fetch(getApiUrl(endpoint), {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+    });
 
 
-  if (!response.ok) {
-    const errorRawBody = await response.text();
-    const parsedApiError = extractApiError(errorRawBody, response.status);
-    const apiMessage = parsedApiError?.detail || `Erreur API (${response.status})`;
+    if (!response.ok) {
+      const errorRawBody = await response.text();
+      const parsedApiError = extractApiError(errorRawBody, response.status);
+      const apiMessage = parsedApiError?.detail || `Erreur API (${response.status})`;
+      const apiTitle = parsedApiError?.title || (response.status >= 500 ? 'Erreur serveur' : 'Erreur API');
 
-    if (response.status === 401) {
-      if (!isHandlingUnauthorized) {
-        isHandlingUnauthorized = true;
-        Alert.alert('Session expirée', apiMessage || 'Votre session a expiré. Veuillez vous reconnecter.');
-        try {
-          await unauthorizedHandler?.();
-        } finally {
-          isHandlingUnauthorized = false;
+      if (response.status === 401) {
+        if (!isHandlingUnauthorized) {
+          isHandlingUnauthorized = true;
+          showApiErrorPopup('Session expirée', apiMessage || 'Votre session a expiré. Veuillez vous reconnecter.');
+          try {
+            await unauthorizedHandler?.();
+          } finally {
+            isHandlingUnauthorized = false;
+          }
         }
+      } else {
+        showApiErrorPopup(apiTitle, apiMessage || `Erreur API (${response.status})`);
       }
-    } else if (response.status >= 500) {
-      Alert.alert('Erreur serveur', apiMessage || 'Une erreur serveur est survenue. Réessayez plus tard.');
+
+      const error = new Error(apiMessage || `Erreur API (${response.status})`) as HttpApiError;
+      error.status = response.status;
+      error.errorApi = parsedApiError ?? undefined;
+      throw error;
     }
 
-    const error = new Error(apiMessage || `Erreur API (${response.status})`) as HttpApiError;
-    error.status = response.status;
-    error.errorApi = parsedApiError ?? undefined;
-    throw error;
+    const rawBody = await response.text();
+
+    if (!rawBody) {
+      return null as T;
+    }
+
+    return JSON.parse(rawBody) as T;
+  } catch (error) {
+    const httpError = error as Partial<HttpApiError>;
+    if (typeof httpError?.status === 'number') {
+      throw error;
+    }
+
+    const networkMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.';
+    showApiErrorPopup('Erreur réseau', networkMessage);
+
+    const networkError = new Error(networkMessage) as HttpApiError;
+    networkError.status = 0;
+    throw networkError;
   }
-
-  const rawBody = await response.text();
-
-  if (!rawBody) {
-    return null as T;
-  }
-
-  return JSON.parse(rawBody) as T;
-  
-  
 }
 
 export async function getJson<T>(endpoint: string): Promise<T> {

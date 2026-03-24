@@ -1,6 +1,6 @@
 import apiConfig from '@/config/api';
 import { bonAchatsFakeData, bonLivraisonsFakeData, commissionsFakeData, facturesFakeData, mouvementsFakeData, operationsFakeData, produitsFakeData, proformasFakeData, promotionsFakeData, reglementsFakeData, soldeFake, statsFake } from '@/data/datas.fake';
-import { isFakeModeEnabled } from '@/tools/tools';
+import { isModeDemoEnabled } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
 import { bonLivraison, listBonLivraisons } from '@/types/bon-livraisons.type';
 import { commission, listCommissions } from '@/types/commissions.type';
@@ -29,7 +29,7 @@ export function getSoldeFromFakeData(): number {
 
 export async function fetchSoldeCompte(token: string): Promise<number> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return getSoldeFromFakeData();
 }
 
@@ -47,7 +47,7 @@ export async function fetchSoldeCompte(token: string): Promise<number> {
 
 export async function getfetchPromotions(token: string): Promise<listPromotions> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return promotionsFakeData;
     }
 
@@ -57,7 +57,7 @@ export async function getfetchPromotions(token: string): Promise<listPromotions>
 
 export async function getfetchProduits(token: string): Promise<listProduits> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return produitsFakeData;
     }
   
@@ -67,7 +67,7 @@ export async function getfetchProduits(token: string): Promise<listProduits> {
 
 export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return bonAchatsFakeData;
     }
   
@@ -77,7 +77,7 @@ export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
 
 export async function getStats(token: string): Promise<stat> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return statsFake;
 }
 
@@ -88,7 +88,7 @@ export async function getStats(token: string): Promise<stat> {
 
 export async function getfetchFactures(token: string): Promise<listFactures> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return facturesFakeData;
   }
 
@@ -98,7 +98,7 @@ export async function getfetchFactures(token: string): Promise<listFactures> {
 
 export async function getfetchDevis(token: string): Promise<listDevis> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return proformasFakeData;
   }
 
@@ -108,7 +108,7 @@ export async function getfetchDevis(token: string): Promise<listDevis> {
 
 export async function getfetchFactureById(token: string, id: string): Promise<facture | null> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return facturesFakeData.data.filter(facture => facture.id === id).length > 0
       ? facturesFakeData.data.filter(facture => facture.id === id)[0]
       : null;
@@ -122,7 +122,7 @@ export async function getfetchFactureById(token: string, id: string): Promise<fa
 
 export async function getfetchReglementById(token: string, id: string): Promise<reglement | null> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return reglementsFakeData.data.filter(reglement => reglement.id === id).length > 0
       ? reglementsFakeData.data.filter(reglement => reglement.id === id)[0]
       : null;
@@ -135,7 +135,7 @@ export async function getfetchReglementById(token: string, id: string): Promise<
 
 export async function getfetchCommissionById(token: string, id: string): Promise<commission | null> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return commissionsFakeData.data.filter(commission => commission.id === id).length > 0
       ? commissionsFakeData.data.filter(commission => commission.id === id)[0]
       : null;
@@ -149,7 +149,7 @@ export async function getfetchCommissionById(token: string, id: string): Promise
 
 export async function getfetchBonAchatById(token: string, id: string): Promise<bonAchat | null> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return bonAchatsFakeData.data.filter(bonAchat => bonAchat.id === id).length > 0
       ? bonAchatsFakeData.data.filter(bonAchat => bonAchat.id === id)[0]
       : null;
@@ -163,7 +163,7 @@ export async function getfetchBonAchatById(token: string, id: string): Promise<b
 
 export async function getfetchDevisById(token: string, id: string): Promise<devis | null> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return proformasFakeData.data.filter(devis => devis.id === id).length > 0
       ? proformasFakeData.data.filter(devis => devis.id === id)[0]
       : null;
@@ -177,7 +177,7 @@ export async function getfetchDevisById(token: string, id: string): Promise<devi
 
 export async function getfetchOperations(token: string): Promise<listOperations> {
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return operationsFakeData;
   }
 
@@ -187,7 +187,7 @@ export async function getfetchOperations(token: string): Promise<listOperations>
 
 export async function getfetchReglements(token: string): Promise<listReglements> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return reglementsFakeData;
     }
   
@@ -196,7 +196,7 @@ export async function getfetchReglements(token: string): Promise<listReglements>
 }
 
 export async function getfetchRecentMouvements(token: string): Promise<listMouvements> {
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return getRecentMouvementsFromFakeData();
     }
 
@@ -214,7 +214,7 @@ export function getRecentMouvementsFromFakeData(): listMouvements {
 
 export async function getfetchMouvements(token: string): Promise<listMouvements> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return getRecentMouvementsFromFakeData();
     }
   
@@ -224,7 +224,7 @@ export async function getfetchMouvements(token: string): Promise<listMouvements>
 
 export async function getfetchCommissions(token: string): Promise<listCommissions> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return commissionsFakeData;
     }
   
@@ -234,7 +234,7 @@ export async function getfetchCommissions(token: string): Promise<listCommission
 
 export async function getfetchBonLivraisons(token: string): Promise<listBonLivraisons> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return bonLivraisonsFakeData;
     }
   
@@ -244,7 +244,7 @@ export async function getfetchBonLivraisons(token: string): Promise<listBonLivra
 
 export async function getfetchBonLivraisonById(token: string, id: string): Promise<bonLivraison | null> {
   
-    if (isFakeModeEnabled()) {
+    if (isModeDemoEnabled()) {
       return bonLivraisonsFakeData.data.filter(bonLivraison => bonLivraison.id === id).length > 0
         ? bonLivraisonsFakeData.data.filter(bonLivraison => bonLivraison.id === id)[0]
         : null;

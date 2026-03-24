@@ -1,10 +1,13 @@
 import { useAuthContext } from '@/hooks/auth-context';
-import { DEMO_ACCOUNT } from '@/hooks/use-auth';
+import COLORS from '@/styles/colors';
 import { sharedStyles } from '@/styles/shared';
+import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import styles from './style.js';
 
+import { DEMO_ACCOUNT } from '@/hooks/use-auth';
+import { isModeDemoEnabled } from '@/tools/tools';
 import {
   Image,
   Keyboard,
@@ -19,6 +22,9 @@ export default function LoginScreen() {
   const router = useRouter();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [focusedField, setFocusedField] = useState<'login' | 'password' | null>(null);
+  const passwordInputRef = useRef<TextInput>(null);
   const [validationErrors, setValidationErrors] = useState<{
     login?: string;
     password?: string;
@@ -77,67 +83,125 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topSection}>
-        {/* Partie haute (verte) */}
-         <View style={styles.logoContainer}>
-            <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
-          </View>
-      </View>
+      <View style={styles.loginContainer}>
+        <View style={styles.logoContainer}>
+          <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.brandName}>Gediscom</Text>
+        </View>
 
-      <View style={styles.bottomSection}>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Connectez-vous</Text>
-
+        <View style={styles.formBlock}>
           {error && (
             <View style={styles.errorContainer}>
               <Text style={sharedStyles.errorMessage}>{error}</Text>
             </View>
           )}
 
-          <TextInput
-            placeholder="Nom d'utilisateur"
-            value={login}
-            onChangeText={setLogin}
-            style={styles.input}
-            editable={!isLoading}
-          />
+          <Text style={styles.loginLabel}>Nom d'utilisateur</Text>
+          <View
+            style={[
+              styles.inputRow,
+              focusedField === 'login' && styles.inputRowFocused,
+              validationErrors.login && styles.inputRowError,
+            ]}
+          >
+            <FontAwesome name="user" size={18} color="white" style={styles.inputIcon} />
+            <TextInput
+              placeholder="Nom d'utilisateur"
+              placeholderTextColor={COLORS.accentColor}
+              value={login}
+              onChangeText={setLogin}
+              style={styles.loginInput}
+              editable={!isLoading}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
+              returnKeyType="next"
+              onFocus={() => setFocusedField('login')}
+              onBlur={() => setFocusedField(null)}
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+            />
+          </View>
           {validationErrors.login && (
             <Text style={styles.fieldError}>{validationErrors.login}</Text>
           )}
 
-          <TextInput
-            placeholder="Mot de passe"
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-            secureTextEntry
-            editable={!isLoading}
-          />
+          <Text style={styles.loginLabel}>Mot de passe</Text>
+          <View
+            style={[
+              styles.inputRow,
+              focusedField === 'password' && styles.inputRowFocused,
+              validationErrors.password && styles.inputRowError,
+            ]}
+          >
+            <FontAwesome name="lock" size={18} color="white" style={styles.inputIcon} />
+            <TextInput
+              ref={passwordInputRef}
+              placeholder="Mot de passe"
+              placeholderTextColor={COLORS.accentColor}
+              value={password}
+              onChangeText={setPassword}
+              style={styles.loginInput}
+              secureTextEntry={!isPasswordVisible}
+              editable={!isLoading}
+              autoComplete="password"
+              textContentType="password"
+              returnKeyType="done"
+              onFocus={() => setFocusedField('password')}
+              onBlur={() => setFocusedField(null)}
+              onSubmitEditing={handleLogin}
+            />
+            <TouchableOpacity
+              onPress={() => setIsPasswordVisible((prev) => !prev)}
+              activeOpacity={0.8}
+              style={styles.passwordToggle}
+              disabled={isLoading}
+            >
+              <FontAwesome
+                name={isPasswordVisible ? 'eye-slash' : 'eye'}
+                size={18}
+                color="white"
+              />
+            </TouchableOpacity>
+          </View>
           {validationErrors.password && (
             <Text style={styles.fieldError}>{validationErrors.password}</Text>
           )}
 
           <TouchableOpacity
-            style={[styles.buttonCnx, isLoading && styles.buttonDisabled]}
+            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            activeOpacity={0.85}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Connexion...' : 'Se connecter'}
+            <Text style={styles.loginButtonText}>
+              {isLoading ? 'Connexion...' : 'Se connecter →'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.demoButton, isLoading && styles.buttonDisabled]}
-            onPress={handleDemoLogin}
-            disabled={isLoading}
-          >
-            <Text style={styles.demoButtonText}>Entrer en mode demo</Text>
-          </TouchableOpacity>
 
-          <Text style={styles.demoHint}>
-            Compte demo : {DEMO_ACCOUNT.login} / {DEMO_ACCOUNT.password}
-          </Text>
+          {isModeDemoEnabled() && (
+            <TouchableOpacity
+              style={[styles.guestButton, isLoading && styles.buttonDisabled]}
+              onPress={handleDemoLogin}
+              disabled={isLoading}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.guestButtonText}>Mode demo→</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.socialLinksContainer}>
+            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
+              <FontAwesome name="facebook" size={18} color={COLORS.primaryColor} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
+              <FontAwesome name="instagram" size={18} color={COLORS.primaryColor} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
+              <FontAwesome name="linkedin" size={18} color={COLORS.primaryColor} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </SafeAreaView>

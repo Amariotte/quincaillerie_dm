@@ -42,6 +42,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await signOut();
+              router.replace('/(auth)' as never);
             } catch (err) {
               Alert.alert(
                 'Erreur',
@@ -49,6 +50,8 @@ export default function ProfileScreen() {
                   ? err.message
                   : 'Erreur lors de la déconnexion'
               );
+              router.replace('/(auth)' as never);
+
             }
           },
           style: 'destructive',
@@ -66,7 +69,7 @@ export default function ProfileScreen() {
         contentContainerStyle={sharedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.container}>
+        <View style={sharedStyles.container}>
           <View style={[styles.profileHero, { backgroundColor: cardColor }]}> 
             <TouchableOpacity
               activeOpacity={0.85}
@@ -115,7 +118,7 @@ export default function ProfileScreen() {
           )}
 
           {/* Settings Sections */}
-          <View style={styles.settingsSection}>
+          <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
             {/* Account Settings */}
             <Text style={[styles.sectionTitle, { color: textColor }]}>
               Compte
@@ -262,10 +265,6 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
  
-  container: {
-    flex: 1,
-    padding: 24,
-  },
   profileHero: {
     alignItems: 'center',
     borderRadius: 24,

@@ -1,21 +1,31 @@
-
 import { StyleSheet } from 'react-native';
 import COLORS from '../../styles/colors';
-import { sharedStyles } from '../../styles/shared';
-
-
 const styles = StyleSheet.create({
-
   safeArea: {
-    ...sharedStyles.safeArea,
+    flex: 1,
     backgroundColor: COLORS.primaryColor,
   },
 
-  topSection: {
+  welcomeContainer: {
     flex: 1,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+  },
+
+  centeredLogoWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  loginContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 28,
   },
 
   logoContainer: {
@@ -24,127 +34,179 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
   },
 
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: COLORS.primaryColor,
-  },
-  formContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  brandName: {
+    marginTop: -6,
+    fontSize: 36,
+    fontWeight: '700',
+    color: 'white',
   },
 
-  input: {
-    marginBottom: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#d0d0d0',
-    borderRadius: 8,
-    backgroundColor: '#f7f7f7',
+  welcomeButton: {
+    width: '80%',
+    borderRadius: 999,
+    paddingVertical: 14,
+    backgroundColor: COLORS.brandButtonColor,
+    alignItems: 'center',
   },
 
-  fieldError: {
-    marginBottom: 12,
-    color: COLORS.errorColor,
-    fontSize: 12,
-    fontWeight: '500',
+  welcomeButtonText: {
+    color: COLORS.secondaryColor,
+    fontSize: 18,
+    fontWeight: '700',
   },
 
-  errorContainer: {
-    marginBottom: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
+  formBlock: {
+    width: '80%',
+    marginTop: 8,
   },
 
- 
-
-  buttonText: {
+  loginLabel: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
-  },
-
-  buttonCnx: {
-    marginTop: 16,
-    backgroundColor: COLORS.primaryColor,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-
-  demoButton: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: COLORS.primaryColor,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#eef7f5',
-  },
-
-  demoButtonText: {
-    color: COLORS.primaryColor,
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-
-  demoHint: {
     marginTop: 10,
-    color: '#6b7280',
-    fontSize: 12,
+    marginBottom: 6,
+  },
+
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'white',
+    marginBottom: 6,
+    paddingBottom: 5,
+  },
+
+  inputRowFocused: {
+    borderBottomColor: COLORS.brandButtonColor,
+    borderBottomWidth: 2,
+  },
+
+  inputRowError: {
+    borderBottomColor: COLORS.errorColor,
+  },
+
+  inputIcon: {
+    color: 'white',
+    fontSize: 18,
+    marginRight: 8,
+    width: 20,
     textAlign: 'center',
+  },
+
+  loginInput: {
+    flex: 1,
+    color: 'white',
+    fontSize: 15,
+    paddingVertical: 2,
+  },
+
+  passwordToggle: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    marginLeft: 6,
+  },
+
+  loginPlaceholder: {
+    color: COLORS.accentColor,
+  },
+
+  fieldError: {
+    marginBottom: 8,
+    color: COLORS.errorColor,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  errorContainer: {
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: COLORS.errorColor,
+  },
+
+  loginButton: {
+    marginTop: 14,
+    backgroundColor: COLORS.brandButtonColor,
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+
+  loginButtonText: {
+    color: COLORS.secondaryColor,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  secondaryLink: {
+    marginTop: 18,
+    textAlign: 'center',
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+
+  registerRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  registerText: {
+    color: 'white',
+    fontSize: 15,
+  },
+
+  registerLink: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  guestButton: {
+    alignSelf: 'center',
+    marginTop: 20,
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    backgroundColor: COLORS.secondaryColor,
+  },
+
+  guestButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  socialLinksContainer: {
+    marginTop: 18,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 14,
+  },
+
+  socialIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
   },
 
   buttonDisabled: {
     opacity: 0.7,
   },
-
-  bottomSection: {
-    flex: 2,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'space-between',
-    height: '50%',
-    backgroundColor: '#858080',
-  },
-
-  footerSection: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-
-  footerText: {
-    color: '#6b7280',
-    fontSize: 14,
-    marginBottom: 6,
-  },
-
-  footerLink: {
-    color: COLORS.primaryColor,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
 });
 
 export default styles;

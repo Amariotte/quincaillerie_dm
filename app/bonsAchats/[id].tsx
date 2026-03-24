@@ -7,10 +7,12 @@ import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/servic
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style';
 
 export default function BonAchatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -136,36 +138,92 @@ export default function BonAchatDetailScreen() {
             </View>
           ) : null}
 
-          <View style={[sharedStyles.headerCard, { backgroundColor: cardColor }]}> 
-            <View style={sharedStyles.headerTopRow}>
-              <Text style={[sharedStyles.clientName, { color: textColor }]}>{bonAchat.numeroBa?.trim() ? bonAchat.numeroBa : 'Bon sans numero'}</Text>
+          <View style={styles.ticketCard}>
+            <View style={styles.ticketShadow} />
+            <View style={styles.ticketBody}>
+              <View style={styles.ticketLeftPanel}>
+                <View style={styles.ticketHeaderRow}>
+                  <View style={styles.ticketRefBlock}>
+                    <Text style={styles.ticketEyebrow}>BON D&apos;ACHAT</Text>
+                    <Text style={styles.ticketRef}>{bonAchat.numeroBa?.trim() ? bonAchat.numeroBa : 'Bon sans numero'}</Text>
+                  </View>
+                  <View style={[styles.ticketStatusBadge, { backgroundColor: `${statusColor}22` }]}> 
+                    <Text style={[styles.ticketStatusText, { color: statusColor }]}>{statusLabel}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.ticketIconRow}>
+                  <View style={styles.ticketMainIconWrap}>
+                    <MaterialIcons name="redeem" size={54} color="#ffffff" />
+                  </View>
+                  <View style={styles.ticketMetaStack}>
+                    <View style={styles.ticketMetaItem}>
+                      <Text style={styles.ticketMetaLabel}>Agence</Text>
+                      <Text style={styles.ticketMetaValue} numberOfLines={1}>{bonAchat.nomAgence || '—'}</Text>
+                    </View>
+                    <View style={styles.ticketMetaItem}>
+                      <Text style={styles.ticketMetaLabel}>Créé le</Text>
+                      <Text style={styles.ticketMetaValue}>{bonAchat.dateBa ? formatDate(bonAchat.dateBa) : '—'}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={detailStyles.detailMetaGrid}>
+                  <View style={detailStyles.detailMetaChip}>
+                    <Text style={detailStyles.detailMetaChipLabel}>Usage</Text>
+                    <Text style={detailStyles.detailMetaChipValue}>{uniqueUseLabel}</Text>
+                  </View>
+                  <View style={detailStyles.detailMetaChip}>
+                    <Text style={detailStyles.detailMetaChipLabel}>Autres clients</Text>
+                    <Text style={detailStyles.detailMetaChipValue}>{canBeUsedByOtherClients}</Text>
+                  </View>
+                  <View style={detailStyles.detailMetaChip}>
+                    <Text style={detailStyles.detailMetaChipLabel}>Agence unique</Text>
+                    <Text style={detailStyles.detailMetaChipValue}>{restrictedToAgency}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.ticketFooterRow}>
+                  <View style={styles.ticketTag}>
+                    <MaterialIcons name="payments" size={14} color="#0f766e" />
+                    <Text style={styles.ticketTagText}>Coût {formatAmount(bonAchat.CoutBa ?? 0)}</Text>
+                  </View>
+                  <View style={styles.ticketArrowWrap}>
+                    <Text style={styles.ticketArrowText}>Solde {formatAmount(remainingAmount)}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.ticketDivider}>
+                <View style={styles.ticketPunchTop} />
+                <View style={styles.ticketPunchBottom} />
+              </View>
+
+              <View style={styles.ticketRightPanel}>
+                <View style={styles.ticketDot} />
+                <MaterialIcons name="confirmation-number" size={44} color="#5b1d2c" />
+                <View style={styles.ticketAmountPill}>
+                  <Text style={styles.ticketAmountText}>{formatAmount(bonAchat.montantBa)}</Text>
+                </View>
+                <View style={styles.ticketExpiryBlock}>
+                  <Text style={styles.ticketExpiryLabel}>Validité</Text>
+                  <Text style={styles.ticketExpiryValue}>{bonAchat.dateExpBa ? formatDate(bonAchat.dateExpBa) : '—'}</Text>
+                </View>
+                <View style={styles.ticketMiniBadge}>
+                  <Text style={styles.ticketMiniBadgeText}>{bonAchatLines.length} ligne{bonAchatLines.length > 1 ? 's' : ''}</Text>
+                </View>
+              </View>
             </View>
-            
-            <View style={sharedStyles.metaRow}>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date : {bonAchat.dateBa ? formatDate(bonAchat.dateBa) : '—'}</Text>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date d'expiration : {bonAchat.dateExpBa ? formatDate(bonAchat.dateExpBa) : '—'}</Text>
-            </View>
-             <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-              <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
-            </View>
-            <View style={sharedStyles.metaRow}>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence : {bonAchat.nomAgence ?? '—'}</Text>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Usage unique : {uniqueUseLabel}</Text>
-            </View>
-            <View style={sharedStyles.metaRow}>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Autres clients autorisés : {canBeUsedByOtherClients}</Text>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Limité à une agence : {restrictedToAgency}</Text>
-            </View>
-            <View style={sharedStyles.metaRow}>
-              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Coût d'acquisition : {formatAmount(bonAchat.CoutBa ?? 0)}</Text>
-            </View>
-           
           </View>
 
-          <View style={[sharedStyles.summaryCard, { backgroundColor: cardColor }]}> 
+          <View style={[detailStyles.summaryCard, { backgroundColor: '#fff8e1' }]}> 
+            <View style={detailStyles.sectionHeader}>
+              <MaterialIcons name="analytics" size={20} color="#5b1d2c" />
+              <Text style={detailStyles.sectionTitle}>Synthèse du bon</Text>
+            </View>
             <View style={sharedStyles.summaryRow}>
-              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant du bon d'achat</Text>
-              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(bonAchat.montantBa)}</Text>
+              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant du bon</Text>
+              <Text style={[detailStyles.summaryValueStrong, { color: '#5b1d2c' }]}>{formatAmount(bonAchat.montantBa)}</Text>
             </View>
             <View style={sharedStyles.summaryRow}>
               <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant réparti</Text>
@@ -177,7 +235,7 @@ export default function BonAchatDetailScreen() {
             </View>
             <View style={sharedStyles.summaryRow}>
               <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>Montant restant</Text>
-              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>{formatAmount(remainingAmount)}</Text>
+              <Text style={[detailStyles.summaryValueStrong, { color: '#0f766e' }]}>{formatAmount(remainingAmount)}</Text>
             </View>
             <View style={sharedStyles.separator} />
             <View style={sharedStyles.summaryRow}>
@@ -186,21 +244,32 @@ export default function BonAchatDetailScreen() {
             </View>
           </View>
 
-          <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
-            <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Répartition du bon d'achat</Text>
+          <View style={[detailStyles.linesCard, { backgroundColor: cardColor }]}> 
+            <View style={detailStyles.sectionHeader}>
+              <MaterialIcons name="receipt-long" size={20} color={tintColor} />
+              <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Répartition du bon</Text>
+            </View>
             <View style={sharedStyles.linesBlock}>
               {bonAchatLines.length === 0 ? (
-                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n'est disponible pour ce bon d'achat.</Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucune ligne de répartition n&apos;est disponible pour ce bon d&apos;achat.</Text>
               ) : (
                 bonAchatLines.map((line) => (
-                  <View key={line.id} style={sharedStyles.lineRow}>
-                    <View style={sharedStyles.lineLeft}>
-                      <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
-                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
-                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
-                      <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
+                  <View key={line.id} style={detailStyles.lineCard}>
+                    <View style={[sharedStyles.lineRow, detailStyles.lineRowTight]}>
+                      <View style={sharedStyles.lineLeft}>
+                        <View style={detailStyles.lineTitleRow}>
+                          <MaterialIcons name="description" size={16} color={tintColor} />
+                          <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
+                        </View>
+                        <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
+                        <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
+                        {line.nomClient && ( <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Propriétaire : {line.nomClient}</Text> )}
+                        <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
+                      </View>
+                      <View style={detailStyles.lineAmountBadge}>
+                        <Text style={detailStyles.lineAmountText}>{formatAmount(line.montantRegDoc)}</Text>
+                      </View>
                     </View>
-                    <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>
                   </View>
                 ))
               )}
@@ -211,3 +280,94 @@ export default function BonAchatDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const detailStyles = StyleSheet.create({
+  detailMetaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  detailMetaChip: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minWidth: '31%',
+  },
+  detailMetaChipLabel: {
+    color: '#c7fffb',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  detailMetaChipValue: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 3,
+  },
+  summaryCard: {
+    borderRadius: 22,
+    padding: 18,
+    gap: 10,
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#5b1d2c',
+  },
+  summaryValueStrong: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  linesCard: {
+    borderRadius: 22,
+    padding: 16,
+    gap: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  lineCard: {
+    borderRadius: 18,
+    padding: 14,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  lineRowTight: {
+    alignItems: 'flex-start',
+  },
+  lineTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  lineAmountBadge: {
+    marginLeft: 10,
+    backgroundColor: '#ecfeff',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#a5f3fc',
+  },
+  lineAmountText: {
+    color: '#0f766e',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+});

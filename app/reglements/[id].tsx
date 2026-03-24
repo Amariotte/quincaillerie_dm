@@ -195,6 +195,7 @@ export default function ReglementDetailScreen() {
                       <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.codeDoc || 'Document sans code'}</Text>
                       <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Type : {line.typeDoc}</Text>
                       <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Date document : {formatDate(line.dateDoc)}</Text>
+                      {line.nomClient && ( <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Propriétaire : {line.nomClient}</Text> )}
                       <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>Montant document : {formatAmount(line.montantDoc)}</Text>
                     </View>
                     <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.montantRegDoc)}</Text>

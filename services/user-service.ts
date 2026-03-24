@@ -1,6 +1,6 @@
 import apiConfig from '@/config/api';
 import { userDataFake, userDataFakeAuthResponse } from '@/data/datas.fake';
-import { isFakeModeEnabled } from '@/tools/tools';
+import { isModeDemoEnabled } from '@/tools/tools';
 import { AuthResponse, user } from '@/types/user.type';
 import { getJsonAuth, postJson, postJsonAuth } from './api-client';
 
@@ -9,7 +9,7 @@ export async function fetchConnectedUser(userToken: string): Promise<user> {
     throw new Error('Token utilisateur manquant');
   }
 
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return userDataFake;
   }
 
@@ -18,7 +18,7 @@ export async function fetchConnectedUser(userToken: string): Promise<user> {
 }
 
 export async function signInApi(login: string, password: string): Promise<AuthResponse> {
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return userDataFakeAuthResponse;
   }
  try {
@@ -42,7 +42,7 @@ export async function signInApi(login: string, password: string): Promise<AuthRe
 }
 
 export async function signOutApi(userToken: string): Promise<void> {
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return;
   }
 
@@ -55,7 +55,7 @@ export async function signOutApi(userToken: string): Promise<void> {
 
 
 export async function updatePasswordApi(userToken: string, oldPassword: string, newPassword: string): Promise<void> {
-  if (isFakeModeEnabled()) {
+  if (isModeDemoEnabled()) {
     return;
   }
 

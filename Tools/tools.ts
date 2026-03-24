@@ -15,8 +15,8 @@ export const MAIN_ACCOUNT_FILTER = 'Compte principal';
 
 
   
- export const isFakeModeEnabled = (): boolean => {
-    return process.env.EXPO_PUBLIC_MODE_FAKE_DATA === 'true';
+ export const isModeDemoEnabled = (): boolean => {
+    return process.env.EXPO_PUBLIC_MODE_DEMO === 'true';
   }
 
 

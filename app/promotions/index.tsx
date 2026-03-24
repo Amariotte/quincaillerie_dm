@@ -6,7 +6,7 @@ import { getfetchPromotions } from '@/services/api-service';
 import { getCacheData, PROMOTIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared';
 import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
-import { listPromotions, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
+import { listPromotions, promotion, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -20,6 +20,35 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+function parsePromotionDate(value?: Date): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getPromotionStatusFromDates(promotionItem: promotion): promotionStatus {
+  const now = Date.now();
+  const startDate = parsePromotionDate(promotionItem.dateDebut);
+  const endDate = parsePromotionDate(promotionItem.dateFin);
+
+  if (startDate && now < startDate.getTime()) {
+    return 'A venir';
+  }
+
+  if (endDate && now > endDate.getTime()) {
+    return 'A venir';
+  }
+
+  if (startDate || endDate) {
+    return 'En cours';
+  }
+
+  return promotionItem.status ?? 'A venir';
+}
 
 export default function PromotionsScreen() {
   const router = useRouter();
@@ -70,31 +99,36 @@ export default function PromotionsScreen() {
     loadPromotions();
   }, [loadPromotions]);
 
+  const promotionsWithComputedStatus = promotions.data.map((promotion) => ({
+    ...promotion,
+    computedStatus: getPromotionStatusFromDates(promotion),
+  }));
+
   const statusFilters: Array<promotionStatus | 'Tous'> = [
     'Tous',
     ...Array.from(
       new Set(
-        promotions.data
-          .map((promotion) => promotion.status)
+        promotionsWithComputedStatus
+          .map((promotion) => promotion.computedStatus)
           .filter((status): status is promotionStatus => typeof status === 'string' && status.trim().length > 0)
       )
     ),
   ];
 
-  const filteredPromotions = promotions.data.filter((promotion) => {
+  const filteredPromotions = promotionsWithComputedStatus.filter((promotion) => {
     const matchesQuery =
       promotion.description?.toLowerCase().includes(query.toLowerCase()) ||
       promotion.nomProduit?.toLowerCase().includes(query.toLowerCase()) ||
       promotion.libelle?.toLowerCase().includes(query.toLowerCase());
     const issueComparable = toComparableDate(promotion.dateDebut);
     const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
-    const matchesStatus = activeStatus === 'Tous' || promotion.status === activeStatus;
+    const matchesStatus = activeStatus === 'Tous' || promotion.computedStatus === activeStatus;
 
     return matchesQuery && matchesDate && matchesStatus;
   });
 
   const totalCount = filteredPromotions.length;
-  const activePromotions = filteredPromotions.filter((promotion) => promotion.status === 'En cours');
+  const activePromotions = filteredPromotions.filter((promotion) => promotion.computedStatus === 'En cours');
   const activeCount = activePromotions.length;
   const totalQuota = filteredPromotions.reduce((sum, promotion) => sum + promotion.nbMax, 0);
 
@@ -193,8 +227,8 @@ export default function PromotionsScreen() {
               scrollEnabled={false}
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: promotion }) => {
-                const statusLabel = promotion.status;
-                const statusColor = statusPromotionColorMap[promotion.status] || tintColor;
+                const statusLabel = promotion.computedStatus;
+                const statusColor = statusPromotionColorMap[promotion.computedStatus] || tintColor;
 
                 return (
                   <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 

@@ -10,7 +10,7 @@ import { listProduits } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const defaultProductImage = require('../../assets/images/partial-react-logo.png');
@@ -26,6 +26,7 @@ export default function ProduitsScreen() {
   const [produits, setProduits] = useState<listProduits>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [activeFamille, setActiveFamille] = useState('Toutes');
    const [isLoading, setIsLoading] = useState(true);
+   const [isRefreshing, setIsRefreshing] = useState(false);
    const [isError, setIsError] = useState(false);
    const [isOfflineMode, setIsOfflineMode] = useState(false);
     const { userToken } = useAuthContext();
@@ -100,12 +101,32 @@ useEffect(() => {
     loadProduits();
   }, [loadProduits]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      if (!userToken) {
+        setIsRefreshing(false);
+        return;
+      }
+      const data = await getfetchProduits(userToken);
+      setProduits(data);
+      setIsOfflineMode(false);
+      await setCacheData(PRODUITS_LIST_CACHE_KEY, data);
+      setIsError(false);
+    } catch {
+      setIsError(true);
+      setIsOfflineMode(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [userToken]);
+
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des produits" subtitle="Prix et familles" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
           <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
             <MaterialIcons name="search" size={20} color={mutedColor} />

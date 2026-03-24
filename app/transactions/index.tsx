@@ -1,11 +1,13 @@
 import { AppHeader } from '@/components/app-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { getfetchMouvements } from '@/services/api-service';
 import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
+import COLORS from '@/styles/colors';
 import { sharedStyles } from '@/styles/shared';
-import { formatDate } from '@/tools/tools';
+import { formatAmount, formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -13,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -22,42 +25,29 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
 
-type PeriodSection = {
-  key: string;
-  title: string;
-  data: listMouvements['data'];
-};
+const orderedMouvementTypes: Array<listMouvements['data'][number]['libType']> = ['Vente', 'Réglement', 'Commission', 'Décaissement'];
 
-function parseMouvementDate(value: string): Date | null {
-  const direct = new Date(value);
-  if (!Number.isNaN(direct.getTime())) {
-    return direct;
+function getSignedAmountDisplay(tx: listMouvements['data'][number]) {
+  const absoluteAmount = Math.abs(Number(tx.montant) || 0);
+
+  if (tx.libType === 'Réglement' || tx.libType === 'Commission') {
+    return {
+      label: `+ ${formatAmount(absoluteAmount)}`,
+      color: typeMouvementColorMap['Réglement'],
+    };
   }
 
-  const normalized = value.trim();
-  const slashMatch = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!slashMatch) {
-    return null;
+  if (tx.libType === 'Vente' || tx.libType === 'Décaissement') {
+    return {
+      label: `- ${formatAmount(absoluteAmount)}`,
+      color: COLORS.errorColor,
+    };
   }
 
-  const day = Number(slashMatch[1]);
-  const monthIndex = Number(slashMatch[2]) - 1;
-  const year = Number(slashMatch[3]);
-  const parsed = new Date(year, monthIndex, day);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-
-  return parsed;
-}
-
-function isSameDay(first: Date, second: Date): boolean {
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
+  return {
+    label: formatAmount(absoluteAmount),
+    color: typeMouvementColorMap[tx.libType] || COLORS.errorColor,
+  };
 }
 
 export default function TransactionsScreen() {
@@ -69,9 +59,14 @@ export default function TransactionsScreen() {
 
   const [mouvements, setMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [query, setQuery] = useState('');
   const normalizedQuery = useMemo(() => query.trim().toLowerCase(), [query]);
+  const [activeType, setActiveType] = useState<'Tous' | listMouvements['data'][number]['libType']>('Tous');
+
+  const [startDateQuery, setStartDateQuery] = useState('');
+  const [endDateQuery, setEndDateQuery] = useState('');
 
   const loadMouvements = useCallback(async () => {
     if (!userToken) {
@@ -102,75 +97,89 @@ export default function TransactionsScreen() {
     loadMouvements();
   }, [loadMouvements]);
 
-  const filtered = useMemo(() => {
-    if (!normalizedQuery) {
-      return mouvements.data;
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      if (!userToken) {
+        setIsRefreshing(false);
+        return;
+      }
+
+      const data = await getfetchMouvements(userToken);
+      setMouvements(data);
+      setIsOfflineMode(false);
+      await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
+    } catch {
+      setIsOfflineMode(true);
+    } finally {
+      setIsRefreshing(false);
     }
+  }, [userToken]);
 
-    return mouvements.data.filter((t) =>
-      t.libType.toLowerCase().includes(normalizedQuery) ||
-      t.nomAgence.toLowerCase().includes(normalizedQuery) ||
-      t.nomSousCompte.toLowerCase().includes(normalizedQuery) ||
-      t.codeOp.toLowerCase().includes(normalizedQuery)
-    );
-  }, [mouvements.data, normalizedQuery]);
+  const typeFilters: Array<'Tous' | listMouvements['data'][number]['libType']> = useMemo(
+    () => [
+      'Tous',
+      ...Array.from(
+        new Set(
+          mouvements.data
+            .map((mouvement) => mouvement.libType)
+            .filter((type): type is listMouvements['data'][number]['libType'] => typeof type === 'string' && type.trim().length > 0)
+        )
+      ),
+    ],
+    [mouvements.data]
+  );
 
-  const groupedSections = useMemo<PeriodSection[]>(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const beforeYesterday = new Date(today);
-    beforeYesterday.setDate(today.getDate() - 2);
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const filtered = useMemo(() => {
+    return mouvements.data.filter((t) => {
+      const matchesType = activeType === 'Tous' || t.libType === activeType;
+      const matchesQuery =
+        !normalizedQuery ||
+        t.libType.toLowerCase().includes(normalizedQuery) ||
+        t.nomAgence.toLowerCase().includes(normalizedQuery) ||
+        t.nomSousCompte.toLowerCase().includes(normalizedQuery) ||
+        t.codeOp.toLowerCase().includes(normalizedQuery);
 
-    const buckets: Record<string, listMouvements['data']> = {
-      today: [],
-      yesterday: [],
-      beforeYesterday: [],
-      thisMonth: [],
-      older: [],
+      return matchesType && matchesQuery;
+    });
+  }, [activeType, mouvements.data, normalizedQuery]);
+
+  const totalsByType = useMemo(() => {
+    const initialTotals: Record<listMouvements['data'][number]['libType'], number> = {
+      Vente: 0,
+      Réglement: 0,
+      Commission: 0,
+      Décaissement: 0,
     };
 
-    for (const tx of filtered) {
-      const txDate = parseMouvementDate(tx.dateOp);
-
-      if (!txDate) {
-        buckets.older.push(tx);
-        continue;
-      }
-
-      if (isSameDay(txDate, today)) {
-        buckets.today.push(tx);
-        continue;
-      }
-
-      if (isSameDay(txDate, yesterday)) {
-        buckets.yesterday.push(tx);
-        continue;
-      }
-
-      if (isSameDay(txDate, beforeYesterday)) {
-        buckets.beforeYesterday.push(tx);
-        continue;
-      }
-
-      if (txDate >= monthStart && txDate <= now) {
-        buckets.thisMonth.push(tx);
-        continue;
-      }
-
-      buckets.older.push(tx);
-    }
-
-    return [
-      { key: 'today', title: "Aujourd'hui", data: buckets.today },
-      { key: 'yesterday', title: 'Hier', data: buckets.yesterday },
-      { key: 'beforeYesterday', title: 'Avant-hier', data: buckets.beforeYesterday },
-      { key: 'thisMonth', title: 'Ce mois', data: buckets.thisMonth },
-      { key: 'older', title: 'Plus anciens', data: buckets.older },
-    ].filter((section) => section.data.length > 0);
+    return filtered.reduce((accumulator, mouvement) => {
+      accumulator[mouvement.libType] += Number(mouvement.montant) || 0;
+      return accumulator;
+    }, initialTotals);
   }, [filtered]);
+
+  const getTypeTotalDisplay = (type: listMouvements['data'][number]['libType']) => {
+    const absoluteAmount = Math.abs(totalsByType[type]);
+    const isIncoming = type === 'Réglement' || type === 'Commission';
+
+    return {
+      label: `${isIncoming ? '+' : '-'} ${formatAmount(absoluteAmount)}`,
+      color: isIncoming ? typeMouvementColorMap['Réglement'] : COLORS.errorColor,
+    };
+  };
+
+  const totalGeneral = useMemo(() => {
+    return filtered.reduce((accumulator, mouvement) => {
+      const amount = Math.abs(Number(mouvement.montant) || 0);
+      const isIncoming = mouvement.libType === 'Réglement' || mouvement.libType === 'Commission';
+      return accumulator + (isIncoming ? amount : -amount);
+    }, 0);
+  }, [filtered]);
+
+  const totalGeneralDisplay = {
+    label: `${totalGeneral >= 0 ? '+' : '-'} ${formatAmount(Math.abs(totalGeneral))}`,
+    color: totalGeneral >= 0 ? typeMouvementColorMap['Réglement'] : COLORS.errorColor,
+  };
 
   const handleTransactionPress = (tx: listMouvements['data'][number]) => {
     if (tx.libType === 'Vente') {
@@ -200,9 +209,9 @@ export default function TransactionsScreen() {
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-        <AppHeader showBack title="Transactions" subtitle="50 derniers mouvements financiers" />
+        <AppHeader showBack title="Transactions" subtitle= "" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
           {isOfflineMode && (
             <View style={[styles.offlineBanner, { backgroundColor: offlineBg }]}>
@@ -210,6 +219,37 @@ export default function TransactionsScreen() {
               <Text style={[styles.offlineText, { color: offlineText }]}>Mode déconnecté</Text>
             </View>
           )}
+
+          <View style={sharedStyles.statsRow}>
+            {orderedMouvementTypes.slice(0, 2).map((type) => {
+              const totalDisplay = getTypeTotalDisplay(type);
+
+              return (
+                <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
+                  <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
+                  <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>{totalDisplay.label}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={sharedStyles.statsRow}>
+            {orderedMouvementTypes.slice(2, 4).map((type) => {
+              const totalDisplay = getTypeTotalDisplay(type);
+
+              return (
+                <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
+                  <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
+                  <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>{totalDisplay.label}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+            <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Total général</Text>
+            <Text style={[sharedStyles.statValue, { color: totalGeneralDisplay.color }]}>{totalGeneralDisplay.label}</Text>
+          </View>
 
           <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
             <MaterialIcons name="search" size={20} color={mutedColor} />
@@ -221,6 +261,48 @@ export default function TransactionsScreen() {
               style={[sharedStyles.searchInput, { color: textColor }]}
             />
           </View>
+
+
+
+           <DateRangePicker
+                      startDateValue={startDateQuery}
+                      endDateValue={endDateQuery}
+                      onChangeStartDate={setStartDateQuery}
+                      onChangeEndDate={setEndDateQuery}
+                      cardColor={cardColor}
+                      borderColor={borderColor}
+                      textColor={textColor}
+                      mutedColor={mutedColor}
+                      tintColor={tintColor}
+                    />
+
+
+
+          {typeFilters.length > 2 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              {typeFilters.map((type) => {
+                const isActive = type === activeType;
+
+                return (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setActiveType(type)}
+                    style={[
+                      sharedStyles.filterChip,
+                      {
+                        backgroundColor: isActive ? tintColor : cardColor,
+                        borderColor: isActive ? tintColor : borderColor,
+                      },
+                    ]}
+                  >
+                    <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{type}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+
+
 
           {isLoading && mouvements.data.length === 0 ? (
             <View style={styles.loaderBlock}>
@@ -234,34 +316,25 @@ export default function TransactionsScreen() {
             </View>
           ) : (
             <View style={sharedStyles.listBlock}>
-              {groupedSections.map((section) => (
-                <View key={section.key} style={styles.sectionBlock}>
-                  <Text style={[styles.sectionHeader, { color: textColor }]}>{section.title}</Text>
-                  <View style={styles.sectionRows}>
-                    {section.data.map((tx) => {
-                      const sc = typeMouvementColorMap[tx.libType] || tintColor;
-                      return (
-                        <TouchableOpacity
-                          key={String(tx.id)}
-                          activeOpacity={0.85}
-                          onPress={() => handleTransactionPress(tx)}
-                          style={[styles.txCard, { backgroundColor: cardColor }]}
-                        >
-                          <View style={styles.txTopRow}>
-                            <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>{tx.libType} {tx.codeOp}</Text>
-                            <View style={[sharedStyles.statusBadge, { backgroundColor: `${sc}18` }]}>
-                            </View>
-                          </View>
-                          <View style={styles.txBottomRow}>
-                            <Text style={[styles.txDate, { color: mutedColor }]}>{formatDate(tx.dateOp)}</Text>
-                            <Text style={[styles.txAmount, { color: sc }]}>{tx.montant}</Text>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              ))}
+              {filtered.map((tx) => {
+                const signedAmount = getSignedAmountDisplay(tx);
+                return (
+                  <TouchableOpacity
+                    key={String(tx.id)}
+                    activeOpacity={0.85}
+                    onPress={() => handleTransactionPress(tx)}
+                    style={[styles.txCard, { backgroundColor: cardColor }]}
+                  >
+                    <View style={styles.txTopRow}>
+                      <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>{tx.libType} n° {tx.codeOp}</Text>
+                    </View>
+                    <View style={styles.txBottomRow}>
+                      <Text style={[styles.txDate, { color: mutedColor }]}>{formatDate(tx.dateOp)}</Text>
+                      <Text style={[styles.txAmount, { color: signedAmount.color }]}>{signedAmount.label}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>

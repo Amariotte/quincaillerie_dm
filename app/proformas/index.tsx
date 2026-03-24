@@ -218,7 +218,7 @@ export default function ProformasScreen() {
                     <View style={sharedStyles.invoiceTopRow}>
                       <View style={sharedStyles.invoiceRefBlock}>
                         <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
-                        <Text style={[sharedStyles.clientName, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                        <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>{proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[sharedStyles.statusText, { color: statusColor }]}>{proforma.status}</Text>

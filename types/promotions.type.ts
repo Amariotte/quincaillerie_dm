@@ -15,7 +15,7 @@ export type promotion = {
   dateDebut?: Date;
   dateFin?: Date;
   nbMax: number;
-  status: promotionStatus
+  status?: promotionStatus
 };
 
 
