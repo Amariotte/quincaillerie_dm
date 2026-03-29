@@ -1,7 +1,7 @@
 ﻿import { AppHeader } from '@/components/app-header';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { getfetchDevisById, getfetchProduits, postDevisLigne } from '@/services/api-service';
+import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, updateDevisLigne } from '@/services/api-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount } from '@/tools/tools';
 import { devis, devisLigneEdit, statusDevisColorMap } from '@/types/devis.type';
@@ -30,6 +30,15 @@ type LocalLine = {
   qteDevis: number;
 };
 
+const mapDevisToLocalLines = (dev: devis): LocalLine[] =>
+  (dev.details ?? []).map((l) => ({
+    idProduit: l.idProduit,
+    idDevisLigne: l.id,
+    designation: l.designation,
+    prixUnitaire: l.prixVenteTTC,
+    qteDevis: l.qteVendue,
+  }));
+
 
 export default function ProformaSaisieScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -46,6 +55,15 @@ export default function ProformaSaisieScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
 
+  const applyUpdatedDevis = useCallback((dev: devis | null) => {
+    if (!dev) {
+      return;
+    }
+
+    setProforma(dev);
+    setLines(mapDevisToLocalLines(dev));
+  }, []);
+
   // Chargement initial : catalogue produits + proforma existante si mode édition
   useEffect(() => {
     const load = async () => {
@@ -57,41 +75,14 @@ export default function ProformaSaisieScreen() {
         ]);
         setProducts(prod.data ?? []);
         if (dev) {
-          setProforma(dev);
-          setLines(
-            (dev.details ?? []).map((l) => ({
-              idProduit: l.id,
-              idDevisLigne: l.id,
-              designation: l.designation,
-              prixUnitaire: l.prixVenteTTC,
-              qteDevis: l.qteVendue,
-            })),
-          );
+          applyUpdatedDevis(dev);
         }
       } finally {
         setIsLoading(false);
       }
     };
     load();
-  }, [id, userToken, isEditMode]);
-
-  // Après un appel API de ligne, recharger le détail proforma pour actualiser les totaux
-  const refreshProforma = useCallback(async (devId: string) => {
-    if (!userToken) return;
-    const dev = await getfetchDevisById(userToken, devId);
-    if (dev) {
-      setProforma(dev);
-      setLines(
-        (dev.details ?? []).map((l) => ({
-          idProduit: l.id,
-          idDevisLigne: l.id,
-          designation: l.designation,
-          prixUnitaire: l.prixVenteTTC,
-          qteDevis: l.qteVendue,
-        })),
-      );
-    }
-  }, [userToken]);
+  }, [applyUpdatedDevis, id, userToken, isEditMode]);
 
   
 
@@ -118,35 +109,68 @@ export default function ProformaSaisieScreen() {
 
   // Modification de quantité : mise à jour locale + appel API si proforma existante
   const handleQtyChange = useCallback(
-    async (idProduit: string, rawValue: string) => {
+    async (line: LocalLine, rawValue: string) => {
       const qty = Math.max(0, parseInt(rawValue.replace(/[^0-9]/g, ''), 10) || 0);
+
       setLines((prev) => {
         if (qty === 0) {
-          return prev.filter((line) => line.idProduit !== idProduit);
+          return prev.filter((currentLine) => currentLine.idDevisLigne !== line.idDevisLigne);
         }
-        return prev.map((line) => (line.idProduit === idProduit ? { ...line, qteDevis: qty } : line));
+
+        return prev.map((currentLine) =>
+          currentLine.idDevisLigne === line.idDevisLigne
+            ? { ...currentLine, qteDevis: qty }
+            : currentLine
+        );
       });
-      if (proforma?.id && userToken && qty > 0) {
-        const existing = lines.find((line) => line.idProduit === idProduit);
-        const ligne: devisLigneEdit = {
-          idDevis: proforma.id,
-          idDevisLigne: existing?.idDevisLigne,
-          qteDevis: qty,
-          idProduit,
+
+      if (!proforma?.id || !userToken) {
+        return;
+      }
+
+      try {
+        if (qty === 0) {
+          if (line.idDevisLigne) {
+            const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
+            applyUpdatedDevis(updatedDevis);
+          }
+          return;
+        }
+
+        const payload: devisLigneEdit = {
+          qte: qty,
+          produitId: line.idProduit,
         };
-        try {
-          await postDevisLigne(userToken, ligne);
-          await refreshProforma(proforma.id);
-        } catch { /* géré par popup global */ }
+
+        if (line.idDevisLigne) {
+          const updatedDevis = await updateDevisLigne(userToken, proforma.id, line.idDevisLigne, payload);
+          applyUpdatedDevis(updatedDevis);
+        } else {
+          const updatedDevis = await postDevisLigne(userToken, payload, proforma.id);
+          applyUpdatedDevis(updatedDevis);
+        }
+      } catch {
+        Alert.alert('Erreur', "La mise à jour de la ligne du devis a échoué.");
       }
     },
-    [proforma?.id, userToken, lines, refreshProforma],
+    [applyUpdatedDevis, proforma?.id, userToken],
   );
 
   // Suppression locale d'une ligne
-  const removeLine = useCallback((idProduit: string) => {
-    setLines((prev) => prev.filter((line) => line.idProduit !== idProduit));
-  }, []);
+  const removeLine = useCallback(async (line: LocalLine) => {
+    setLines((prev) => prev.filter((currentLine) => currentLine.idDevisLigne !== line.idDevisLigne));
+
+    if (!proforma?.id || !userToken || !line.idDevisLigne) {
+      return;
+    }
+
+    try {
+      const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
+      applyUpdatedDevis(updatedDevis);
+    } catch {
+      Alert.alert('Erreur', 'La suppression de la ligne a échoué.');
+    }
+  }, [applyUpdatedDevis, proforma?.id, userToken]);
 
   // Ajout d'un produit depuis le catalogue
   const addProduct = useCallback(
@@ -155,21 +179,20 @@ export default function ProformaSaisieScreen() {
         setShowCatalog(false);
         return;
       }
-      setLines((prev) => [
-        ...prev,
-        { idProduit: product.id, designation: product.designation, prixUnitaire: product.prixVenteTTC, qteDevis: 1 },
-      ]);
+      
       setShowCatalog(false);
       setProductSearch('');
-      if (proforma?.id && userToken) {
-        const ligne: devisLigneEdit = { idDevis: proforma.id, qteDevis: 1, idProduit: product.id };
+      if ( userToken) {
+        const ligne: devisLigneEdit = { qte: 1, produitId: product.id };
         try {
-          await postDevisLigne(userToken, ligne);
-          await refreshProforma(proforma.id);
-        } catch { /* géré par popup global */ }
+          const updatedDevis = await postDevisLigne(userToken, ligne, proforma?.id);
+          applyUpdatedDevis(updatedDevis);
+        } catch {
+          Alert.alert('Erreur', "L'ajout de la ligne a échoué.");
+        }
       }
     },
-    [lines, proforma?.id, userToken, refreshProforma],
+    [applyUpdatedDevis, lines, proforma?.id, userToken],
   );
 
   const handleSave = () => {
@@ -182,8 +205,8 @@ export default function ProformaSaisieScreen() {
     setTimeout(() => {
       setIsSaving(false);
       Alert.alert(
-        isEditMode ? 'Proforma modifiée' : 'Proforma créée',
-        isEditMode ? 'Les modifications ont été enregistrées.' : 'La proforma a été créée.',
+        isEditMode ? 'Devis modifié' : 'Devis créé',
+        isEditMode ? 'Les modifications ont été enregistrées.' : 'Le devis a été créé.',
         [{ text: 'OK', onPress: () => router.back() }],
       );
     }, 800);
@@ -193,7 +216,7 @@ export default function ProformaSaisieScreen() {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-          <AppHeader showBack title={isEditMode ? 'Modifier la proforma' : 'Nouvelle proforma'} />
+          <AppHeader showBack title={isEditMode ? 'Modifier le devis' : 'Nouveau devis'} />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={tintColor} />
@@ -209,7 +232,7 @@ export default function ProformaSaisieScreen() {
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader
           showBack
-          title={isEditMode ? 'Modifier la proforma' : 'Nouvelle proforma'}
+          title={isEditMode ? 'Modifier le devis' : 'Nouveau devis'}
           subtitle={proforma?.codeDevis ?? 'Saisie des articles'}
         />
       </View>
@@ -330,7 +353,7 @@ export default function ProformaSaisieScreen() {
                       <View style={styles.lineRightCol}>
                         <View style={[styles.qtyRow, { borderColor }]}>
                           <TouchableOpacity
-                            onPress={() => handleQtyChange(line.idProduit, String(line.qteDevis - 1))}
+                            onPress={() => handleQtyChange(line, String(line.qteDevis - 1))}
                             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                           >
                             <MaterialIcons
@@ -341,19 +364,19 @@ export default function ProformaSaisieScreen() {
                           </TouchableOpacity>
                           <TextInput
                             value={String(line.qteDevis)}
-                            onChangeText={(v) => handleQtyChange(line.idProduit, v)}
+                            onChangeText={(v) => handleQtyChange(line, v)}
                             keyboardType="number-pad"
                             selectTextOnFocus
                             style={[styles.qtyInput, { color: textColor, borderColor }]}
                           />
                           <TouchableOpacity
-                            onPress={() => handleQtyChange(line.idProduit, String(line.qteDevis + 1))}
+                            onPress={() => handleQtyChange(line, String(line.qteDevis + 1))}
                             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                           >
                             <MaterialIcons name="add" size={20} color={textColor} />
                           </TouchableOpacity>
                         </View>
-                        <TouchableOpacity onPress={() => removeLine(line.idProduit)} style={styles.removeBtn}>
+                        <TouchableOpacity onPress={() => removeLine(line)} style={styles.removeBtn}>
                           <MaterialIcons name="delete-outline" size={18} color="#ef4444" />
                         </TouchableOpacity>
                       </View>
@@ -405,7 +428,7 @@ export default function ProformaSaisieScreen() {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.primaryBtnText}>
-                  {isEditMode ? 'Enregistrer' : 'Créer la proforma'}
+                  {isEditMode ? 'Enregistrer' : 'Créer le devis'}
                 </Text>
               )}
             </TouchableOpacity>

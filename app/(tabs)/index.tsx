@@ -9,7 +9,7 @@ import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { stat } from '@/types/other.type';
-import { listPromotions, promotion, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
+import { listPromotions, statusPromotionColorMap } from '@/types/promotions.type';
 import { SoldeResponse } from '@/types/solde.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -87,27 +87,6 @@ function parsePromotionDate(value?: Date): Date | null {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
-
-function getPromotionStatusFromDates(promotionItem: promotion): promotionStatus {
-  const now = Date.now();
-  const startDate = parsePromotionDate(promotionItem.dateDebut);
-  const endDate = parsePromotionDate(promotionItem.dateFin);
-
-  if (startDate && now < startDate.getTime()) {
-    return 'A venir';
-  }
-
-  if (endDate && now > endDate.getTime()) {
-    return 'A venir';
-  }
-
-  if (startDate || endDate) {
-    return 'En cours';
-  }
-
-  return promotionItem.status ?? 'A venir';
-}
-
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -235,13 +214,12 @@ export default function HomeScreen() {
   const promotionsBanner = useMemo(() => {
     return promotions.data
       .map((promotionItem) => ({
-        ...promotionItem,
-        computedStatus: getPromotionStatusFromDates(promotionItem),
+        ...promotionItem
       }))
-      .filter((promotionItem) => promotionItem.computedStatus === 'En cours' || promotionItem.computedStatus === 'A venir')
+      .filter((promotionItem) => promotionItem.status === 'En cours' || promotionItem.status === 'A venir')
       .sort((first, second) => {
-        if (first.computedStatus !== second.computedStatus) {
-          return first.computedStatus === 'En cours' ? -1 : 1;
+        if (first.status !== second.status) {
+          return first.status === 'En cours' ? -1 : 1;
         }
 
         const firstDate = first.dateDebut ? new Date(first.dateDebut).getTime() : Number.MAX_SAFE_INTEGER;
@@ -532,8 +510,8 @@ export default function HomeScreen() {
                     ]}
                   >
                     <View style={styles.promoTopRow}>
-                      <Text style={[styles.promoBadge, { color: statusPromotionColorMap[promo.computedStatus] || tintColor }]}>
-                        {promo.computedStatus === 'En cours' ? 'Promotion active' : 'Promotion à venir'}
+                      <Text style={[styles.promoBadge, { color: statusPromotionColorMap[promo.status] || tintColor }]}>
+                        {promo.status === 'En cours' ? 'Promotion active' : 'Promotion à venir'}
                       </Text>
                     </View>
 
@@ -551,7 +529,7 @@ export default function HomeScreen() {
                         <MaterialIcons
                           name="redeem"
                           size={34}
-                          color={statusPromotionColorMap[promo.computedStatus] || tintColor}
+                          color={statusPromotionColorMap[promo.status] || tintColor}
                         />
                       </View>
                     </View>

@@ -1,11 +1,14 @@
 import { meta } from "./other.type";
 
-export type devisStatus = 'En saisie' | 'Validé' | 'Transformé';
+export type devisStatus = 'En saisie' | 'Validé' | 'Transformé' | 'En attente' | 'En saisie (opérateur)' | 'Inconnu';
 
 export const statusDevisColorMap: Record<devisStatus, string> = {
   'En saisie': '#f50b0b',
   'Validé': '#e47e08',
   'Transformé': '#16a34a',
+  'En attente': '#f5a623',
+  'En saisie (opérateur)': '#50b0f5',
+  'Inconnu': '#9e9e9e',
 };
 
 
@@ -62,9 +65,7 @@ export type listDevis = {
 
 
 export type devisLigneEdit = {
-  idDevis?: string;
-  idDevisLigne?: string;
-  qteDevis: number;
-  idProduit: string;
+  qte: number;
+  produitId?: string;
 };
 

@@ -1,18 +1,23 @@
 export type user = {
   id: string;
+  civilite: string;
   nom: string;
   code: string;
+  type: string;
   ncc: string;
   telFixe: string;
   telMobile: string;
-  dateNaissance: string;
+  dateNaissance: Date;
+  dateAnniversaire: string;
+  typePiece: string;
+  numPiece: string;
   adresse: string;
   nomRepresentantLegal: string;
   email: string;
   nomAgence: string;
+  plafond: number;
   photo: string;
 };
-
 
 
 export type AuthResponse = {

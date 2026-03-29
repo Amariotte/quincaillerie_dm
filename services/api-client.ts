@@ -177,3 +177,23 @@ export async function postJsonAuth<TResponse, TBody = unknown>(endpoint: string,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
+
+export async function deleteJsonAuth<TResponse>(endpoint: string, token: string): Promise<TResponse> {
+  return requestJson<TResponse>(endpoint, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+
+export async function putJsonAuth<TResponse, TBody = unknown>(endpoint: string, token: string, body?: TBody): Promise<TResponse> {
+  return requestJson<TResponse>(endpoint, {
+    method: 'PUT',
+    headers: { 
+      Authorization: `Bearer ${token}`,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}

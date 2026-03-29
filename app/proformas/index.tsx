@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   ScrollView,
   Text,
@@ -19,7 +20,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getfetchDevis } from '@/services/api-service';
+import { deleteDevis, getfetchDevis } from '@/services/api-service';
 import { sharedStyles } from '@/styles/shared';
 import { devisStatus, listDevis, statusDevisColorMap } from '@/types/devis.type';
 const statusFilters: Array<'Toutes' | devisStatus> = ['Toutes', 'En saisie', 'Validé', 'Transformé'];
@@ -39,6 +40,7 @@ export default function ProformasScreen() {
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeClient, setActiveClient] = useState('Tous');
   const [activeStatus, setActiveStatus] = useState<'Toutes' | devisStatus>('Toutes');
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
   const loadProformas = useCallback(async () => {
     if (!userToken) {
@@ -71,6 +73,54 @@ export default function ProformasScreen() {
   useEffect(() => {
     loadProformas();
   }, [loadProformas]);
+
+  const handleEditDevis = useCallback((devisId: string) => {
+    router.push({ pathname: '/devis/nouveau', params: { id: devisId } });
+  }, [router]);
+
+  const handleDeleteDevis = useCallback((devisId: string, codeDevis: string) => {
+    if (!userToken) {
+      return;
+    }
+
+    Alert.alert(
+      'Supprimer le devis',
+      `Voulez-vous vraiment supprimer le devis ${codeDevis} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingIds((prev) => (prev.includes(devisId) ? prev : [...prev, devisId]));
+              await deleteDevis(userToken, devisId);
+
+              setProformas((prev) => ({
+                ...prev,
+                data: prev.data.filter((item) => item.id !== devisId),
+              }));
+
+              const cachedData = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
+              const updatedData = (cachedData?.data ?? []).filter((item) => item.id !== devisId);
+
+              await setCacheData(DEVIS_LIST_CACHE_KEY, {
+                meta: cachedData?.meta ?? { page: 1, next: 1, totalPages: 1, total: updatedData.length, size: updatedData.length },
+                data: updatedData,
+              });
+            } catch (error) {
+              Alert.alert(
+                'Suppression impossible',
+                error instanceof Error ? error.message : 'Le devis n\'a pas pu être supprimé.'
+              );
+            } finally {
+              setDeletingIds((prev) => prev.filter((id) => id !== devisId));
+            }
+          },
+        },
+      ]
+    );
+  }, [userToken]);
 
 
   const sousCompteFilters = buildSousCompteFilters(
@@ -212,6 +262,8 @@ export default function ProformasScreen() {
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: proforma }) => {
                 const statusColor = statusDevisColorMap[proforma.status];
+                const isDraft = proforma.status === 'En saisie';
+                const isDeleting = deletingIds.includes(proforma.id);
 
                 return (
                   <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
@@ -239,12 +291,34 @@ export default function ProformasScreen() {
 
                     <View style={sharedStyles.invoiceBottomRow}>
                       <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
-                      <TouchableOpacity
-                        onPress={() => router.push(`/proformas/${proforma.id}` as never)}
-                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                      >
-                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {isDraft ? (
+                          <TouchableOpacity
+                            onPress={() => handleEditDevis(proforma.id)}
+                            disabled={isDeleting}
+                            style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18`, opacity: isDeleting ? 0.6 : 1 }]}
+                          >
+                            <Text style={[sharedStyles.actionText, { color: tintColor }]}>Modifier</Text>
+                          </TouchableOpacity>
+                        ) : null}
+
+                        {isDraft ? (
+                          <TouchableOpacity
+                            onPress={() => handleDeleteDevis(proforma.id, proforma.codeDevis)}
+                            disabled={isDeleting}
+                            style={[sharedStyles.actionButton, { backgroundColor: '#fee2e2', opacity: isDeleting ? 0.6 : 1 }]}
+                          >
+                            <Text style={[sharedStyles.actionText, { color: '#b91c1c' }]}>{isDeleting ? 'Suppression...' : 'Supprimer'}</Text>
+                          </TouchableOpacity>
+                        ) : null}
+
+                        <TouchableOpacity
+                          onPress={() => router.push(`/proformas/${proforma.id}` as never)}
+                          style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        >
+                          <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 );

@@ -2,23 +2,26 @@ import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { getfetchDevisById } from '@/services/api-service';
+import { deleteDevis, getfetchDevisById } from '@/services/api-service';
 import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from '@/tools/tools';
 import { devis, listDevis, statusDevisColorMap } from '@/types/devis.type';
-import { useLocalSearchParams } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function ProformaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
   const { userToken } = useAuthContext();
   const [proforma, setProforma] = useState<devis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadProformas = async () => {
@@ -102,6 +105,52 @@ export default function ProformaDetailScreen() {
 
   const statusColor = statusDevisColorMap[devis.status];
   const invoiceLines = devis.details ?? [];
+  const isDraft = devis.status === 'En saisie';
+
+  const handleEdit = () => {
+    router.push({ pathname: '/devis/nouveau', params: { id: devis.id } });
+  };
+
+  const handleDelete = () => {
+    if (!userToken) {
+      return;
+    }
+
+    Alert.alert(
+      'Supprimer le devis',
+      `Voulez-vous vraiment supprimer le devis ${devis.codeDevis} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsDeleting(true);
+              await deleteDevis(userToken, devis.id);
+
+              const cachedProformas = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
+              const updatedData = (cachedProformas?.data ?? []).filter((item) => item.id !== devis.id);
+
+              await setCacheData(DEVIS_LIST_CACHE_KEY, {
+                meta: cachedProformas?.meta ?? { page: 1, next: 1, totalPages: 1, total: updatedData.length, size: updatedData.length },
+                data: updatedData,
+              });
+
+              router.replace('/proformas');
+            } catch (error) {
+              Alert.alert(
+                'Suppression impossible',
+                error instanceof Error ? error.message : 'Le devis n\'a pas pu être supprimé.'
+              );
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
@@ -135,6 +184,28 @@ export default function ProformaDetailScreen() {
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur saisie : {devis.operateurSaisie ?? '—'}</Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Opérateur validation : {devis.operateurValidation ?? '—'}</Text>
             </View>
+
+            {isDraft ? (
+              <View style={styles.actionsRow}>
+                <TouchableOpacity
+                  onPress={handleEdit}
+                  disabled={isDeleting}
+                  style={[styles.primaryAction, { backgroundColor: tintColor }]}
+                >
+                  <MaterialIcons name="edit" size={18} color="#ffffff" />
+                  <Text style={styles.primaryActionText}>Modifier</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleDelete}
+                  disabled={isDeleting}
+                  style={[styles.secondaryAction, { borderColor: '#ef4444', opacity: isDeleting ? 0.6 : 1 }]}
+                >
+                  <MaterialIcons name="delete-outline" size={18} color="#ef4444" />
+                  <Text style={styles.secondaryActionText}>{isDeleting ? 'Suppression...' : 'Supprimer'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
            
           </View>
 
@@ -210,3 +281,43 @@ export default function ProformaDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10,
+  },
+  primaryAction: {
+    flex: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  primaryActionText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  secondaryAction: {
+    flex: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    backgroundColor: '#ffffff',
+  },
+  secondaryActionText: {
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+});

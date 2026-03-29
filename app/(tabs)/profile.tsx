@@ -18,6 +18,38 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+type ProfileField = {
+  label: string;
+  value: unknown;
+  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  formatter?: (value: unknown) => string;
+};
+
+
+const formatTextValue = (value: unknown) => {
+  if (value == null) {
+    return '';
+  }
+  return String(value).trim();
+};
+
+const formatDateValue = (value: unknown) => {
+  if (!(value instanceof Date)) {
+    return formatTextValue(value);
+  }
+  if (Number.isNaN(value.getTime())) {
+    return '';
+  }
+  return value.toLocaleDateString('fr-FR');
+};
+
+const formatNumberValue = (value: unknown) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return formatTextValue(value);
+  }
+  return new Intl.NumberFormat('fr-FR').format(value);
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, isLoading } = useAuthContext();
@@ -38,6 +70,37 @@ export default function ProfileScreen() {
     const identity = user?.email ?? user?.nom ?? 'utilisateur';
     return `https://i.pravatar.cc/240?u=${encodeURIComponent(identity)}`;
   }, [user?.email, user?.nom]);
+
+  const profileFields = useMemo(() => {
+    if (!user) {
+      return [] as Array<ProfileField & { displayValue: string }>;
+    }
+
+    const fields: ProfileField[] = [
+      { label: 'Code', value: user.code, icon: 'badge' },
+      { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'badge' },
+      { label: 'Type de pièce', value: user.typePiece, icon: 'description' },
+      { label: 'Numéro de pièce', value: user.numPiece, icon: 'description' },
+      { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake', formatter: formatDateValue },
+      { label: 'Date d\'anniversaire', value: user.dateAnniversaire, icon: 'cake' },
+      { label: 'Type', value: user.type, icon: 'cake' },
+      { label: 'Civilité', value: user.civilite, icon: 'wc' },
+      { label: 'Adresse', value: user.adresse, icon: 'place' },
+      { label: 'Email', value: user.email, icon: 'email' },
+      { label: 'Téléphone fixe', value: user.telFixe, icon: 'phone' },
+      { label: 'Téléphone mobile', value: user.telMobile, icon: 'smartphone' },
+      { label: 'NCC', value: user.ncc, icon: 'account-balance' },
+      { label: 'Agence', value: user.nomAgence, icon: 'apartment' },
+      { label: 'Plafond', value: user.plafond, icon: 'apartment', formatter: formatNumberValue },
+    ];
+
+    return fields
+      .map((field) => ({
+        ...field,
+        displayValue: field.formatter ? field.formatter(field.value) : formatTextValue(field.value),
+      }))
+      .filter((field) => field.displayValue.length > 0);
+  }, [user]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -72,29 +135,6 @@ export default function ProfileScreen() {
     );
   };
 
-  const openPopup = (type: FeedbackPopupType) => {
-    const popupContent: Record<FeedbackPopupType, { title: string; message: string }> = {
-      error: {
-        title: 'Erreur détectée',
-        message: 'Une erreur est survenue lors du traitement. Veuillez réessayer dans quelques instants.',
-      },
-      success: {
-        title: 'Opération réussie',
-        message: 'Votre modification a bien été prise en compte et enregistrée avec succès.',
-      },
-      info: {
-        title: 'Information utile',
-        message: 'Ce popup est un module réutilisable pour afficher des messages informatifs dans l’application.',
-      },
-    };
-
-    setPopupState({
-      visible: true,
-      type,
-      title: popupContent[type].title,
-      message: popupContent[type].message,
-    });
-  };
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
@@ -128,25 +168,14 @@ export default function ProfileScreen() {
           {user && (
             <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
               <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
-              {[
-                { label: 'Code', value: user.code, icon: 'badge' as const },
-                { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'badge' as const },
-                { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake' as const },
-                { label: 'Adresse', value: user.adresse, icon: 'place' as const },
-                { label: 'Email', value: user.email, icon: 'email' as const },
-                { label: 'Téléphone fixe', value: user.telFixe, icon: 'phone' as const },
-                { label: 'Téléphone mobile', value: user.telMobile, icon: 'smartphone' as const },
-                { label: 'NCC', value: user.ncc, icon: 'account-balance' as const },
-                { label: 'Agence', value: user.nomAgence, icon: 'apartment' as const },
-             
-              ].filter(f => f.value).map((field) => (
+              {profileFields.map((field) => (
                 <View key={field.label} style={[styles.profileRow, { borderBottomColor: mutedColor + '30' }]}>
                   <View style={[styles.profileIconWrap, { backgroundColor: tintColor + '18' }]}>
                     <MaterialIcons name={field.icon} size={18} color={tintColor} />
                   </View>
                   <View style={styles.profileTextWrap}>
                     <Text style={[styles.profileLabel, { color: mutedColor }]}>{field.label}</Text>
-                    <Text style={[styles.profileValue, { color: textColor }]}>{field.value}</Text>
+                    <Text style={[styles.profileValue, { color: textColor }]}>{field.displayValue}</Text>
                   </View>
                 </View>
               ))}
@@ -284,33 +313,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Tests des popups</Text>
-            <Text style={[styles.popupTestDescription, { color: mutedColor }]}>Déclenchez les différents types de messages pour vérifier le module.</Text>
-
-            <View style={styles.popupActionsRow}>
-              <TouchableOpacity
-                onPress={() => openPopup('error')}
-                style={[styles.popupActionChip, { backgroundColor: '#fee2e2' }]}
-              >
-                <Text style={[styles.popupActionText, { color: '#b91c1c' }]}>Erreur</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => openPopup('success')}
-                style={[styles.popupActionChip, { backgroundColor: '#dcfce7' }]}
-              >
-                <Text style={[styles.popupActionText, { color: '#15803d' }]}>Succès</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => openPopup('info')}
-                style={[styles.popupActionChip, { backgroundColor: '#d1fae5' }]}
-              >
-                <Text style={[styles.popupActionText, { color: tintColor }]}>Info</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+    
 
           {/* Logout Button */}
           <AuthButton

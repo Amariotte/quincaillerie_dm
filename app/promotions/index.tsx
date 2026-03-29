@@ -6,49 +6,21 @@ import { getfetchPromotions } from '@/services/api-service';
 import { getCacheData, PROMOTIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared';
 import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
-import { listPromotions, promotion, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
+import { listPromotions, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-function parsePromotionDate(value?: Date): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function getPromotionStatusFromDates(promotionItem: promotion): promotionStatus {
-  const now = Date.now();
-  const startDate = parsePromotionDate(promotionItem.dateDebut);
-  const endDate = parsePromotionDate(promotionItem.dateFin);
-
-  if (startDate && now < startDate.getTime()) {
-    return 'A venir';
-  }
-
-  if (endDate && now > endDate.getTime()) {
-    return 'A venir';
-  }
-
-  if (startDate || endDate) {
-    return 'En cours';
-  }
-
-  return promotionItem.status ?? 'A venir';
-}
 
 export default function PromotionsScreen() {
   const router = useRouter();
@@ -99,38 +71,41 @@ export default function PromotionsScreen() {
     loadPromotions();
   }, [loadPromotions]);
 
-  const promotionsWithComputedStatus = promotions.data.map((promotion) => ({
-    ...promotion,
-    computedStatus: getPromotionStatusFromDates(promotion),
-  }));
-
-  const statusFilters: Array<promotionStatus | 'Tous'> = [
+  const statusFilters = useMemo<Array<promotionStatus | 'Tous'>>(() => [
     'Tous',
     ...Array.from(
       new Set(
-        promotionsWithComputedStatus
-          .map((promotion) => promotion.computedStatus)
+        promotions.data
+          .map((promotion) => promotion.status)
           .filter((status): status is promotionStatus => typeof status === 'string' && status.trim().length > 0)
       )
     ),
-  ];
+  ], [promotions.data]);
 
-  const filteredPromotions = promotionsWithComputedStatus.filter((promotion) => {
-    const matchesQuery =
-      promotion.description?.toLowerCase().includes(query.toLowerCase()) ||
-      promotion.nomProduit?.toLowerCase().includes(query.toLowerCase()) ||
-      promotion.libelle?.toLowerCase().includes(query.toLowerCase());
-    const issueComparable = toComparableDate(promotion.dateDebut);
-    const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
-    const matchesStatus = activeStatus === 'Tous' || promotion.computedStatus === activeStatus;
+  const filteredPromotions = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
 
-    return matchesQuery && matchesDate && matchesStatus;
-  });
+    return promotions.data.filter((promotion) => {
+      const matchesQuery = normalizedQuery.length === 0 || [
+        promotion.description,
+        promotion.nomProduit,
+        promotion.libelle,
+        promotion.id,
+      ]
+        .filter(Boolean)
+        .some((value) => value?.toLowerCase().includes(normalizedQuery));
+      const issueComparable = toComparableDate(promotion.dateDebut);
+      const matchesDate = matchesDateRange(issueComparable, startDateQuery, endDateQuery);
+      const matchesStatus = activeStatus === 'Tous' || promotion.status === activeStatus;
+
+      return matchesQuery && matchesDate && matchesStatus;
+    });
+  }, [activeStatus, endDateQuery, promotions.data, query, startDateQuery]);
 
   const totalCount = filteredPromotions.length;
-  const activePromotions = filteredPromotions.filter((promotion) => promotion.computedStatus === 'En cours');
-  const activeCount = activePromotions.length;
-  const totalQuota = filteredPromotions.reduce((sum, promotion) => sum + promotion.nbMax, 0);
+  const activeCount = filteredPromotions.filter((promotion) => promotion.status === 'En cours').length;
+  const upcomingCount = filteredPromotions.filter((promotion) => promotion.status === 'A venir').length;
+  const hasFilters = query.trim().length > 0 || startDateQuery.length > 0 || endDateQuery.length > 0 || activeStatus !== 'Tous';
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
@@ -148,6 +123,11 @@ export default function PromotionsScreen() {
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Promotions en cours</Text>
               <Text style={[sharedStyles.statCount, { color: '#16a34a' }]}>{activeCount} promotion{activeCount > 1 ? 's' : ''}</Text>
+            </View>
+
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>À venir</Text>
+              <Text style={[sharedStyles.statCount, { color: '#f59e0b' }]}>{upcomingCount} promotion{upcomingCount > 1 ? 's' : ''}</Text>
             </View>
           </View>
 
@@ -198,13 +178,20 @@ export default function PromotionsScreen() {
             </ScrollView>
           )}
 
-          {isOfflineMode && !isLoading ? (
-            <View style={[sharedStyles.loadingBanner, { backgroundColor: cardColor }]}> 
-              <MaterialIcons name="wifi-off" size={16} color={mutedColor} />
-              <Text style={[sharedStyles.loadingText, { color: mutedColor }]}>Mode hors ligne activé (données locales).</Text>
+          <View style={[styles.resultsBanner, { backgroundColor: cardColor, borderColor }]}> 
+            <View>
+              <Text style={[styles.resultsTitle, { color: textColor }]}>{totalCount} résultat{totalCount > 1 ? 's' : ''}</Text>
+              <Text style={[styles.resultsSubtitle, { color: mutedColor }]}>
+                {hasFilters ? 'Filtres appliqués sur la liste des promotions.' : 'Toutes les campagnes disponibles sont affichées.'}
+              </Text>
             </View>
-          ) : null}
-
+            {isOfflineMode ? (
+              <View style={[styles.offlineBadge, { backgroundColor: `${tintColor}18` }]}>
+                <MaterialIcons name="wifi-off" size={14} color={tintColor} />
+                <Text style={[styles.offlineText, { color: tintColor }]}>Cache</Text>
+              </View>
+            ) : null}
+          </View>
 
           {isLoading ? (
             <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
@@ -227,49 +214,67 @@ export default function PromotionsScreen() {
               scrollEnabled={false}
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: promotion }) => {
-                const statusLabel = promotion.computedStatus;
-                const statusColor = statusPromotionColorMap[promotion.computedStatus] || tintColor;
+                const statusLabel = promotion.status;
+                const statusColor = statusPromotionColorMap[promotion.status] || tintColor;
+                const detailCount = promotion.details?.length ?? 0;
+                const hasDetailCount = detailCount > 0;
+                const volumeLabel = promotion.nbMax > 0
+                  ? `${promotion.nbMax} unité${promotion.nbMax > 1 ? 's' : ''}`
+                  : 'Non défini';
 
                 return (
-                  <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => router.push(`/promotions/${promotion.id}` as never)}
+                    style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
+                  >
                     <View style={sharedStyles.invoiceTopRow}>
-                      <View style={sharedStyles.invoiceRefBlock}>
-                          <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{promotion.description || 'Description non disponible'}</Text>
-                        <Text style={[sharedStyles.invoiceRef, { color: mutedColor }]}>{promotion.nomProduit || 'Produit non renseigné'}</Text>
+                      <View style={styles.cardMainBlock}>
+                        <View style={styles.cardTitleRow}>
+                          <Text style={[sharedStyles.invoiceRef, { color: textColor, flex: 1 }]} numberOfLines={2}>
+                            {promotion.libelle || 'Promotion sans libellé'}
+                          </Text>
+                          <MaterialIcons name="chevron-right" size={20} color={mutedColor} />
+                        </View>
+                        <Text style={[styles.productLabel, { color: mutedColor }]} numberOfLines={1}>
+                          {promotion.nomProduit || 'Produit non renseigné'}
+                        </Text>
+                        <Text style={[styles.descriptionText, { color: mutedColor }]} numberOfLines={2}>
+                          {promotion.description || 'Aucune description disponible pour cette campagne.'}
+                        </Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
                         <Text style={[sharedStyles.statusText, { color: statusColor }]}>{statusLabel}</Text>
                       </View>
                     </View>
 
-                    <View style={sharedStyles.invoiceMetaRow}>
-                      <View>
+                    <View style={styles.quickFactsRow}>
+                      <View style={[styles.quickFactCard, { backgroundColor: `${tintColor}10` }]}>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Début</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{promotion.dateDebut ? formatDate(promotion.dateDebut) : '—'}</Text>
                       </View>
-                      <View>
+                      <View style={[styles.quickFactCard, { backgroundColor: `${tintColor}10` }]}>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Fin</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{promotion.dateFin ? formatDate(promotion.dateFin) : '—'}</Text>
                       </View>
+                      <View style={[styles.quickFactCard, { backgroundColor: `${tintColor}10` }]}>
+                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Volume</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]} numberOfLines={1}>{volumeLabel}</Text>
+                      </View>
                     </View>
-                    
-                      {promotion.nbMax > 0 ? (
-                         <View style={sharedStyles.metaModeRow}>
-                      <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Volume maximum</Text>
-                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>{promotion.nbMax} unité{promotion.nbMax > 1 ? 's' : ''}</Text>
+
+                    <View style={styles.footerRow}>
+                      <View style={styles.footerMetaRow}>
+                        <Text style={[styles.footerMetaText, { color: mutedColor }]}>Réf. {promotion.id}</Text>
+                        {hasDetailCount ? (
+                          <Text style={[styles.footerMetaText, { color: mutedColor }]}>{detailCount} palier{detailCount > 1 ? 's' : ''}</Text>
+                        ) : null}
+                      </View>
+                      <View style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}> 
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
+                      </View>
                     </View>
-                      ) : null}
-                   
-            
-                    <View style={sharedStyles.invoiceBottomRow}>
-                      <TouchableOpacity
-                        onPress={() => router.push(`/promotions/${promotion.id}` as never)}
-                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
-                      >
-                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>{'Voir détail'}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               }}
             />
@@ -279,4 +284,80 @@ export default function PromotionsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  resultsBanner: {
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  resultsTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  resultsSubtitle: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  cardMainBlock: {
+    flex: 1,
+    gap: 4,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  productLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  descriptionText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  quickFactsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  quickFactCard: {
+    flex: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  footerMetaRow: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  footerMetaText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
 

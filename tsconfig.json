@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/(tabs)/styles.js", "app/(auth)/style.js", "app/compte/style.js", "app/ventes/style.js", "app/bonsAchats/style.js"  ]
+, "app/(tabs)/styles.js", "app/(auth)/style.js", "app/compte/style.js", "app/ventes/style.js", "app/bonsAchats/style.js", "types/.type copy.ts"  ]
 }

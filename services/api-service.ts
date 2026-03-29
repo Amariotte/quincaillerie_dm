@@ -174,18 +174,67 @@ export async function getfetchDevisById(token: string, id: string): Promise<devi
   return  d ;
 }
 
-export async function postDevisLigne(token: string, ligne: devisLigneEdit): Promise<devis | null> {
+export async function postDevisLigne(token: string, ligne: devisLigneEdit, devisId?: string): Promise<devis | null> {
   if (isModeDemoEnabled()) {
-    const found = proformasFakeData.data.find(d => d.id === ligne.idDevis);
+    if (!devisId) {
+      return null;
+    }
+
+    const found = proformasFakeData.data.find((devis) => devis.id === devisId);
+    return found ?? null;
+  }
+
+  const endpoint = devisId
+    ? `${apiConfig.endpoints.devis}/${devisId}`
+    : `${apiConfig.endpoints.devis}`;
+
+  const d = await postJsonAuth<devis, devisLigneEdit>(endpoint, token, ligne);
+  return d;
+}
+
+export async function updateDevisLigne(token: string, devisId: string, ligneId: string, ligne: devisLigneEdit): Promise<devis | null> {
+  if (isModeDemoEnabled()) {
+    const found = proformasFakeData.data.find((devis) => devis.id === devisId);
     return found ?? null;
   }
 
   const d = await postJsonAuth<devis, devisLigneEdit>(
-    `${apiConfig.endpoints.devis}/${ligne.idDevis}`,
+    `${apiConfig.endpoints.devis}/${devisId}/lignes/${ligneId}`,
     token,
     ligne
   );
+
+
+
   return d;
+}
+
+export async function deleteDevisLigne(token: string, devisId: string, ligneId: string): Promise<devis | null> {
+  if (isModeDemoEnabled()) {
+    const found = proformasFakeData.data.find((devis) => devis.id === devisId);
+    return found ?? null;
+  }
+
+  const d = await getJsonAuth<devis | null>(
+    `${apiConfig.endpoints.devis}/${devisId}/lignes/${ligneId}/delete`,
+    token
+  );
+
+
+  return d;
+}
+
+
+
+export async function deleteDevis(token: string, id: string): Promise<boolean> {
+  if (isModeDemoEnabled()) {
+    const initialLength = proformasFakeData.data.length;
+    proformasFakeData.data = proformasFakeData.data.filter((devis) => devis.id !== id);
+    return proformasFakeData.data.length < initialLength;
+  }
+
+  await getJsonAuth<null>(`${apiConfig.endpoints.devis}/${id}/delete`, token);
+  return true;
 }
 
 
