@@ -1,4 +1,5 @@
 ﻿import { AppHeader } from '@/components/app-header';
+import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, updateDevisLigne } from '@/services/api-service';
@@ -11,7 +12,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -54,6 +54,39 @@ export default function ProformaSaisieScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupType, setPopupType] = useState<FeedbackPopupType>('info');
+  const [popupTitle, setPopupTitle] = useState('Information');
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupButtonLabel, setPopupButtonLabel] = useState('Fermer');
+  const [popupCloseAction, setPopupCloseAction] = useState<(() => void) | null>(null);
+
+  const openPopup = useCallback(
+    (
+      type: FeedbackPopupType,
+      title: string,
+      message: string,
+      buttonLabel = 'Fermer',
+      onCloseAction?: () => void,
+    ) => {
+      setPopupType(type);
+      setPopupTitle(title);
+      setPopupMessage(message);
+      setPopupButtonLabel(buttonLabel);
+      setPopupCloseAction(() => onCloseAction ?? null);
+      setPopupVisible(true);
+    },
+    [],
+  );
+
+  const closePopup = useCallback(() => {
+    setPopupVisible(false);
+    const action = popupCloseAction;
+    setPopupCloseAction(null);
+    if (action) {
+      action();
+    }
+  }, [popupCloseAction]);
 
   const applyUpdatedDevis = useCallback((dev: devis | null) => {
     if (!dev) {
@@ -150,10 +183,10 @@ export default function ProformaSaisieScreen() {
           applyUpdatedDevis(updatedDevis);
         }
       } catch {
-        Alert.alert('Erreur', "La mise à jour de la ligne du devis a échoué.");
+        openPopup('error', 'Erreur', "La mise à jour de la ligne du devis a échoué.");
       }
     },
-    [applyUpdatedDevis, proforma?.id, userToken],
+    [applyUpdatedDevis, openPopup, proforma?.id, userToken],
   );
 
   // Suppression locale d'une ligne
@@ -168,9 +201,9 @@ export default function ProformaSaisieScreen() {
       const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
       applyUpdatedDevis(updatedDevis);
     } catch {
-      Alert.alert('Erreur', 'La suppression de la ligne a échoué.');
+      openPopup('error', 'Erreur', 'La suppression de la ligne a échoué.');
     }
-  }, [applyUpdatedDevis, proforma?.id, userToken]);
+  }, [applyUpdatedDevis, openPopup, proforma?.id, userToken]);
 
   // Ajout d'un produit depuis le catalogue
   const addProduct = useCallback(
@@ -188,27 +221,51 @@ export default function ProformaSaisieScreen() {
           const updatedDevis = await postDevisLigne(userToken, ligne, proforma?.id);
           applyUpdatedDevis(updatedDevis);
         } catch {
-          Alert.alert('Erreur', "L'ajout de la ligne a échoué.");
+          openPopup('error', 'Erreur', "L'ajout de la ligne a échoué.");
         }
       }
     },
-    [applyUpdatedDevis, lines, proforma?.id, userToken],
+    [applyUpdatedDevis, lines, openPopup, proforma?.id, userToken],
   );
 
-  const handleSave = () => {
+  const handleValidate = () => {
     if (lines.length === 0) {
-      Alert.alert('Aucun article', "Ajoutez au moins un produit avant d'enregistrer.");
+      openPopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
       return;
     }
     setIsSaving(true);
     // Ici : appel API création/validation proforma
     setTimeout(() => {
       setIsSaving(false);
-      Alert.alert(
-        isEditMode ? 'Devis modifié' : 'Devis créé',
-        isEditMode ? 'Les modifications ont été enregistrées.' : 'Le devis a été créé.',
-        [{ text: 'OK', onPress: () => router.back() }],
+      openPopup(
+        'success',
+        'Devis validé',
+       'Le devis a été validé.',
+        'OK',
+        () => router.back(),
       );
+    }, 800);
+  };
+
+  const handleSave = () => {
+    if (lines.length === 0) {
+      openPopup('info', 'Aucun article', "Ajoutez au moins un produit avant d'enregistrer.");
+      return;
+    }
+    setIsSaving(true);
+    // Ici : appel API création/validation proforma
+    setTimeout(() => {
+      setIsSaving(false);
+      openPopup(
+        'success',
+        'Devis enregistré',
+        'Le devis a été enregistré. Retour en cours...',
+        'OK',
+      );
+
+      setTimeout(() => {
+        router.back();
+      }, 1200);
     }, 800);
   };
 
@@ -416,11 +473,12 @@ export default function ProformaSaisieScreen() {
 
           {/* Boutons d'action */}
           <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.secondaryBtn, { borderColor }]} onPress={() => router.back()}>
-              <Text style={[styles.secondaryBtnText, { color: textColor }]}>Annuler</Text>
+            <TouchableOpacity style={[styles.secondaryBtn, { borderColor }]} onPress={() => { handleSave() }}>
+              <Text style={[styles.secondaryBtnText, { color: textColor }]}>Enregistrer</Text>
             </TouchableOpacity>
+           
             <TouchableOpacity
-              onPress={handleSave}
+              onPress={handleValidate}
               disabled={isSaving}
               style={[styles.primaryBtn, { backgroundColor: tintColor, opacity: isSaving ? 0.7 : 1 }]}
             >
@@ -428,7 +486,7 @@ export default function ProformaSaisieScreen() {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.primaryBtnText}>
-                  {isEditMode ? 'Enregistrer' : 'Créer le devis'}
+                  {'Valider le devis'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -436,6 +494,14 @@ export default function ProformaSaisieScreen() {
 
         </View>
       </ScrollView>
+      <FeedbackPopup
+        visible={popupVisible}
+        type={popupType}
+        title={popupTitle}
+        message={popupMessage}
+        buttonLabel={popupButtonLabel}
+        onClose={closePopup}
+      />
     </SafeAreaView>
   );
 }

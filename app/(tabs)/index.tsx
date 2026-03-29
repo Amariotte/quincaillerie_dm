@@ -1,15 +1,15 @@
 import { AppHeader } from '@/components/app-header';
+import { SkeletonCard } from '@/components/skeleton-loader';
 import { menuItems } from '@/data/menus';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { fetchSoldeCompte, getfetchPromotions, getfetchRecentMouvements, getStats } from '@/services/api-service';
-import { BALANCE_CACHE_KEY, getCacheData, PROMOTIONS_LIST_CACHE_KEY, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
+import { fetchSoldeCompte, getfetchRecentMouvements, getStats } from '@/services/api-service';
+import { BALANCE_CACHE_KEY, getCacheData, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
 import COLORS from '@/styles/colors';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { stat } from '@/types/other.type';
-import { listPromotions, statusPromotionColorMap } from '@/types/promotions.type';
 import { SoldeResponse } from '@/types/solde.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -79,15 +79,6 @@ function getSignedAmountDisplay(mouvement: listMouvements['data'][number]) {
   };
 }
 
-function parsePromotionDate(value?: Date): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
 export default function HomeScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
@@ -100,7 +91,6 @@ export default function HomeScreen() {
   const [recentMouvements, setRecentMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
   const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] = useState(true);
   const [statInfos, setStatInfos] = useState<stat | null>(null);
-  const [promotions, setPromotions] = useState<listPromotions>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
 
   const loadBalance = useCallback(async () => {
     let hasCachedBalance = false;
@@ -155,26 +145,7 @@ export default function HomeScreen() {
     }
   }, [userToken]);
 
-  const loadPromotionsData = useCallback(async () => {
-    try {
-      const cached = await getCacheData<listPromotions>(PROMOTIONS_LIST_CACHE_KEY);
-      if (cached && cached.data.length > 0) {
-        setPromotions(cached);
-      }
-
-      if (!userToken) {
-        return;
-      }
-
-      const data = await getfetchPromotions(userToken);
-      setPromotions(data);
-      await setCacheData(PROMOTIONS_LIST_CACHE_KEY, data);
-    } catch {
-      setIsOfflineMode(true);
-    }
-  }, [userToken]);
-
-
+ 
    const loadRecentMouvements = useCallback(async () => {
     setIsLoadingRecentMouvements(true);
     try {
@@ -199,35 +170,18 @@ export default function HomeScreen() {
     loadBalance();
     loadRecentMouvements();
     loadStatData();
-    loadPromotionsData();
-  }, [loadBalance, loadRecentMouvements, loadStatData, loadPromotionsData]);
+  }, [loadBalance, loadRecentMouvements, loadStatData]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([loadBalance(), loadRecentMouvements(), loadStatData(), loadPromotionsData()]);
+      await Promise.all([loadBalance(), loadRecentMouvements(), loadStatData()]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [loadBalance, loadRecentMouvements, loadStatData, loadPromotionsData]);
+  }, [loadBalance, loadRecentMouvements, loadStatData]);
 
-  const promotionsBanner = useMemo(() => {
-    return promotions.data
-      .map((promotionItem) => ({
-        ...promotionItem
-      }))
-      .filter((promotionItem) => promotionItem.status === 'En cours' || promotionItem.status === 'A venir')
-      .sort((first, second) => {
-        if (first.status !== second.status) {
-          return first.status === 'En cours' ? -1 : 1;
-        }
-
-        const firstDate = first.dateDebut ? new Date(first.dateDebut).getTime() : Number.MAX_SAFE_INTEGER;
-        const secondDate = second.dateDebut ? new Date(second.dateDebut).getTime() : Number.MAX_SAFE_INTEGER;
-        return firstDate - secondDate;
-      });
-  }, [promotions.data]);
-
+ 
   const handleMenuPress = (itemId: string) => {
     if (itemId === 'ventes') {
       router.push('/ventes' as never);
@@ -449,10 +403,11 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={[styles.balanceCaption, { color: '#f59e0b' }]}>Mon solde courant</Text>
               </View>
-              <TouchableOpacity onPress={() => { loadBalance(); loadPromotionsData(); loadRecentMouvements(); loadStatData(); }} style={[styles.depositButton, { backgroundColor: tintColor }]}> 
+              <TouchableOpacity onPress={() => { loadBalance(); loadRecentMouvements(); loadStatData(); }} style={[styles.depositButton, { backgroundColor: tintColor }]}> 
                 <MaterialIcons name="refresh" size={18} color="#ffffff" />
               </TouchableOpacity>
             </View>
+
 
             <View style={styles.metricsRow}>
               <View style={styles.metricBlock}>
@@ -483,66 +438,6 @@ export default function HomeScreen() {
             ItemSeparatorComponent={() => <View style={styles.menuSeparator} />}
           />
 
-          {promotionsBanner.length > 0 && (
-            <>
-              <View style={styles.promotionsHeader}>
-                <Text style={[styles.sectionTitle, styles.promoTitleSection, { color: textColor }]}>Promotions</Text>
-                <TouchableOpacity onPress={() => router.push('/promotions' as never)}>
-                  <Text style={[styles.seeAllText, { color: tintColor }]}>Voir tout</Text>
-                </TouchableOpacity>
-              </View>
-
-              <FlatList
-                data={promotionsBanner}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => String(item.id)}
-                contentContainerStyle={styles.promoBannerList}
-                ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
-                renderItem={({ item: promo }) => (
-                  <TouchableOpacity
-                    activeOpacity={0.88}
-                    onPress={() => router.push(`/promotions/${promo.id}` as never)}
-                    style={[
-                      styles.promoCard,
-                      styles.promoBannerCard,
-                      { backgroundColor: `${COLORS.primaryColor}22`, borderColor: `${COLORS.primaryColor}55` },
-                    ]}
-                  >
-                    <View style={styles.promoTopRow}>
-                      <Text style={[styles.promoBadge, { color: statusPromotionColorMap[promo.status] || tintColor }]}>
-                        {promo.status === 'En cours' ? 'Promotion active' : 'Promotion à venir'}
-                      </Text>
-                    </View>
-
-                    <View style={styles.promoBodyRow}>
-                      <View style={styles.promoTextWrap}>
-                        <Text style={[styles.promoTitle, { color: textColor }]} numberOfLines={1}>
-                          {promo.libelle || promo.nomProduit || 'Offre spéciale'}
-                        </Text>
-                        <Text style={[styles.promoDescription, { color: mutedColor }]} numberOfLines={2}>
-                          {promo.description || promo.nomProduit || 'Une promotion est disponible. Touchez pour voir les détails.'}
-                        </Text>
-                      </View>
-
-                      <View style={[styles.promoIconCard, { backgroundColor: `${tintColor}22` }]}>
-                        <MaterialIcons
-                          name="redeem"
-                          size={34}
-                          color={statusPromotionColorMap[promo.status] || tintColor}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.promoFooterRow}>
-                      <Text style={[styles.promoDate, { color: mutedColor }]}>Du {promo.dateDebut ? formatDate(promo.dateDebut) : '—'}</Text>
-                      <Text style={[styles.promoDate, { color: mutedColor }]}>au {promo.dateFin ? formatDate(promo.dateFin) : '—'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-            </>
-          )}
 
           <View style={styles.transactionsHeader}>
             <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>20 Dernières transactions</Text>
@@ -553,9 +448,11 @@ export default function HomeScreen() {
 
           <View style={styles.transactionList}>
             {isLoadingRecentMouvements && recentMouvements.data.length === 0 ? (
-              <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
-                <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Chargement...</Text>
-              </View>
+              <>
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={2} />
+                <SkeletonCard lines={2} />
+              </>
             ) : recentMouvements.data.length === 0 ? (
               <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
                 <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune transaction recente</Text>

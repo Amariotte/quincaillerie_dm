@@ -25,6 +25,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style';
 
+type BonStatusFilter = 'all' | 'active' | 'expired';
+
+function isExpiredBon(bon: bonAchat): boolean {
+  if (!bon.dateExpBa) {
+    return false;
+  }
+
+  return new Date(bon.dateExpBa).getTime() < Date.now();
+}
+
 export default function BonsAchatsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
@@ -40,6 +50,7 @@ export default function BonsAchatsScreen() {
   const [selectedBonId, setSelectedBonId] = useState<string | null>(null);
   const [selectedBonDetail, setSelectedBonDetail] = useState<bonAchat | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<BonStatusFilter>('all');
 
   const loadBons = useCallback(async () => {
     if (!userToken) {
@@ -102,9 +113,30 @@ export default function BonsAchatsScreen() {
         || bon.numeroBa.toLowerCase().includes(normalizedQuery)
         || (bon.nomAgence ?? '').toLowerCase().includes(normalizedQuery);
 
-      return matchesQuery;
+      const expired = isExpiredBon(bon);
+      const isActive = !expired && bon.etatBa === 1;
+      const matchesStatus =
+        statusFilter === 'all'
+        || (statusFilter === 'active' && isActive)
+        || (statusFilter === 'expired' && expired);
+
+      return matchesQuery && matchesStatus;
     });
-  }, [bonAchats.data, query]);
+  }, [bonAchats.data, query, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    const initial = { all: bonAchats.data.length, active: 0, expired: 0 };
+
+    for (const bon of bonAchats.data) {
+      if (isExpiredBon(bon)) {
+        initial.expired += 1;
+      } else if (bon.etatBa === 1) {
+        initial.active += 1;
+      }
+    }
+
+    return initial;
+  }, [bonAchats.data]);
 
   const totalCount = filteredBons.length;
   const totalAmount = filteredBons.reduce((sum, bon) => sum + bon.montantBa, 0);
@@ -186,6 +218,13 @@ export default function BonsAchatsScreen() {
       </View>
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
+          {isOfflineMode && !isLoading ? (
+            <View style={[styles.offlineBanner, { backgroundColor: `${tintColor}14`, borderColor: `${tintColor}35` }]}>
+              <MaterialIcons name="wifi-off" size={16} color={tintColor} />
+              <Text style={[styles.offlineBannerText, { color: tintColor }]}>Mode hors ligne: affichage des données disponibles.</Text>
+            </View>
+          ) : null}
+
           <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les bons</Text>
@@ -206,6 +245,41 @@ export default function BonsAchatsScreen() {
               placeholderTextColor={mutedColor}
               style={[sharedStyles.searchInput, { color: textColor }]}
             />
+            {query.length > 0 ? (
+              <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <MaterialIcons name="close" size={18} color={mutedColor} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <View style={styles.filterRow}>
+            <TouchableOpacity
+              onPress={() => setStatusFilter('all')}
+              style={[
+                styles.filterChip,
+                statusFilter === 'all' && { backgroundColor: `${tintColor}15`, borderColor: `${tintColor}55` },
+              ]}
+            >
+              <Text style={[styles.filterChipText, { color: statusFilter === 'all' ? tintColor : mutedColor }]}>Tous ({statusCounts.all})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setStatusFilter('active')}
+              style={[
+                styles.filterChip,
+                statusFilter === 'active' && { backgroundColor: '#dcfce7', borderColor: '#16a34a66' },
+              ]}
+            >
+              <Text style={[styles.filterChipText, { color: statusFilter === 'active' ? '#15803d' : mutedColor }]}>Actifs ({statusCounts.active})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setStatusFilter('expired')}
+              style={[
+                styles.filterChip,
+                statusFilter === 'expired' && { backgroundColor: '#fee2e2', borderColor: '#dc262666' },
+              ]}
+            >
+              <Text style={[styles.filterChipText, { color: statusFilter === 'expired' ? '#b91c1c' : mutedColor }]}>Expirés ({statusCounts.expired})</Text>
+            </TouchableOpacity>
           </View>
 
           {isLoading && (
@@ -238,7 +312,7 @@ export default function BonsAchatsScreen() {
             <>
               <View style={styles.horizontalListHeader}>
                 <Text style={[styles.horizontalListTitle, { color: textColor }]}>Liste des bons</Text>
-                <Text style={[styles.horizontalListHint, { color: mutedColor }]}>Fais glisser et sélectionne un bon</Text>
+                <Text style={[styles.horizontalListHint, { color: mutedColor }]}>{filteredBons.length} résultat{filteredBons.length > 1 ? 's' : ''}</Text>
               </View>
 
               <FlatList
@@ -248,7 +322,7 @@ export default function BonsAchatsScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalListContent}
                 renderItem={({ item: bon }) => {
-                  const isExpired = bon.dateExpBa ? new Date(bon.dateExpBa).getTime() < Date.now() : false;
+                  const isExpired = isExpiredBon(bon);
                   const statusLabel = isExpired ? 'Expiré' : bon.etatBa === 1 ? 'Actif' : 'Inactif';
                   const statusColor = isExpired ? '#dc2626' : bon.etatBa === 1 ? '#16a34a' : '#d97706';
                   const isSelected = String(bon.id) === String(selectedBon?.id);
@@ -325,7 +399,7 @@ export default function BonsAchatsScreen() {
               />
 
               {selectedBonData && (() => {
-                const isExpired = selectedBonData.dateExpBa ? new Date(selectedBonData.dateExpBa).getTime() < Date.now() : false;
+                const isExpired = isExpiredBon(selectedBonData);
                 const statusLabel = isExpired ? 'Expiré' : selectedBonData.etatBa === 1 ? 'Actif' : 'Inactif';
                 const statusColor = isExpired ? '#dc2626' : selectedBonData.etatBa === 1 ? '#16a34a' : '#d97706';
                 const bonAchatLines = selectedBonData.details ?? [];

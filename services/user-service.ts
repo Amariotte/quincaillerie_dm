@@ -50,18 +50,19 @@ export async function signOutApi(userToken: string): Promise<void> {
     throw new Error('Token utilisateur manquant');
   }
 
-  await postJsonAuth<void>(apiConfig.endpoints.logout, userToken);
+  await getJsonAuth<void>(apiConfig.endpoints.logout, userToken);
 }
 
 
 export async function updatePasswordApi(userToken: string, oldPassword: string, newPassword: string): Promise<void> {
   if (isModeDemoEnabled()) {
-    return;
+    return ;
   }
 
   if (!userToken) {
     throw new Error('Token utilisateur manquant');
   }
 
-  await postJsonAuth<void>(apiConfig.endpoints.changePassword, userToken, { oldPassword, newPassword });
+  const response = await postJsonAuth<void>(apiConfig.endpoints.changePassword, userToken, { oldPassword, newPassword });
+  return response;
 }

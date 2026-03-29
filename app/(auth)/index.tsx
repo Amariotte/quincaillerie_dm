@@ -14,6 +14,8 @@ export default function AuthIndex() {
           <View style={styles.logoContainer}>
             <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
             <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
+            <Text style={styles.welcomeSubtitle}>Gestion et Suivi Professionnel</Text>
+            <Text style={styles.welcomeDescription}>Accédez à votre tableau de bord pour gérer vos activités, ventes et commissions en temps réel.</Text>
           </View>
         </View>
 
@@ -22,7 +24,7 @@ export default function AuthIndex() {
           onPress={() => router.push('/(auth)/login')}
           activeOpacity={0.85}
         >
-          <Text style={styles.welcomeButtonText}>Commencer →</Text>
+          <Text style={styles.welcomeButtonText}>Se connecter →</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

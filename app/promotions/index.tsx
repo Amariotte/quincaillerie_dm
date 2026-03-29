@@ -178,21 +178,7 @@ export default function PromotionsScreen() {
             </ScrollView>
           )}
 
-          <View style={[styles.resultsBanner, { backgroundColor: cardColor, borderColor }]}> 
-            <View>
-              <Text style={[styles.resultsTitle, { color: textColor }]}>{totalCount} résultat{totalCount > 1 ? 's' : ''}</Text>
-              <Text style={[styles.resultsSubtitle, { color: mutedColor }]}>
-                {hasFilters ? 'Filtres appliqués sur la liste des promotions.' : 'Toutes les campagnes disponibles sont affichées.'}
-              </Text>
-            </View>
-            {isOfflineMode ? (
-              <View style={[styles.offlineBadge, { backgroundColor: `${tintColor}18` }]}>
-                <MaterialIcons name="wifi-off" size={14} color={tintColor} />
-                <Text style={[styles.offlineText, { color: tintColor }]}>Cache</Text>
-              </View>
-            ) : null}
-          </View>
-
+      
           {isLoading ? (
             <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
           ) : isError ? (
@@ -234,7 +220,6 @@ export default function PromotionsScreen() {
                           <Text style={[sharedStyles.invoiceRef, { color: textColor, flex: 1 }]} numberOfLines={2}>
                             {promotion.libelle || 'Promotion sans libellé'}
                           </Text>
-                          <MaterialIcons name="chevron-right" size={20} color={mutedColor} />
                         </View>
                         <Text style={[styles.productLabel, { color: mutedColor }]} numberOfLines={1}>
                           {promotion.nomProduit || 'Produit non renseigné'}
@@ -296,14 +281,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  resultsTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  resultsSubtitle: {
-    fontSize: 12,
-    marginTop: 4,
-  },
+ 
   offlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',

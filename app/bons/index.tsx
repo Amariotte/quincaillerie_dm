@@ -164,9 +164,7 @@ export default function BonsScreen() {
                       <View style={sharedStyles.invoiceRefBlock}>
                         <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{bon.codeBL}</Text>
                       </View>
-                      <View style={[sharedStyles.statusBadge, { backgroundColor: `${tintColor}18` }]}>
-                        <Text style={[sharedStyles.statusText, { color: tintColor }]}>Livraison</Text>
-                      </View>
+                      
                     </View>
 
                     <View style={sharedStyles.invoiceMetaRow}>

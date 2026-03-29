@@ -10,7 +10,7 @@ import { listMouvements } from '@/types/mouvements.type';
 import { listOperations } from '@/types/operations.type';
 import { stat } from '@/types/other.type';
 import { listProduits } from '@/types/produits.type';
-import { listPromotions } from '@/types/promotions.type';
+import { listPromotions, promotion } from '@/types/promotions.type';
 import { listReglements, reglement } from '@/types/reglements.type';
 import { SoldeResponse } from '@/types/solde.type';
 import { getJsonAuth, postJsonAuth } from './api-client';
@@ -315,5 +315,17 @@ export async function getfetchBonLivraisonById(token: string, id: string): Promi
     }
   
   const data = await getJsonAuth<bonLivraison>(`${apiConfig.endpoints.bonLivraisons}/${id}`, token);
+  return data;
+}
+
+export async function getfetchPromotionById(token: string, id: string): Promise<promotion | null> {
+  
+    if (isModeDemoEnabled()) {
+      return promotionsFakeData.data.filter(promotion => promotion.id === id).length > 0
+        ? promotionsFakeData.data.filter(promotion => promotion.id === id)[0]
+        : null;
+    }
+  
+  const data = await getJsonAuth<promotion>(`${apiConfig.endpoints.promotions}/${id}`, token);
   return data;
 }

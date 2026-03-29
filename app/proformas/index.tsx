@@ -282,11 +282,7 @@ export default function ProformasScreen() {
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Émise le</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
                       </View>
-
-                      <View>
-                        <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Articles</Text>
-                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{proforma.nbProduits}</Text>
-                      </View>
+                      
                     </View>
 
                     <View style={sharedStyles.invoiceBottomRow}>
@@ -296,9 +292,10 @@ export default function ProformasScreen() {
                           <TouchableOpacity
                             onPress={() => handleEditDevis(proforma.id)}
                             disabled={isDeleting}
+                            accessibilityLabel="Modifier le devis"
                             style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18`, opacity: isDeleting ? 0.6 : 1 }]}
                           >
-                            <Text style={[sharedStyles.actionText, { color: tintColor }]}>Modifier</Text>
+                            <MaterialIcons name="edit" size={18} color={tintColor} />
                           </TouchableOpacity>
                         ) : null}
 
@@ -306,9 +303,14 @@ export default function ProformasScreen() {
                           <TouchableOpacity
                             onPress={() => handleDeleteDevis(proforma.id, proforma.codeDevis)}
                             disabled={isDeleting}
+                            accessibilityLabel="Supprimer le devis"
                             style={[sharedStyles.actionButton, { backgroundColor: '#fee2e2', opacity: isDeleting ? 0.6 : 1 }]}
                           >
-                            <Text style={[sharedStyles.actionText, { color: '#b91c1c' }]}>{isDeleting ? 'Suppression...' : 'Supprimer'}</Text>
+                            {isDeleting ? (
+                              <ActivityIndicator size="small" color="#b91c1c" />
+                            ) : (
+                              <MaterialIcons name="delete-outline" size={18} color="#b91c1c" />
+                            )}
                           </TouchableOpacity>
                         ) : null}
 

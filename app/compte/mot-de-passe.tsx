@@ -1,10 +1,11 @@
 import { AppHeader } from '@/components/app-header';
+import { FeedbackPopup } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { updatePasswordApi } from '@/services/user-service';
 import { sharedStyles } from '@/styles/shared.js';
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './style.js';
 
@@ -16,6 +17,7 @@ export default function ChangePasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessPopupVisible, setIsSuccessPopupVisible] = useState(false);
 
   const handleSubmit = async () => {
     if (!currentPassword || !nextPassword || !confirmPassword) {
@@ -43,10 +45,10 @@ export default function ChangePasswordScreen() {
 
     try {
       await updatePasswordApi(userToken, currentPassword, nextPassword);
-      Alert.alert('Mot de passe modifié', 'Le mot de passe a été mis à jour avec succès.');
       setCurrentPassword('');
       setNextPassword('');
       setConfirmPassword('');
+      setIsSuccessPopupVisible(true);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Impossible de modifier le mot de passe.');
     } finally {
@@ -127,6 +129,15 @@ export default function ChangePasswordScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <FeedbackPopup
+        visible={isSuccessPopupVisible}
+        type="success"
+        title="Mot de passe modifié"
+        message="Le mot de passe a été mis à jour avec succès."
+        buttonLabel="Continuer"
+        onClose={() => setIsSuccessPopupVisible(false)}
+      />
     </SafeAreaView>
   );
 }

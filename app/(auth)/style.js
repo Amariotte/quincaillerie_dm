@@ -1,10 +1,17 @@
 import { StyleSheet } from 'react-native';
 import COLORS from '../../styles/colors';
-import { Colors } from '../../styles/theme';
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#f5faf7',
+  },
+
+  keyboardWrapper: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
   },
 
   welcomeContainer: {
@@ -22,29 +29,69 @@ const styles = StyleSheet.create({
   },
 
   loginContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingTop: 18,
+    paddingBottom: 22,
+  },
+
+  loginTopBar: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
   },
 
   logo: {
-    width: 250,
-    height: 250,
+    width: 200,
+    height: 200,
   },
 
   brandName: {
-    marginTop: -40,
-    fontSize: 45,
+    marginTop: -30,
+    fontSize: 38,
     fontWeight: '700',
     color: COLORS.primaryColor,
+  },
+
+  welcomeSubtitle: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.secondaryColor,
+  },
+
+  welcomeDescription: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#60766a',
+    textAlign: 'center',
+    maxWidth: 320,
+    lineHeight: 20,
+  },
+
+  screenTitle: {
+    marginTop: 4,
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.secondaryColor,
+  },
+
+  screenSubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#5f7166',
+    textAlign: 'center',
+    maxWidth: 290,
+    lineHeight: 18,
   },
 
   welcomeButton: {
@@ -62,22 +109,24 @@ const styles = StyleSheet.create({
   },
 
   formBlock: {
-    width: '80%',
+    width: '100%',
     marginTop: 8,
     borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     backgroundColor: '#ffffff',
     shadowColor: '#206A5D',
     shadowOpacity: 0.08,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#e1ede7',
   },
 
   loginLabel: {
     color: COLORS.primaryColor,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginTop: 10,
     marginBottom: 6,
@@ -86,19 +135,22 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#b8cfc2',
+    borderWidth: 1,
+    borderColor: '#cfe2d8',
+    borderRadius: 12,
     marginBottom: 6,
-    paddingBottom: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    backgroundColor: '#fcfefd',
   },
 
   inputRowFocused: {
-    borderBottomColor: COLORS.brandButtonColor,
+    borderColor: COLORS.brandButtonColor,
     borderBottomWidth: 2,
   },
 
   inputRowError: {
-    borderBottomColor: COLORS.errorColor,
+    borderColor: COLORS.errorColor,
   },
 
   inputIcon: {
@@ -113,7 +165,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.secondaryColor,
     fontSize: 15,
-    paddingVertical: 2,
+    paddingVertical: 0,
   },
 
   passwordToggle: {
@@ -144,17 +196,26 @@ const styles = StyleSheet.create({
   },
 
   loginButton: {
-    marginTop: 14,
+    marginTop: 8,
     backgroundColor: COLORS.primaryColor,
     borderRadius: 999,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
   },
 
   loginButtonText: {
     color: COLORS.whiteColor,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
+  },
+
+  forgotLink: {
+    marginTop: 6,
+    marginBottom: 10,
+    color: COLORS.primaryColor,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'right',
   },
 
   secondaryLink: {
@@ -168,36 +229,72 @@ const styles = StyleSheet.create({
 
   guestButton: {
     alignSelf: 'center',
-    marginTop: 20,
+    marginTop: 10,
     borderRadius: 999,
     paddingHorizontal: 18,
-    paddingVertical: 9,
-    backgroundColor: COLORS.primaryColor,
+    paddingVertical: 10,
+    backgroundColor: '#e9f2ed',
+    borderWidth: 1,
+    borderColor: '#cfe2d8',
   },
 
   guestButtonText: {
-    color: 'white',
+    color: COLORS.primaryColor,
     fontSize: 14,
     fontWeight: '700',
   },
 
+  dividerRow: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#d7e5de',
+  },
+
+  dividerText: {
+    color: '#60766a',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
   socialLinksContainer: {
-    marginTop: 18,
+    marginTop: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 14,
+    flexWrap: 'wrap',
+    gap: 10,
   },
 
   socialIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#eef5f0',
+    backgroundColor: '#f3f8f5',
     borderWidth: 1,
-    borderColor: '#d6e5db',
+    borderColor: '#d3e4db',
+  },
+
+  bottomHelpRow: {
+    marginTop: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+
+  bottomHelpText: {
+    color: COLORS.primaryColor,
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   buttonDisabled: {

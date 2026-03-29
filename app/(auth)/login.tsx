@@ -1,22 +1,26 @@
 import { useAuthContext } from '@/hooks/auth-context';
+import { DEMO_ACCOUNT } from '@/hooks/use-auth';
 import COLORS from '@/styles/colors';
 import { sharedStyles } from '@/styles/shared';
+import { isModeDemoEnabled } from '@/tools/tools';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import styles from './style.js';
-
-import { DEMO_ACCOUNT } from '@/hooks/use-auth';
-import { isModeDemoEnabled } from '@/tools/tools';
 import {
-  Image,
-  Keyboard,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Linking,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from './style';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,21 +29,76 @@ export default function LoginScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [focusedField, setFocusedField] = useState<'login' | 'password' | null>(null);
   const passwordInputRef = useRef<TextInput>(null);
-  const [validationErrors, setValidationErrors] = useState<{
-    login?: string;
-    password?: string;
-  }>({});
+  const [validationErrors, setValidationErrors] = useState<{ login?: string; password?: string }>({});
   const { signIn, signInDemo, isLoading, error } = useAuthContext();
   const brandLogo = require('../../assets/images/logo.png');
 
+  const socialLinks = {
+    facebook: process.env.EXPO_PUBLIC_FACEBOOK_URL,
+    instagram: process.env.EXPO_PUBLIC_INSTAGRAM_URL,
+    linkedin: process.env.EXPO_PUBLIC_LINKEDIN_URL,
+    tiktok: process.env.EXPO_PUBLIC_TIKTOK_URL,
+    mail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
+    phone: process.env.EXPO_PUBLIC_SUPPORT_PHONE,
+  };
+
+  type ExternalLinkOptions = {
+    url?: string;
+    label: string;
+    appUrls?: string[];
+  };
+
+  const openExternalLink = async ({ url, label, appUrls = [] }: ExternalLinkOptions) => {
+    if (!url && appUrls.length === 0) {
+      Alert.alert('Lien non configuré', `Le lien ${label} n'est pas configuré.`);
+      return;
+    }
+
+    for (const appUrl of appUrls) {
+      const canOpenApp = await Linking.canOpenURL(appUrl);
+      if (canOpenApp) {
+        await Linking.openURL(appUrl);
+        return;
+      }
+    }
+
+    if (!url) {
+      Alert.alert('Lien indisponible', `Impossible d'ouvrir ${label}.`);
+      return;
+    }
+
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert('Lien indisponible', `Impossible d'ouvrir ${label}.`);
+      return;
+    }
+
+    await Linking.openURL(url);
+  };
+
+  const handleOpenMail = () =>
+    openExternalLink({
+      url: socialLinks.mail ? `mailto:${socialLinks.mail}` : undefined,
+      label: 'email',
+    });
+
+  const handleOpenCall = () =>
+    openExternalLink({
+      url: socialLinks.phone ? `tel:${socialLinks.phone}` : undefined,
+      label: 'téléphone',
+    });
+
+  const facebookDeepLink = socialLinks.facebook
+    ? `fb://facewebmodal/f?href=${encodeURIComponent(socialLinks.facebook)}`
+    : undefined;
+  const tiktokDeepLink = socialLinks.tiktok
+    ? `snssdk1233://openUrl?url=${encodeURIComponent(socialLinks.tiktok)}`
+    : undefined;
+
   const validateForm = () => {
-    const errors: {
-      login?: string;
-      password?: string;
-    } = {};
+    const errors: { login?: string; password?: string } = {};
 
     if (!login.trim()) {
- 
       errors.login = 'Le login est requis';
     }
 
@@ -80,131 +139,211 @@ export default function LoginScreen() {
     }
   };
 
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.loginContainer}>
-        <View style={styles.logoContainer}>
-          <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
-        </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardWrapper}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.loginTopBar}>
+            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+              <FontAwesome name="arrow-left" size={20} color={COLORS.primaryColor} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.formBlock}>
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={sharedStyles.errorMessage}>{error}</Text>
+          <View style={styles.loginContainer}>
+            <View style={styles.logoContainer}>
+              <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
+              <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
+              <Text style={styles.screenTitle}>Connexion</Text>
+              <Text style={styles.screenSubtitle}>Accédez à votre espace de gestion en toute sécurité</Text>
             </View>
-          )}
 
-          <Text style={styles.loginLabel}>Nom d'utilisateur</Text>
-          <View
-            style={[
-              styles.inputRow,
-              focusedField === 'login' && styles.inputRowFocused,
-              validationErrors.login && styles.inputRowError,
-            ]}
-          >
-            <FontAwesome name="user" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
-            <TextInput
-              placeholder="Nom d'utilisateur"
-              placeholderTextColor={COLORS.accentColor}
-              value={login}
-              onChangeText={setLogin}
-              style={styles.loginInput}
-              editable={!isLoading}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="username"
-              textContentType="username"
-              returnKeyType="next"
-              onFocus={() => setFocusedField('login')}
-              onBlur={() => setFocusedField(null)}
-              onSubmitEditing={() => passwordInputRef.current?.focus()}
-            />
-          </View>
-          {validationErrors.login && (
-            <Text style={styles.fieldError}>{validationErrors.login}</Text>
-          )}
+            <View style={styles.formBlock}>
+              {error && (
+                <View style={styles.errorContainer}>
+                  <Text style={sharedStyles.errorMessage}>{error}</Text>
+                </View>
+              )}
 
-          <Text style={styles.loginLabel}>Mot de passe</Text>
-          <View
-            style={[
-              styles.inputRow,
-              focusedField === 'password' && styles.inputRowFocused,
-              validationErrors.password && styles.inputRowError,
-            ]}
-          >
-            <FontAwesome name="lock" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
-            <TextInput
-              ref={passwordInputRef}
-              placeholder="Mot de passe"
-              placeholderTextColor={COLORS.accentColor}
-              value={password}
-              onChangeText={setPassword}
-              style={styles.loginInput}
-              secureTextEntry={!isPasswordVisible}
-              editable={!isLoading}
-              autoComplete="password"
-              textContentType="password"
-              returnKeyType="done"
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
-              onSubmitEditing={handleLogin}
-            />
-            <TouchableOpacity
-              onPress={() => setIsPasswordVisible((prev) => !prev)}
-              activeOpacity={0.8}
-              style={styles.passwordToggle}
-              disabled={isLoading}
-            >
-              <FontAwesome
-                name={isPasswordVisible ? 'eye-slash' : 'eye'}
-                size={18}
-                color={COLORS.primaryColor}
-              />
+              <Text style={styles.loginLabel}>Nom d'utilisateur</Text>
+              <View
+                style={[
+                  styles.inputRow,
+                  focusedField === 'login' && styles.inputRowFocused,
+                  validationErrors.login && styles.inputRowError,
+                ]}
+              >
+                <FontAwesome name="user" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
+                <TextInput
+                  placeholder="Nom d'utilisateur"
+                  placeholderTextColor={COLORS.accentColor}
+                  value={login}
+                  onChangeText={setLogin}
+                  style={styles.loginInput}
+                  editable={!isLoading}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="username"
+                  textContentType="username"
+                  returnKeyType="next"
+                  onFocus={() => setFocusedField('login')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
+                />
+              </View>
+              {validationErrors.login && <Text style={styles.fieldError}>{validationErrors.login}</Text>}
+
+              <Text style={styles.loginLabel}>Mot de passe</Text>
+              <View
+                style={[
+                  styles.inputRow,
+                  focusedField === 'password' && styles.inputRowFocused,
+                  validationErrors.password && styles.inputRowError,
+                ]}
+              >
+                <FontAwesome name="lock" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
+                <TextInput
+                  ref={passwordInputRef}
+                  placeholder="Mot de passe"
+                  placeholderTextColor={COLORS.accentColor}
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.loginInput}
+                  secureTextEntry={!isPasswordVisible}
+                  editable={!isLoading}
+                  autoComplete="password"
+                  textContentType="password"
+                  returnKeyType="done"
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={handleLogin}
+                />
+                <TouchableOpacity
+                  onPress={() => setIsPasswordVisible((prev) => !prev)}
+                  activeOpacity={0.8}
+                  style={styles.passwordToggle}
+                  disabled={isLoading}
+                >
+                  <FontAwesome name={isPasswordVisible ? 'eye-slash' : 'eye'} size={18} color={COLORS.primaryColor} />
+                </TouchableOpacity>
+              </View>
+              {validationErrors.password && <Text style={styles.fieldError}>{validationErrors.password}</Text>}
+
+             
+
+              <TouchableOpacity
+                style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.loginButtonText}>{isLoading ? 'Connexion...' : 'Se connecter'}</Text>
+              </TouchableOpacity>
+
+              {isModeDemoEnabled() && (
+                <TouchableOpacity
+                  style={[styles.guestButton, isLoading && styles.buttonDisabled]}
+                  onPress={handleDemoLogin}
+                  disabled={isLoading}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.guestButtonText}>Mode demo</Text>
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Ou continuer avec</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.socialLinksContainer}>
+                {socialLinks.facebook && (
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      openExternalLink({
+                        url: socialLinks.facebook,
+                        label: 'Facebook',
+                        appUrls: facebookDeepLink ? [facebookDeepLink, 'fb://'] : ['fb://'],
+                      })
+                    }
+                  >
+                    <FontAwesome name="facebook" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+                {socialLinks.instagram && (
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      openExternalLink({
+                        url: socialLinks.instagram,
+                        label: 'Instagram',
+                        appUrls: ['instagram://'],
+                      })
+                    }
+                  >
+                    <FontAwesome name="instagram" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+                {socialLinks.linkedin && (
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      openExternalLink({
+                        url: socialLinks.linkedin,
+                        label: 'LinkedIn',
+                        appUrls: ['linkedin://'],
+                      })
+                    }
+                  >
+                    <FontAwesome name="linkedin" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+                {socialLinks.tiktok && (
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      openExternalLink({
+                        url: socialLinks.tiktok,
+                        label: 'TikTok',
+                        appUrls: tiktokDeepLink ? [tiktokDeepLink, 'tiktok://', 'snssdk1233://'] : ['tiktok://', 'snssdk1233://'],
+                      })
+                    }
+                  >
+                    <FontAwesome name="music" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+                {socialLinks.mail && (
+                  <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85} onPress={handleOpenMail}>
+                    <FontAwesome name="envelope" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+                {socialLinks.phone && (
+                  <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85} onPress={handleOpenCall}>
+                    <FontAwesome name="phone" size={18} color={COLORS.primaryColor} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.bottomHelpRow} activeOpacity={0.8} onPress={handleOpenCall}>
+              <FontAwesome name="headphones" size={14} color={COLORS.primaryColor} />
+              <Text style={styles.bottomHelpText}>Besoin d'aide ? Contactez le support</Text>
             </TouchableOpacity>
           </View>
-          {validationErrors.password && (
-            <Text style={styles.fieldError}>{validationErrors.password}</Text>
-          )}
-
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Connexion...' : 'Se connecter →'}
-            </Text>
-          </TouchableOpacity>
-
-
-          {isModeDemoEnabled() && (
-            <TouchableOpacity
-              style={[styles.guestButton, isLoading && styles.buttonDisabled]}
-              onPress={handleDemoLogin}
-              disabled={isLoading}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.guestButtonText}>Mode demo→</Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.socialLinksContainer}>
-            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
-              <FontAwesome name="facebook" size={18} color={COLORS.primaryColor} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
-              <FontAwesome name="instagram" size={18} color={COLORS.primaryColor} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85}>
-              <FontAwesome name="linkedin" size={18} color={COLORS.primaryColor} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-

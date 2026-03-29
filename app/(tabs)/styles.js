@@ -139,90 +139,8 @@ const styles = StyleSheet.create({
   menuSeparator: {
     width: 10,
   },
-  promoCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 24,
-    marginBottom: 18,
-    shadowColor: '#206A5D',
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
-    gap: 8,
-  },
-  promotionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  promoTitleSection: {
-    marginBottom: 0,
-  },
-  promoBannerList: {
-    paddingBottom: 18,
-    paddingRight: 8,
-  },
-  promoBannerCard: {
-    width: 300,
-    marginBottom: 0,
-    padding: 16,
-  },
-  promoTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  promoBadge: {
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  promoTitle: {
-    fontSize: 17,
-    fontWeight: '900',
-  },
-  promoBodyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  promoTextWrap: {
-    flex: 1,
-    gap: 4,
-  },
-  promoIconCard: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  promoDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  promoFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  promoDate: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  promoAction: {
-    marginLeft: 'auto',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  promoActionText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
+ 
+
   menuCard: {
     width: 108,
     minHeight: 88,
@@ -319,6 +237,27 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: 24,
+  },
+
+  // Quick Actions
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+    paddingBottom: 4,
+  },
+  quickActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 6,
+  },
+  quickActionText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
 

@@ -77,21 +77,20 @@ export default function ProfileScreen() {
     }
 
     const fields: ProfileField[] = [
-      { label: 'Code', value: user.code, icon: 'badge' },
-      { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'badge' },
+      { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'person' },
       { label: 'Type de pièce', value: user.typePiece, icon: 'description' },
-      { label: 'Numéro de pièce', value: user.numPiece, icon: 'description' },
+      { label: 'Numéro de pièce', value: user.numPiece, icon: 'badge' },
       { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake', formatter: formatDateValue },
-      { label: 'Date d\'anniversaire', value: user.dateAnniversaire, icon: 'cake' },
-      { label: 'Type', value: user.type, icon: 'cake' },
+      { label: 'Date d\'anniversaire', value: user.dateAnniversaire, icon: 'event' },
+      { label: 'Type', value: user.type, icon: 'category' },
       { label: 'Civilité', value: user.civilite, icon: 'wc' },
-      { label: 'Adresse', value: user.adresse, icon: 'place' },
-      { label: 'Email', value: user.email, icon: 'email' },
+      { label: 'Adresse', value: user.adresse, icon: 'home' },
+      { label: 'Email', value: user.email, icon: 'alternate-email' },
       { label: 'Téléphone fixe', value: user.telFixe, icon: 'phone' },
       { label: 'Téléphone mobile', value: user.telMobile, icon: 'smartphone' },
       { label: 'NCC', value: user.ncc, icon: 'account-balance' },
-      { label: 'Agence', value: user.nomAgence, icon: 'apartment' },
-      { label: 'Plafond', value: user.plafond, icon: 'apartment', formatter: formatNumberValue },
+      { label: 'Agence', value: user.nomAgence, icon: 'business' },
+      { label: 'Plafond', value: user.plafond, icon: 'attach-money', formatter: formatNumberValue },
     ];
 
     return fields
@@ -119,12 +118,7 @@ export default function ProfileScreen() {
               await signOut();
               router.replace('/(auth)' as never);
             } catch (err) {
-              Alert.alert(
-                'Erreur',
-                err instanceof Error
-                  ? err.message
-                  : 'Erreur lors de la déconnexion'
-              );
+             
               router.replace('/(auth)' as never);
 
             }
@@ -159,6 +153,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <View style={styles.heroTextWrap}>
+              <Text style={[styles.heroName, { color: textColor }]}>{user?.code ?? ''}</Text>
               <Text style={[styles.heroName, { color: textColor }]}>{user?.nom ?? 'Utilisateur'}</Text>
               <Text style={[styles.heroEmail, { color: mutedColor }]}>{user?.email ?? 'Aucun email'}</Text>
             </View>
