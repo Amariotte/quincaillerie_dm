@@ -1,37 +1,43 @@
-import { useAuthContext } from '@/hooks/auth-context';
-import { DEMO_ACCOUNT } from '@/hooks/use-auth';
-import COLORS from '@/styles/colors';
-import { sharedStyles } from '@/styles/shared';
-import { isModeDemoEnabled } from '@/tools/tools';
-import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useAuthContext } from "@/hooks/auth-context";
+import { DEMO_ACCOUNT } from "@/hooks/use-auth";
+import COLORS from "@/styles/colors";
+import { sharedStyles } from "@/styles/shared";
+import { isModeDemoEnabled } from "@/tools/tools";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+
+import { useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import {
-    Alert,
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Linking,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style';
+  Alert,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import styles from "./style";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [login, setLogin] = useState('');
-  const [password, setPassword] = useState('');
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [focusedField, setFocusedField] = useState<'login' | 'password' | null>(null);
+  const [focusedField, setFocusedField] = useState<"login" | "password" | null>(
+    null,
+  );
   const passwordInputRef = useRef<TextInput>(null);
-  const [validationErrors, setValidationErrors] = useState<{ login?: string; password?: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    login?: string;
+    password?: string;
+  }>({});
   const { signIn, signInDemo, isLoading, error } = useAuthContext();
-  const brandLogo = require('../../assets/images/logo.png');
+  const brandLogo = require("../../assets/images/logo.png");
 
   const socialLinks = {
     facebook: process.env.EXPO_PUBLIC_FACEBOOK_URL,
@@ -48,9 +54,16 @@ export default function LoginScreen() {
     appUrls?: string[];
   };
 
-  const openExternalLink = async ({ url, label, appUrls = [] }: ExternalLinkOptions) => {
+  const openExternalLink = async ({
+    url,
+    label,
+    appUrls = [],
+  }: ExternalLinkOptions) => {
     if (!url && appUrls.length === 0) {
-      Alert.alert('Lien non configuré', `Le lien ${label} n'est pas configuré.`);
+      Alert.alert(
+        "Lien non configuré",
+        `Le lien ${label} n'est pas configuré.`,
+      );
       return;
     }
 
@@ -63,13 +76,13 @@ export default function LoginScreen() {
     }
 
     if (!url) {
-      Alert.alert('Lien indisponible', `Impossible d'ouvrir ${label}.`);
+      Alert.alert("Lien indisponible", `Impossible d'ouvrir ${label}.`);
       return;
     }
 
     const canOpen = await Linking.canOpenURL(url);
     if (!canOpen) {
-      Alert.alert('Lien indisponible', `Impossible d'ouvrir ${label}.`);
+      Alert.alert("Lien indisponible", `Impossible d'ouvrir ${label}.`);
       return;
     }
 
@@ -79,13 +92,13 @@ export default function LoginScreen() {
   const handleOpenMail = () =>
     openExternalLink({
       url: socialLinks.mail ? `mailto:${socialLinks.mail}` : undefined,
-      label: 'email',
+      label: "email",
     });
 
   const handleOpenCall = () =>
     openExternalLink({
       url: socialLinks.phone ? `tel:${socialLinks.phone}` : undefined,
-      label: 'téléphone',
+      label: "téléphone",
     });
 
   const facebookDeepLink = socialLinks.facebook
@@ -99,11 +112,11 @@ export default function LoginScreen() {
     const errors: { login?: string; password?: string } = {};
 
     if (!login.trim()) {
-      errors.login = 'Le login est requis';
+      errors.login = "Le login est requis";
     }
 
     if (!password.trim()) {
-      errors.password = 'Le mot de passe est requis';
+      errors.password = "Le mot de passe est requis";
     }
 
     setValidationErrors(errors);
@@ -119,7 +132,7 @@ export default function LoginScreen() {
 
     try {
       await signIn(login.trim(), password);
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch {
       // L'erreur est déjà exposée par le hook.
     }
@@ -133,7 +146,7 @@ export default function LoginScreen() {
 
     try {
       await signInDemo();
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch {
       // L'erreur est déjà exposée par le hook.
     }
@@ -143,7 +156,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -152,16 +165,28 @@ export default function LoginScreen() {
         >
           <View style={styles.loginTopBar}>
             <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-              <FontAwesome name="arrow-left" size={20} color={COLORS.primaryColor} />
+              <FontAwesome
+                name="arrow-left"
+                size={20}
+                color={COLORS.primaryColor}
+              />
             </TouchableOpacity>
           </View>
 
           <View style={styles.loginContainer}>
             <View style={styles.logoContainer}>
-              <Image source={brandLogo} style={styles.logo} resizeMode="contain" />
-              <Text style={styles.brandName}>{process.env.EXPO_PUBLIC_APP_NAME}</Text>
+              <Image
+                source={brandLogo}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <Text style={styles.brandName}>
+                {process.env.EXPO_PUBLIC_APP_NAME}
+              </Text>
               <Text style={styles.screenTitle}>Connexion</Text>
-              <Text style={styles.screenSubtitle}>Accédez à votre espace de gestion en toute sécurité</Text>
+              <Text style={styles.screenSubtitle}>
+                Accédez à votre espace de gestion en toute sécurité
+              </Text>
             </View>
 
             <View style={styles.formBlock}>
@@ -175,11 +200,16 @@ export default function LoginScreen() {
               <View
                 style={[
                   styles.inputRow,
-                  focusedField === 'login' && styles.inputRowFocused,
+                  focusedField === "login" && styles.inputRowFocused,
                   validationErrors.login && styles.inputRowError,
                 ]}
               >
-                <FontAwesome name="user" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
+                <FontAwesome
+                  name="user"
+                  size={18}
+                  color={COLORS.primaryColor}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Nom d'utilisateur"
                   placeholderTextColor={COLORS.accentColor}
@@ -192,22 +222,29 @@ export default function LoginScreen() {
                   autoComplete="username"
                   textContentType="username"
                   returnKeyType="next"
-                  onFocus={() => setFocusedField('login')}
+                  onFocus={() => setFocusedField("login")}
                   onBlur={() => setFocusedField(null)}
                   onSubmitEditing={() => passwordInputRef.current?.focus()}
                 />
               </View>
-              {validationErrors.login && <Text style={styles.fieldError}>{validationErrors.login}</Text>}
+              {validationErrors.login && (
+                <Text style={styles.fieldError}>{validationErrors.login}</Text>
+              )}
 
               <Text style={styles.loginLabel}>Mot de passe</Text>
               <View
                 style={[
                   styles.inputRow,
-                  focusedField === 'password' && styles.inputRowFocused,
+                  focusedField === "password" && styles.inputRowFocused,
                   validationErrors.password && styles.inputRowError,
                 ]}
               >
-                <FontAwesome name="lock" size={18} color={COLORS.primaryColor} style={styles.inputIcon} />
+                <FontAwesome
+                  name="lock"
+                  size={18}
+                  color={COLORS.primaryColor}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   ref={passwordInputRef}
                   placeholder="Mot de passe"
@@ -220,7 +257,7 @@ export default function LoginScreen() {
                   autoComplete="password"
                   textContentType="password"
                   returnKeyType="done"
-                  onFocus={() => setFocusedField('password')}
+                  onFocus={() => setFocusedField("password")}
                   onBlur={() => setFocusedField(null)}
                   onSubmitEditing={handleLogin}
                 />
@@ -230,12 +267,18 @@ export default function LoginScreen() {
                   style={styles.passwordToggle}
                   disabled={isLoading}
                 >
-                  <FontAwesome name={isPasswordVisible ? 'eye-slash' : 'eye'} size={18} color={COLORS.primaryColor} />
+                  <FontAwesome
+                    name={isPasswordVisible ? "eye-slash" : "eye"}
+                    size={18}
+                    color={COLORS.primaryColor}
+                  />
                 </TouchableOpacity>
               </View>
-              {validationErrors.password && <Text style={styles.fieldError}>{validationErrors.password}</Text>}
-
-             
+              {validationErrors.password && (
+                <Text style={styles.fieldError}>
+                  {validationErrors.password}
+                </Text>
+              )}
 
               <TouchableOpacity
                 style={[styles.loginButton, isLoading && styles.buttonDisabled]}
@@ -243,12 +286,17 @@ export default function LoginScreen() {
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
-                <Text style={styles.loginButtonText}>{isLoading ? 'Connexion...' : 'Se connecter'}</Text>
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? "Connexion..." : "Se connecter"}
+                </Text>
               </TouchableOpacity>
 
               {isModeDemoEnabled() && (
                 <TouchableOpacity
-                  style={[styles.guestButton, isLoading && styles.buttonDisabled]}
+                  style={[
+                    styles.guestButton,
+                    isLoading && styles.buttonDisabled,
+                  ]}
                   onPress={handleDemoLogin}
                   disabled={isLoading}
                   activeOpacity={0.85}
@@ -271,12 +319,18 @@ export default function LoginScreen() {
                     onPress={() =>
                       openExternalLink({
                         url: socialLinks.facebook,
-                        label: 'Facebook',
-                        appUrls: facebookDeepLink ? [facebookDeepLink, 'fb://'] : ['fb://'],
+                        label: "Facebook",
+                        appUrls: facebookDeepLink
+                          ? [facebookDeepLink, "fb://"]
+                          : ["fb://"],
                       })
                     }
                   >
-                    <FontAwesome name="facebook" size={18} color={COLORS.primaryColor} />
+                    <FontAwesome
+                      name="facebook"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
                 {socialLinks.instagram && (
@@ -286,12 +340,16 @@ export default function LoginScreen() {
                     onPress={() =>
                       openExternalLink({
                         url: socialLinks.instagram,
-                        label: 'Instagram',
-                        appUrls: ['instagram://'],
+                        label: "Instagram",
+                        appUrls: ["instagram://"],
                       })
                     }
                   >
-                    <FontAwesome name="instagram" size={18} color={COLORS.primaryColor} />
+                    <FontAwesome
+                      name="instagram"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
                 {socialLinks.linkedin && (
@@ -301,12 +359,16 @@ export default function LoginScreen() {
                     onPress={() =>
                       openExternalLink({
                         url: socialLinks.linkedin,
-                        label: 'LinkedIn',
-                        appUrls: ['linkedin://'],
+                        label: "LinkedIn",
+                        appUrls: ["linkedin://"],
                       })
                     }
                   >
-                    <FontAwesome name="linkedin" size={18} color={COLORS.primaryColor} />
+                    <FontAwesome
+                      name="linkedin"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
                 {socialLinks.tiktok && (
@@ -316,30 +378,62 @@ export default function LoginScreen() {
                     onPress={() =>
                       openExternalLink({
                         url: socialLinks.tiktok,
-                        label: 'TikTok',
-                        appUrls: tiktokDeepLink ? [tiktokDeepLink, 'tiktok://', 'snssdk1233://'] : ['tiktok://', 'snssdk1233://'],
+                        label: "TikTok",
+                        appUrls: tiktokDeepLink
+                          ? [tiktokDeepLink, "tiktok://", "snssdk1233://"]
+                          : ["tiktok://", "snssdk1233://"],
                       })
                     }
                   >
-                    <FontAwesome name="music" size={18} color={COLORS.primaryColor} />
+                    <FontAwesome5
+                      name="tiktok"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
                 {socialLinks.mail && (
-                  <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85} onPress={handleOpenMail}>
-                    <FontAwesome name="envelope" size={18} color={COLORS.primaryColor} />
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={handleOpenMail}
+                  >
+                    <FontAwesome
+                      name="envelope"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
                 {socialLinks.phone && (
-                  <TouchableOpacity style={styles.socialIcon} activeOpacity={0.85} onPress={handleOpenCall}>
-                    <FontAwesome name="phone" size={18} color={COLORS.primaryColor} />
+                  <TouchableOpacity
+                    style={styles.socialIcon}
+                    activeOpacity={0.85}
+                    onPress={handleOpenCall}
+                  >
+                    <FontAwesome
+                      name="phone"
+                      size={18}
+                      color={COLORS.primaryColor}
+                    />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
 
-            <TouchableOpacity style={styles.bottomHelpRow} activeOpacity={0.8} onPress={handleOpenCall}>
-              <FontAwesome name="headphones" size={14} color={COLORS.primaryColor} />
-              <Text style={styles.bottomHelpText}>Besoin d'aide ? Contactez le support</Text>
+            <TouchableOpacity
+              style={styles.bottomHelpRow}
+              activeOpacity={0.8}
+              onPress={handleOpenCall}
+            >
+              <FontAwesome
+                name="headphones"
+                size={14}
+                color={COLORS.primaryColor}
+              />
+              <Text style={styles.bottomHelpText}>
+                Besoin d'aide ? Contactez le support
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

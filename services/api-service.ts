@@ -362,7 +362,7 @@ export async function getfetchMouvements(
   token: string,
 ): Promise<listMouvements> {
   if (isModeDemoEnabled()) {
-    return getRecentMouvementsFromFakeData();
+    return mouvementsFakeData;
   }
 
   const data = await getJsonAuth<listMouvements>(

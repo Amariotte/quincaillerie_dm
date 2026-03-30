@@ -5,6 +5,7 @@ import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
   fetchSoldeCompte,
+  getfetchMouvements,
   getfetchRecentMouvements,
   getStats,
 } from "@/services/api-service";
@@ -14,6 +15,7 @@ import {
   RECENTS_MOUVEMENTS_CACHE_KEY,
   setCacheData,
   STAT_DATA_CACHE_KEY,
+  TRANSACTIONS_LIST_CACHE_KEY,
 } from "@/services/cache-service";
 import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared.js";
@@ -27,6 +29,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -41,6 +44,40 @@ type PeriodSection = {
   title: string;
   data: listMouvements["data"];
 };
+
+type MonthlyChartItem = {
+  key: string;
+  label: string;
+  ventes: number;
+  reglements: number;
+  decaissements: number;
+  entrees: number;
+  commissions: number;
+  sorties: number;
+};
+
+const monthlyChartSeries = [
+  { key: "ventes", label: "Ventes", color: typeMouvementColorMap.Vente },
+  {
+    key: "reglements",
+    label: "Règlements",
+    color: typeMouvementColorMap["Réglement"],
+  },
+  {
+    key: "decaissements",
+    label: "Décaissements",
+    color: typeMouvementColorMap["Décaissement"],
+  },
+  { key: "entrees", label: "Entrées", color: COLORS.primaryColor },
+  {
+    key: "commissions",
+    label: "Commissions",
+    color: "#d97706",
+  },
+  { key: "sorties", label: "Sorties", color: COLORS.errorColor },
+] as const;
+
+type MonthlyChartSeriesKey = (typeof monthlyChartSeries)[number]["key"];
 
 function parseMouvementDate(value: string): Date | null {
   const direct = new Date(value);
@@ -72,6 +109,90 @@ function isSameDay(first: Date, second: Date): boolean {
     first.getMonth() === second.getMonth() &&
     first.getDate() === second.getDate()
   );
+}
+
+function getMonthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthlyLabel(date: Date): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    month: "short",
+    year: "2-digit",
+  }).format(date);
+}
+
+function createLastTwelveMonths(): MonthlyChartItem[] {
+  const now = new Date();
+  const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const months: MonthlyChartItem[] = [];
+
+  for (let offset = 11; offset >= 0; offset -= 1) {
+    const monthDate = new Date(
+      currentMonthDate.getFullYear(),
+      currentMonthDate.getMonth() - offset,
+      1,
+    );
+
+    months.push({
+      key: getMonthKey(monthDate),
+      label: getMonthlyLabel(monthDate),
+      ventes: 0,
+      reglements: 0,
+      decaissements: 0,
+      entrees: 0,
+      commissions: 0,
+      sorties: 0,
+    });
+  }
+
+  return months;
+}
+
+function aggregateMonthlyMouvements(
+  mouvements: listMouvements["data"],
+): MonthlyChartItem[] {
+  const months = createLastTwelveMonths();
+  const monthMap = new Map(months.map((month) => [month.key, month]));
+
+  for (const mouvement of mouvements) {
+    const mouvementDate = parseMouvementDate(mouvement.dateOp);
+    if (!mouvementDate) {
+      continue;
+    }
+
+    const bucket = monthMap.get(getMonthKey(mouvementDate));
+    if (!bucket) {
+      continue;
+    }
+
+    const amount = Math.abs(Number(mouvement.montant) || 0);
+
+    if (mouvement.libType === "Vente") {
+      bucket.ventes += amount;
+      bucket.sorties += amount;
+      continue;
+    }
+
+    if (mouvement.libType === "Réglement") {
+      bucket.reglements += amount;
+      bucket.entrees += amount;
+      continue;
+    }
+
+    if (mouvement.libType === "Commission") {
+      bucket.commissions += amount;
+      bucket.entrees += amount;
+      continue;
+    }
+
+    if (mouvement.libType === "Décaissement") {
+      bucket.decaissements += amount;
+      bucket.sorties += amount;
+    }
+  }
+
+  return months;
 }
 
 function getSignedAmountDisplay(mouvement: listMouvements["data"][number]) {
@@ -114,9 +235,19 @@ export default function HomeScreen() {
   const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] =
     useState(true);
   const [statInfos, setStatInfos] = useState<stat | null>(null);
+  const [allMouvements, setAllMouvements] = useState<listMouvements>({
+    meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 },
+    data: [],
+  });
+  const [isLoadingMonthlyChart, setIsLoadingMonthlyChart] = useState(true);
+  const [selectedChartSeries, setSelectedChartSeries] = useState<
+    MonthlyChartSeriesKey[]
+  >(monthlyChartSeries.map((series) => series.key));
+  const [activeChartMonthKey, setActiveChartMonthKey] = useState<string | null>(
+    null,
+  );
 
   const loadBalance = useCallback(async () => {
-    let hasCachedBalance = false;
     try {
       setIsLoadingBalance(true);
       const parsedCache = await getCacheData<SoldeResponse>(BALANCE_CACHE_KEY);
@@ -126,7 +257,6 @@ export default function HomeScreen() {
 
         if (!Number.isNaN(cachedBalance)) {
           setAccountBalance(cachedBalance);
-          hasCachedBalance = true;
         }
       }
 
@@ -159,7 +289,7 @@ export default function HomeScreen() {
       const statInfos = await getStats(userToken ?? "");
       setStatInfos(statInfos);
       await setCacheData(STAT_DATA_CACHE_KEY, statInfos);
-    } catch (ex) {
+    } catch {
       setIsOfflineMode(true);
     }
   }, [userToken]);
@@ -179,10 +309,35 @@ export default function HomeScreen() {
       const data = await getfetchRecentMouvements(userToken ?? "");
       setRecentMouvements(data);
       await setCacheData(RECENTS_MOUVEMENTS_CACHE_KEY, data);
-    } catch (ex) {
+    } catch {
       setIsOfflineMode(true);
     } finally {
       setIsLoadingRecentMouvements(false);
+    }
+  }, [userToken]);
+
+  const loadMonthlyChartData = useCallback(async () => {
+    setIsLoadingMonthlyChart(true);
+    try {
+      const cached = await getCacheData<listMouvements>(
+        TRANSACTIONS_LIST_CACHE_KEY,
+      );
+      if (cached?.data?.length) {
+        setAllMouvements(cached);
+      }
+
+      if (!userToken) {
+        return;
+      }
+
+      const data = await getfetchMouvements(userToken);
+      setAllMouvements(data);
+      await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
+      setIsOfflineMode(false);
+    } catch {
+      setIsOfflineMode(true);
+    } finally {
+      setIsLoadingMonthlyChart(false);
     }
   }, [userToken]);
 
@@ -190,7 +345,8 @@ export default function HomeScreen() {
     loadBalance();
     loadRecentMouvements();
     loadStatData();
-  }, [loadBalance, loadRecentMouvements, loadStatData]);
+    loadMonthlyChartData();
+  }, [loadBalance, loadMonthlyChartData, loadRecentMouvements, loadStatData]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -199,11 +355,78 @@ export default function HomeScreen() {
         loadBalance(),
         loadRecentMouvements(),
         loadStatData(),
+        loadMonthlyChartData(),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [loadBalance, loadRecentMouvements, loadStatData]);
+  }, [loadBalance, loadMonthlyChartData, loadRecentMouvements, loadStatData]);
+
+  const monthlyChartData = useMemo(
+    () => aggregateMonthlyMouvements(allMouvements.data),
+    [allMouvements.data],
+  );
+
+  const visibleChartSeries = useMemo(
+    () =>
+      monthlyChartSeries.filter((series) =>
+        selectedChartSeries.includes(series.key),
+      ),
+    [selectedChartSeries],
+  );
+
+  const monthlyChartMax = useMemo(() => {
+    const maxValue = monthlyChartData.reduce((currentMax, item) => {
+      const itemMax = visibleChartSeries.reduce((seriesMax, series) => {
+        return Math.max(seriesMax, item[series.key]);
+      }, 0);
+
+      return Math.max(currentMax, itemMax);
+    }, 0);
+
+    return maxValue > 0 ? maxValue : 1;
+  }, [monthlyChartData, visibleChartSeries]);
+
+  const hasChartData = useMemo(
+    () =>
+      monthlyChartData.some((item) =>
+        visibleChartSeries.some((series) => item[series.key] > 0),
+      ),
+    [monthlyChartData, visibleChartSeries],
+  );
+
+  const activeChartMonth = useMemo(
+    () =>
+      monthlyChartData.find((item) => item.key === activeChartMonthKey) ?? null,
+    [activeChartMonthKey, monthlyChartData],
+  );
+
+  const isAllChartSeriesSelected =
+    selectedChartSeries.length === monthlyChartSeries.length;
+
+  const toggleChartSeries = (seriesKey: MonthlyChartSeriesKey) => {
+    setSelectedChartSeries((currentSelection) => {
+      if (currentSelection.includes(seriesKey)) {
+        if (currentSelection.length === 1) {
+          return currentSelection;
+        }
+
+        return currentSelection.filter((key) => key !== seriesKey);
+      }
+
+      return [...currentSelection, seriesKey];
+    });
+  };
+
+  const selectAllChartSeries = () => {
+    setSelectedChartSeries(monthlyChartSeries.map((series) => series.key));
+  };
+
+  const handleChartMonthPress = (monthKey: string) => {
+    setActiveChartMonthKey((currentKey) =>
+      currentKey === monthKey ? null : monthKey,
+    );
+  };
 
   const handleMenuPress = (itemId: string) => {
     if (itemId === "ventes") {
@@ -493,6 +716,7 @@ export default function HomeScreen() {
                   loadBalance();
                   loadRecentMouvements();
                   loadStatData();
+                  loadMonthlyChartData();
                 }}
                 style={[styles.depositButton, { backgroundColor: tintColor }]}
               >
@@ -540,6 +764,178 @@ export default function HomeScreen() {
             style={styles.menuStrip}
             ItemSeparatorComponent={() => <View style={styles.menuSeparator} />}
           />
+
+          <View style={styles.transactionsHeader}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                styles.transactionTitle,
+                { color: textColor },
+              ]}
+            >
+              Activité sur 12 mois
+            </Text>
+          </View>
+
+          <View style={[styles.chartCard, { backgroundColor: cardColor }]}>
+            <View style={styles.chartFilterRow}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={selectAllChartSeries}
+                style={[
+                  styles.chartFilterChip,
+                  styles.chartFilterAllChip,
+                  {
+                    backgroundColor: isAllChartSeriesSelected
+                      ? tintColor
+                      : `${tintColor}12`,
+                    borderColor: `${tintColor}35`,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.chartFilterText,
+                    {
+                      color: isAllChartSeriesSelected ? "#ffffff" : tintColor,
+                    },
+                  ]}
+                >
+                  Tous
+                </Text>
+              </TouchableOpacity>
+
+              {monthlyChartSeries.map((series) => (
+                <TouchableOpacity
+                  key={series.key}
+                  activeOpacity={0.85}
+                  onPress={() => toggleChartSeries(series.key)}
+                  style={[
+                    styles.chartFilterChip,
+                    {
+                      backgroundColor: selectedChartSeries.includes(series.key)
+                        ? `${series.color}18`
+                        : "transparent",
+                      borderColor: selectedChartSeries.includes(series.key)
+                        ? series.color
+                        : `${mutedColor}30`,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.chartLegendDot,
+                      { backgroundColor: series.color },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.chartFilterText,
+                      {
+                        color: selectedChartSeries.includes(series.key)
+                          ? textColor
+                          : mutedColor,
+                      },
+                    ]}
+                  >
+                    {series.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {isLoadingMonthlyChart && allMouvements.data.length === 0 ? (
+              <SkeletonCard lines={4} />
+            ) : !hasChartData ? (
+              <View style={styles.chartEmptyState}>
+                <Text style={[styles.chartEmptyText, { color: mutedColor }]}>
+                  Aucune donnée exploitable pour la sélection actuelle.
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chartScrollContent}
+              >
+                <View style={styles.chartInner}>
+                  {monthlyChartData.map((item) => (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => handleChartMonthPress(item.key)}
+                      onHoverIn={() => setActiveChartMonthKey(item.key)}
+                      onHoverOut={() =>
+                        setActiveChartMonthKey((currentKey) =>
+                          currentKey === item.key ? null : currentKey,
+                        )
+                      }
+                      style={styles.chartMonthBlock}
+                    >
+                      {activeChartMonth?.key === item.key ? (
+                        <View
+                          style={[
+                            styles.chartTooltip,
+                            { backgroundColor: textColor },
+                          ]}
+                        >
+                          <Text style={styles.chartTooltipTitle}>
+                            {item.label}
+                          </Text>
+                          {visibleChartSeries.map((series) => (
+                            <View
+                              key={series.key}
+                              style={styles.chartTooltipRow}
+                            >
+                              <View
+                                style={[
+                                  styles.chartTooltipDot,
+                                  { backgroundColor: series.color },
+                                ]}
+                              />
+                              <Text style={styles.chartTooltipLabel}>
+                                {series.label}
+                              </Text>
+                              <Text style={styles.chartTooltipValue}>
+                                {formatAmount(item[series.key])}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      ) : null}
+                      <View style={styles.chartBarsWrap}>
+                        {visibleChartSeries.map((series) => {
+                          const value = item[series.key];
+                          const height = Math.max(
+                            6,
+                            (value / monthlyChartMax) * 150,
+                          );
+
+                          return (
+                            <View key={series.key} style={styles.chartBarTrack}>
+                              <View
+                                style={[
+                                  styles.chartBar,
+                                  {
+                                    height,
+                                    backgroundColor: series.color,
+                                  },
+                                ]}
+                              />
+                            </View>
+                          );
+                        })}
+                      </View>
+                      <Text
+                        style={[styles.chartMonthLabel, { color: textColor }]}
+                      >
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </View>
 
           <View style={styles.transactionsHeader}>
             <Text
