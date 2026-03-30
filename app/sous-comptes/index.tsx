@@ -21,6 +21,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -45,7 +46,6 @@ export default function SousComptesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   const [query, setQuery] = useState("");
 
@@ -72,7 +72,6 @@ export default function SousComptesScreen() {
       // Fetch from API to update
       const data = await getfetchSousComptes(userToken);
       setSousComptes(data);
-      setIsOfflineMode(false);
       await setCacheData(SOUS_COMPTES_LIST_CACHE_KEY, data);
     } catch {
       setSousComptes({
@@ -80,7 +79,6 @@ export default function SousComptesScreen() {
         data: [],
       });
       setIsError(true);
-      setIsOfflineMode(true);
     } finally {
       setIsLoading(false);
     }
@@ -99,12 +97,10 @@ export default function SousComptesScreen() {
       }
       const data = await getfetchSousComptes(userToken);
       setSousComptes(data);
-      setIsOfflineMode(false);
       await setCacheData(SOUS_COMPTES_LIST_CACHE_KEY, data);
       setIsError(false);
     } catch {
       setIsError(true);
-      setIsOfflineMode(true);
     } finally {
       setIsRefreshing(false);
     }
@@ -205,7 +201,8 @@ export default function SousComptesScreen() {
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: sousCompte }) => {
                 return (
-                  <View
+                  <TouchableOpacity
+                    activeOpacity={0.85}
                     style={[styles.invoiceCard, { backgroundColor: cardColor }]}
                   >
                     <View style={styles.invoiceTopRow}>
@@ -216,53 +213,40 @@ export default function SousComptesScreen() {
                         <Text
                           style={[styles.invoiceClient, { color: mutedColor }]}
                         >
-                          {sousCompte.nom?.trim()}
+                          {sousCompte.description?.trim() ||
+                            "Aucune description"}
                         </Text>
                       </View>
                     </View>
 
                     <View style={styles.invoiceMetaRow}>
-                      <View>
-                        <Text
-                          style={[
-                            sharedStyles.metaCaption,
-                            { color: mutedColor },
-                          ]}
-                        >
-                          Téléphone
-                        </Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>
-                          {sousCompte.mobile}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={[
-                            sharedStyles.metaCaption,
-                            { color: mutedColor },
-                          ]}
-                        >
-                          Email
-                        </Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>
-                          {sousCompte.email}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={[
-                            sharedStyles.metaCaption,
-                            { color: mutedColor },
-                          ]}
-                        >
-                          Description
-                        </Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>
-                          {sousCompte.description}
-                        </Text>
-                      </View>
+                      <Text
+                        style={[
+                          sharedStyles.metaCaption,
+                          { color: mutedColor },
+                        ]}
+                      >
+                        Téléphone
+                      </Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>
+                        {sousCompte.mobile || "Aucun numéro"}
+                      </Text>
                     </View>
-                  </View>
+
+                    <View style={styles.invoiceMetaRow}>
+                      <Text
+                        style={[
+                          sharedStyles.metaCaption,
+                          { color: mutedColor },
+                        ]}
+                      >
+                        Email
+                      </Text>
+                      <Text style={[styles.metaValue, { color: textColor }]}>
+                        {sousCompte.email || "Aucun email"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                 );
               }}
             />

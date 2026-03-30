@@ -39,8 +39,8 @@ export const menuItems = [
   {
     id: "sous-comptes",
     title: "Sous comptes",
-    icon: "percent",
-    tint: "#ec4899",
+    icon: "account",
+    tint: "#06b6d4",
   },
   {
     id: "devis",
