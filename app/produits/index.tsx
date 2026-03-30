@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
+import { ProductImage } from '@/components/product-image';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchProduits } from '@/services/api-service';
@@ -10,14 +11,8 @@ import { listProduits } from '@/types/produits.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const defaultProductImage = require('../../assets/images/partial-react-logo.png');
-
-const getProductImage = (imageName: string | undefined) => {
-  return defaultProductImage;
-};
 
 export default function ProduitsScreen() {
   const router = useRouter();
@@ -195,7 +190,12 @@ useEffect(() => {
                     style={[styles.productCard, { backgroundColor: cardColor }]}
                   >
                     <View style={styles.productTopRow}>
-                      <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
+                      <ProductImage
+                        productId={product.id}
+                        userToken={userToken}
+                        style={styles.productImage}
+                        resizeMode="cover"
+                      />
                       <View style={styles.productInfo}>
                         <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
                         <View style={styles.productMetaRow}>

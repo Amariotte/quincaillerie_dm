@@ -1,22 +1,19 @@
 import { AppHeader } from '@/components/app-header';
+import { ProductImage } from '@/components/product-image';
 import { produitsFakeData } from '@/data/datas.fake';
+import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { sharedStyles } from '@/styles/shared';
 import { formatAmount } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-
-const defaultProductImage = require('../../assets/images/partial-react-logo.png');
-
-const getProductImage = (url : string | undefined
-) => ( defaultProductImage);
 
 export default function ProduitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { userToken } = useAuthContext();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
 
   const product = produitsFakeData.data.find((item) => item.id === id);
@@ -48,7 +45,12 @@ export default function ProduitDetailScreen() {
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={sharedStyles.container}>
           <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
-            <Image source={getProductImage(product.imageUrl)} style={styles.productImage} resizeMode="cover" />
+            <ProductImage
+              productId={product.id}
+              userToken={userToken}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
             <View style={styles.productTextBlock}>
               <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
               <View style={[styles.categoryTag, { backgroundColor: `${tintColor}18` }]}>

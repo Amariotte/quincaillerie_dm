@@ -9,6 +9,7 @@ const apiConfig = {
     login: '/auth/login',
     logout: '/auth/logout',
     currentUser: '/auth/me',
+    profilePhoto: '/auth/photos',
     soldes: '/soldes',
     mouvements: '/mouvements',
     changePassword: '/auth/update-password',

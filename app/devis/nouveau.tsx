@@ -2,7 +2,7 @@
 import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, updateDevisLigne } from '@/services/api-service';
+import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, postValidateDevis, updateDevisLigne } from '@/services/api-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount } from '@/tools/tools';
 import { devis, devisLigneEdit, statusDevisColorMap } from '@/types/devis.type';
@@ -228,23 +228,35 @@ export default function ProformaSaisieScreen() {
     [applyUpdatedDevis, lines, openPopup, proforma?.id, userToken],
   );
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
+    const token = userToken;
+    const devisId = proforma?.id;
+
     if (lines.length === 0) {
       openPopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
       return;
     }
+    if (!token || !devisId) {
+      openPopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
+      return;
+    }
+
     setIsSaving(true);
-    // Ici : appel API création/validation proforma
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await postValidateDevis(token, devisId);
+
       openPopup(
         'success',
         'Devis validé',
-       'Le devis a été validé.',
+        'Le devis a été validé.',
         'OK',
         () => router.back(),
       );
-    }, 800);
+    } catch {
+      openPopup('error', 'Erreur', "La validation du devis a échoué.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSave = () => {

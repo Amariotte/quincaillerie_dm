@@ -329,3 +329,15 @@ export async function getfetchPromotionById(token: string, id: string): Promise<
   const data = await getJsonAuth<promotion>(`${apiConfig.endpoints.promotions}/${id}`, token);
   return data;
 }
+
+
+export async function postValidateDevis(token: string, id: string): Promise<devis | null> {
+  if (isModeDemoEnabled()) {
+    const initialLength = proformasFakeData.data.length;
+    proformasFakeData.data = proformasFakeData.data.filter((devis) => devis.id !== id);
+    return proformasFakeData.data.length < initialLength ? proformasFakeData.data.find((devis) => devis.id === id) ?? null : null;
+  }
+
+  const d = await getJsonAuth<devis>(`${apiConfig.endpoints.devis}/${id}/validate`, token);
+  return d;
+}

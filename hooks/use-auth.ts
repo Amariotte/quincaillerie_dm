@@ -1,6 +1,6 @@
 import { userDataFake } from '@/data/datas.fake';
-import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
 import { setCacheUserCode } from '@/services/cache-service';
+import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
 import { user } from '@/types/user.type';
 import { useState } from 'react';
 
@@ -21,6 +21,7 @@ export interface AuthState {
   isSignout: boolean;
   userToken: string | null;
   user: user | null;
+  profilePhotoVersion: number;
 }
 
 export interface UseAuthReturn extends AuthState {
@@ -29,6 +30,7 @@ export interface UseAuthReturn extends AuthState {
   signOut: () => Promise<void>;
   clearAuthSession: () => void;
   refreshUserProfile: () => Promise<void>;
+  refreshProfilePhoto: () => void;
   error: string | null;
 }
 
@@ -38,6 +40,7 @@ export function useAuth(): UseAuthReturn {
     isSignout: false,
     userToken: null,
     user: null,
+    profilePhotoVersion: 0,
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +52,7 @@ export function useAuth(): UseAuthReturn {
       isSignout: false,
       userToken: token,
       user,
+      profilePhotoVersion: 0,
     });
   };
 
@@ -59,6 +63,7 @@ export function useAuth(): UseAuthReturn {
       isSignout: true,
       userToken: null,
       user: null,
+      profilePhotoVersion: 0,
     });
     setError(null);
   };
@@ -78,6 +83,10 @@ export function useAuth(): UseAuthReturn {
       return;
     }
     await loadUserProfile(state.userToken);
+  };
+
+  const refreshProfilePhoto = () => {
+    setState((prev) => ({ ...prev, profilePhotoVersion: Date.now() }));
   };
 
   const signInDemo = async () => {
@@ -162,6 +171,7 @@ export function useAuth(): UseAuthReturn {
     signOut,
     clearAuthSession,
     refreshUserProfile,
+    refreshProfilePhoto,
     error,
   };
 }

@@ -29,6 +29,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Autoriser l'application a acceder a vos photos pour mettre a jour votre image de profil.",
+          "cameraPermission": "Autoriser l'application a utiliser l'appareil photo pour votre image de profil."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

@@ -1,9 +1,10 @@
 import { useAuthContext } from '@/hooks/auth-context';
+import { getConnectedUserProfilePhotoSource } from '@/services/user-service';
 import COLORS from '@/styles/colors';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -18,17 +19,33 @@ type AppHeaderProps = {
   isOffline?: boolean;
 };
 
+const defaultAvatarSource = require('../assets/images/logo.png');
+
 export function AppHeader({ title, subtitle, showBack = false, isOffline = false }: AppHeaderProps) {
   const router = useRouter();
-  const { user, isLoading } = useAuthContext();
+  const { user, userToken, profilePhotoVersion, isLoading } = useAuthContext();
   const headerBackgroundColor = COLORS.primaryColor;
   const headerTextColor = '#ffffff';
   const headerSubtextColor = '#d1fae5';
+  const [useDefaultAvatar, setUseDefaultAvatar] = useState(false);
 
-  const avatarUri = useMemo(() => {
-    const identity = user?.email ?? user?.nom ?? 'utilisateur';
-    return `https://i.pravatar.cc/160?u=${encodeURIComponent(identity)}`;
-  }, [user?.email, user?.nom]);
+  const remoteAvatarSource = useMemo(() => {
+    if (userToken) {
+      try {
+        return getConnectedUserProfilePhotoSource(userToken, profilePhotoVersion);
+      } catch {
+        return defaultAvatarSource;
+      }
+    }
+
+    return defaultAvatarSource;
+  }, [profilePhotoVersion, userToken]);
+
+  useEffect(() => {
+    setUseDefaultAvatar(false);
+  }, [remoteAvatarSource]);
+
+  const avatarSource = useDefaultAvatar ? defaultAvatarSource : remoteAvatarSource;
 
   const defaultSubtitle = user
     ? `${user.nom} · ${user.email}`
@@ -65,7 +82,12 @@ export function AppHeader({ title, subtitle, showBack = false, isOffline = false
         disabled={isLoading}
         style={[styles.avatarButton, { borderColor: '#ffffff' }]}
       >
-        <Image source={avatarUri} style={styles.avatarImage} contentFit="cover" />
+        <Image
+          source={avatarSource}
+          style={styles.avatarImage}
+          contentFit="cover"
+          onError={() => setUseDefaultAvatar(true)}
+        />
       </TouchableOpacity>
     </View>
   );

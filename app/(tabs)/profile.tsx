@@ -3,12 +3,15 @@ import { AuthButton } from '@/components/auth-button';
 import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getConnectedUserProfilePhotoSource, updateConnectedUserProfilePhoto } from '@/services/user-service';
 import { sharedStyles } from '@/styles/shared';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -24,6 +27,8 @@ type ProfileField = {
   icon: React.ComponentProps<typeof MaterialIcons>['name'];
   formatter?: (value: unknown) => string;
 };
+
+const defaultAvatarSource = require('../../assets/images/logo.png');
 
 
 const formatTextValue = (value: unknown) => {
@@ -52,8 +57,11 @@ const formatNumberValue = (value: unknown) => {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut, isLoading } = useAuthContext();
+  const { user, userToken, profilePhotoVersion, refreshProfilePhoto, signOut, isLoading } = useAuthContext();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const [useDefaultAvatar, setUseDefaultAvatar] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [localAvatarPreviewUri, setLocalAvatarPreviewUri] = useState<string | null>(null);
   const [popupState, setPopupState] = useState<{
     visible: boolean;
     type: FeedbackPopupType;
@@ -66,10 +74,33 @@ export default function ProfileScreen() {
     message: '',
   });
 
-  const avatarUri = useMemo(() => {
-    const identity = user?.email ?? user?.nom ?? 'utilisateur';
-    return `https://i.pravatar.cc/240?u=${encodeURIComponent(identity)}`;
-  }, [user?.email, user?.nom]);
+  const openPopup = (type: FeedbackPopupType, title: string, message: string) => {
+    setPopupState({ visible: true, type, title, message });
+  };
+
+  const remoteAvatarSource = useMemo(() => {
+    if (userToken) {
+      try {
+        return getConnectedUserProfilePhotoSource(userToken, profilePhotoVersion);
+      } catch {
+        return defaultAvatarSource;
+      }
+    }
+
+    return defaultAvatarSource;
+  }, [profilePhotoVersion, userToken]);
+
+  useEffect(() => {
+    setUseDefaultAvatar(false);
+  }, [remoteAvatarSource]);
+
+  const avatarSource = useMemo(() => {
+    if (localAvatarPreviewUri) {
+      return { uri: localAvatarPreviewUri };
+    }
+
+    return useDefaultAvatar ? defaultAvatarSource : remoteAvatarSource;
+  }, [localAvatarPreviewUri, remoteAvatarSource, useDefaultAvatar]);
 
   const profileFields = useMemo(() => {
     if (!user) {
@@ -129,6 +160,56 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleChangeProfileImage = async () => {
+    if (isUploadingPhoto) {
+      return;
+    }
+
+    if (!userToken) {
+      openPopup('error', 'Erreur', 'Session utilisateur indisponible.');
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      openPopup('info', 'Permission requise', 'Autorisez l’accès à la galerie pour modifier votre photo de profil.');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      selectionLimit: 1,
+    });
+
+    if (pickerResult.canceled || pickerResult.assets.length === 0) {
+      return;
+    }
+
+    const selectedAsset = pickerResult.assets[0];
+    setLocalAvatarPreviewUri(selectedAsset.uri);
+    setUseDefaultAvatar(false);
+    setIsUploadingPhoto(true);
+
+    try {
+      await updateConnectedUserProfilePhoto(userToken, {
+        uri: selectedAsset.uri,
+        fileName: selectedAsset.fileName,
+        mimeType: selectedAsset.mimeType,
+      });
+      refreshProfilePhoto();
+      openPopup('success', 'Photo mise à jour', 'Votre photo de profil a été modifiée.');
+    } catch (error) {
+      setLocalAvatarPreviewUri(null);
+      const message = error instanceof Error ? error.message : 'La mise à jour de la photo a échoué.';
+      openPopup('error', 'Erreur', message);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
@@ -143,10 +224,21 @@ export default function ProfileScreen() {
           <View style={[styles.profileHero, { backgroundColor: cardColor }]}> 
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => Alert.alert('Bientôt disponible', 'La modification de la photo de profil sera ajoutée prochainement.')}
+              onPress={handleChangeProfileImage}
+              disabled={isUploadingPhoto}
               style={styles.avatarHeroWrap}
             >
-              <Image source={avatarUri} style={styles.avatarHeroImage} contentFit="cover" />
+              <Image
+                source={avatarSource}
+                style={styles.avatarHeroImage}
+                contentFit="cover"
+                onError={() => setUseDefaultAvatar(true)}
+              />
+              {isUploadingPhoto ? (
+                <View style={styles.avatarLoadingOverlay}>
+                  <ActivityIndicator size="small" color="#ffffff" />
+                </View>
+              ) : null}
               <View style={[styles.editBadge, { backgroundColor: tintColor }]}> 
                 <MaterialIcons name="edit" size={16} color="#ffffff" />
               </View>
@@ -356,6 +448,17 @@ const styles = StyleSheet.create({
     width: 108,
     height: 108,
     borderRadius: 54,
+  },
+  avatarLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   editBadge: {
     position: 'absolute',

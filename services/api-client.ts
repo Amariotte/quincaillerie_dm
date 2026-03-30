@@ -146,6 +146,58 @@ async function requestJson<T>(endpoint: string, init?: RequestInit): Promise<T> 
   }
 }
 
+async function requestMultipart<T>(endpoint: string, init?: RequestInit): Promise<T> {
+  try {
+    const response = await fetch(getApiUrl(endpoint), init);
+
+    if (!response.ok) {
+      const errorRawBody = await response.text();
+      const parsedApiError = extractApiError(errorRawBody, response.status);
+      const apiMessage = parsedApiError?.detail || `Erreur API (${response.status})`;
+      const apiTitle = parsedApiError?.title || (response.status >= 500 ? 'Erreur serveur' : 'Erreur API');
+
+      if (response.status === 401) {
+        if (!isHandlingUnauthorized) {
+          isHandlingUnauthorized = true;
+          showApiErrorPopup('Session expirée', apiMessage || 'Votre session a expiré. Veuillez vous reconnecter.');
+          try {
+            await unauthorizedHandler?.();
+          } finally {
+            isHandlingUnauthorized = false;
+          }
+        }
+      } else {
+        showApiErrorPopup(apiTitle, apiMessage || `Erreur API (${response.status})`);
+      }
+
+      const error = new Error(apiMessage || `Erreur API (${response.status})`) as HttpApiError;
+      error.status = response.status;
+      error.errorApi = parsedApiError ?? undefined;
+      throw error;
+    }
+
+    const rawBody = await response.text();
+
+    if (!rawBody) {
+      return null as T;
+    }
+
+    return JSON.parse(rawBody) as T;
+  } catch (error) {
+    const httpError = error as Partial<HttpApiError>;
+    if (typeof httpError?.status === 'number') {
+      throw error;
+    }
+
+    const networkMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.';
+    showApiErrorPopup('Erreur réseau', networkMessage);
+
+    const networkError = new Error(networkMessage) as HttpApiError;
+    networkError.status = 0;
+    throw networkError;
+  }
+}
+
 export async function getJson<T>(endpoint: string): Promise<T> {
   return requestJson<T>(endpoint);
 }
@@ -195,5 +247,20 @@ export async function putJsonAuth<TResponse, TBody = unknown>(endpoint: string, 
       Authorization: `Bearer ${token}`,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+export async function uploadMultipartAuth<TResponse>(
+  endpoint: string,
+  token: string,
+  body: FormData,
+  method: 'POST' | 'PUT' | 'PATCH' = 'POST'
+): Promise<TResponse> {
+  return requestMultipart<TResponse>(endpoint, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body,
   });
 }
