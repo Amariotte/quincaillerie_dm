@@ -1,10 +1,10 @@
-import apiConfig from '@/config/api';
-import { useMemo, useState } from 'react';
-import { Image, ImageProps, ImageSourcePropType } from 'react-native';
+import apiConfig from "@/config/api";
+import { useMemo, useState } from "react";
+import { Image, ImageProps, ImageSourcePropType } from "react-native";
 
-const defaultProductImage = require('../assets/images/partial-react-logo.png');
+const defaultProductImage = require("../assets/images/produit.png");
 
-type ProductImageProps = Omit<ImageProps, 'source'> & {
+type ProductImageProps = Omit<ImageProps, "source"> & {
   productId?: string | null;
   userToken?: string | null;
   cacheKey?: string | number;
@@ -19,9 +19,11 @@ function getProductImageSource(
     return defaultProductImage;
   }
 
-  const imageUrl = new URL(`${apiConfig.baseURL}${apiConfig.endpoints.produits}/${productId}/images`);
+  const imageUrl = new URL(
+    `${apiConfig.baseURL}${apiConfig.endpoints.produits}/${productId}/images`,
+  );
   if (cacheKey != null) {
-    imageUrl.searchParams.set('t', String(cacheKey));
+    imageUrl.searchParams.set("t", String(cacheKey));
   }
 
   return {
@@ -32,7 +34,13 @@ function getProductImageSource(
   };
 }
 
-export function ProductImage({ productId, userToken, cacheKey, onError, ...imageProps }: ProductImageProps) {
+export function ProductImage({
+  productId,
+  userToken,
+  cacheKey,
+  onError,
+  ...imageProps
+}: ProductImageProps) {
   const [hasError, setHasError] = useState(false);
 
   const remoteSource = useMemo(

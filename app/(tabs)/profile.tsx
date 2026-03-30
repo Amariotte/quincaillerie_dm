@@ -1,15 +1,21 @@
-import { AppHeader } from '@/components/app-header';
-import { AuthButton } from '@/components/auth-button';
-import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
-import { useAuthContext } from '@/hooks/auth-context';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { getConnectedUserProfilePhotoSource, updateConnectedUserProfilePhoto } from '@/services/user-service';
-import { sharedStyles } from '@/styles/shared';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { AppHeader } from "@/components/app-header";
+import { AuthButton } from "@/components/auth-button";
+import {
+  FeedbackPopup,
+  FeedbackPopupType,
+} from "@/components/ui/feedback-popup";
+import { useAuthContext } from "@/hooks/auth-context";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import {
+  getConnectedUserProfilePhotoSource,
+  updateConnectedUserProfilePhoto,
+} from "@/services/user-service";
+import { sharedStyles } from "@/styles/shared";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,22 +24,21 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ProfileField = {
   label: string;
   value: unknown;
-  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  icon: React.ComponentProps<typeof MaterialIcons>["name"];
   formatter?: (value: unknown) => string;
 };
 
-const defaultAvatarSource = require('../../assets/images/logo.png');
-
+const defaultAvatarSource = require("../../assets/images/avatar.png");
 
 const formatTextValue = (value: unknown) => {
   if (value == null) {
-    return '';
+    return "";
   }
   return String(value).trim();
 };
@@ -43,25 +48,35 @@ const formatDateValue = (value: unknown) => {
     return formatTextValue(value);
   }
   if (Number.isNaN(value.getTime())) {
-    return '';
+    return "";
   }
-  return value.toLocaleDateString('fr-FR');
+  return value.toLocaleDateString("fr-FR");
 };
 
 const formatNumberValue = (value: unknown) => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
     return formatTextValue(value);
   }
-  return new Intl.NumberFormat('fr-FR').format(value);
+  return new Intl.NumberFormat("fr-FR").format(value);
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, userToken, profilePhotoVersion, refreshProfilePhoto, signOut, isLoading } = useAuthContext();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const {
+    user,
+    userToken,
+    profilePhotoVersion,
+    refreshProfilePhoto,
+    signOut,
+    isLoading,
+  } = useAuthContext();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } =
+    useAppTheme();
   const [useDefaultAvatar, setUseDefaultAvatar] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [localAvatarPreviewUri, setLocalAvatarPreviewUri] = useState<string | null>(null);
+  const [localAvatarPreviewUri, setLocalAvatarPreviewUri] = useState<
+    string | null
+  >(null);
   const [popupState, setPopupState] = useState<{
     visible: boolean;
     type: FeedbackPopupType;
@@ -69,19 +84,26 @@ export default function ProfileScreen() {
     message: string;
   }>({
     visible: false,
-    type: 'info',
-    title: '',
-    message: '',
+    type: "info",
+    title: "",
+    message: "",
   });
 
-  const openPopup = (type: FeedbackPopupType, title: string, message: string) => {
+  const openPopup = (
+    type: FeedbackPopupType,
+    title: string,
+    message: string,
+  ) => {
     setPopupState({ visible: true, type, title, message });
   };
 
   const remoteAvatarSource = useMemo(() => {
     if (userToken) {
       try {
-        return getConnectedUserProfilePhotoSource(userToken, profilePhotoVersion);
+        return getConnectedUserProfilePhotoSource(
+          userToken,
+          profilePhotoVersion,
+        );
       } catch {
         return defaultAvatarSource;
       }
@@ -104,60 +126,74 @@ export default function ProfileScreen() {
 
   const profileFields = useMemo(() => {
     if (!user) {
-      return [] as Array<ProfileField & { displayValue: string }>;
+      return [] as (ProfileField & { displayValue: string })[];
     }
 
     const fields: ProfileField[] = [
-      { label: 'Représentant légal', value: user.nomRepresentantLegal, icon: 'person' },
-      { label: 'Type de pièce', value: user.typePiece, icon: 'description' },
-      { label: 'Numéro de pièce', value: user.numPiece, icon: 'badge' },
-      { label: 'Date de naissance', value: user.dateNaissance, icon: 'cake', formatter: formatDateValue },
-      { label: 'Date d\'anniversaire', value: user.dateAnniversaire, icon: 'event' },
-      { label: 'Type', value: user.type, icon: 'category' },
-      { label: 'Civilité', value: user.civilite, icon: 'wc' },
-      { label: 'Adresse', value: user.adresse, icon: 'home' },
-      { label: 'Email', value: user.email, icon: 'alternate-email' },
-      { label: 'Téléphone fixe', value: user.telFixe, icon: 'phone' },
-      { label: 'Téléphone mobile', value: user.telMobile, icon: 'smartphone' },
-      { label: 'NCC', value: user.ncc, icon: 'account-balance' },
-      { label: 'Agence', value: user.nomAgence, icon: 'business' },
-      { label: 'Plafond', value: user.plafond, icon: 'attach-money', formatter: formatNumberValue },
+      {
+        label: "Représentant légal",
+        value: user.nomRepresentantLegal,
+        icon: "person",
+      },
+      { label: "Type de pièce", value: user.typePiece, icon: "description" },
+      { label: "Numéro de pièce", value: user.numPiece, icon: "badge" },
+      {
+        label: "Date de naissance",
+        value: user.dateNaissance,
+        icon: "cake",
+        formatter: formatDateValue,
+      },
+      {
+        label: "Date d'anniversaire",
+        value: user.dateAnniversaire,
+        icon: "event",
+      },
+      { label: "Type", value: user.type, icon: "category" },
+      { label: "Civilité", value: user.civilite, icon: "wc" },
+      { label: "Adresse", value: user.adresse, icon: "home" },
+      { label: "Email", value: user.email, icon: "alternate-email" },
+      { label: "Téléphone fixe", value: user.telFixe, icon: "phone" },
+      { label: "Téléphone mobile", value: user.telMobile, icon: "smartphone" },
+      { label: "NCC", value: user.ncc, icon: "account-balance" },
+      { label: "Agence", value: user.nomAgence, icon: "business" },
+      {
+        label: "Plafond",
+        value: user.plafond,
+        icon: "attach-money",
+        formatter: formatNumberValue,
+      },
     ];
 
     return fields
       .map((field) => ({
         ...field,
-        displayValue: field.formatter ? field.formatter(field.value) : formatTextValue(field.value),
+        displayValue: field.formatter
+          ? field.formatter(field.value)
+          : formatTextValue(field.value),
       }))
       .filter((field) => field.displayValue.length > 0);
   }, [user]);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter?',
-      [
-        {
-          text: 'Annuler',
-          onPress: () => {},
-          style: 'cancel',
+    Alert.alert("Déconnexion", "Êtes-vous sûr de vouloir vous déconnecter?", [
+      {
+        text: "Annuler",
+        onPress: () => {},
+        style: "cancel",
+      },
+      {
+        text: "Déconnexion",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace("/(auth)" as never);
+          } catch (error) {
+            router.replace("/(auth)" as never);
+          }
         },
-        {
-          text: 'Déconnexion',
-          onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/(auth)' as never);
-            } catch (err) {
-             
-              router.replace('/(auth)' as never);
-
-            }
-          },
-          style: 'destructive',
-        },
-      ]
-    );
+        style: "destructive",
+      },
+    ]);
   };
 
   const handleChangeProfileImage = async () => {
@@ -166,13 +202,17 @@ export default function ProfileScreen() {
     }
 
     if (!userToken) {
-      openPopup('error', 'Erreur', 'Session utilisateur indisponible.');
+      openPopup("error", "Erreur", "Session utilisateur indisponible.");
       return;
     }
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      openPopup('info', 'Permission requise', 'Autorisez l’accès à la galerie pour modifier votre photo de profil.');
+      openPopup(
+        "info",
+        "Permission requise",
+        "Autorisez l’accès à la galerie pour modifier votre photo de profil.",
+      );
       return;
     }
 
@@ -200,28 +240,38 @@ export default function ProfileScreen() {
         mimeType: selectedAsset.mimeType,
       });
       refreshProfilePhoto();
-      openPopup('success', 'Photo mise à jour', 'Votre photo de profil a été modifiée.');
+      openPopup(
+        "success",
+        "Photo mise à jour",
+        "Votre photo de profil a été modifiée.",
+      );
     } catch (error) {
       setLocalAvatarPreviewUri(null);
-      const message = error instanceof Error ? error.message : 'La mise à jour de la photo a échoué.';
-      openPopup('error', 'Erreur', message);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "La mise à jour de la photo a échoué.";
+      openPopup("error", "Erreur", message);
     } finally {
       setIsUploadingPhoto(false);
     }
   };
 
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 20, paddingTop: 22 }}>
-        <AppHeader title="Profil" subtitle="Informations et préférences du compte" showBack />
+        <AppHeader
+          title="Profil"
+          subtitle="Informations et préférences du compte"
+          showBack
+        />
       </View>
       <ScrollView
         contentContainerStyle={sharedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={sharedStyles.container}>
-          <View style={[styles.profileHero, { backgroundColor: cardColor }]}> 
+          <View style={[styles.profileHero, { backgroundColor: cardColor }]}>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleChangeProfileImage}
@@ -239,30 +289,57 @@ export default function ProfileScreen() {
                   <ActivityIndicator size="small" color="#ffffff" />
                 </View>
               ) : null}
-              <View style={[styles.editBadge, { backgroundColor: tintColor }]}> 
+              <View style={[styles.editBadge, { backgroundColor: tintColor }]}>
                 <MaterialIcons name="edit" size={16} color="#ffffff" />
               </View>
             </TouchableOpacity>
 
             <View style={styles.heroTextWrap}>
-              <Text style={[styles.heroName, { color: textColor }]}>{user?.code ?? ''}</Text>
-              <Text style={[styles.heroName, { color: textColor }]}>{user?.nom ?? 'Utilisateur'}</Text>
-              <Text style={[styles.heroEmail, { color: mutedColor }]}>{user?.email ?? 'Aucun email'}</Text>
+              <Text style={[styles.heroName, { color: textColor }]}>
+                {user?.code ?? ""}
+              </Text>
+              <Text style={[styles.heroName, { color: textColor }]}>
+                {user?.nom ?? "Utilisateur"}
+              </Text>
+              <Text style={[styles.heroEmail, { color: mutedColor }]}>
+                {user?.email ?? "Aucun email"}
+              </Text>
             </View>
           </View>
 
           {/* Fiche détaillée */}
           {user && (
             <View style={[styles.profileCard, { backgroundColor: cardColor }]}>
-              <Text style={[styles.sectionTitle, { color: textColor }]}>Informations personnelles</Text>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>
+                Informations personnelles
+              </Text>
               {profileFields.map((field) => (
-                <View key={field.label} style={[styles.profileRow, { borderBottomColor: mutedColor + '30' }]}>
-                  <View style={[styles.profileIconWrap, { backgroundColor: tintColor + '18' }]}>
-                    <MaterialIcons name={field.icon} size={18} color={tintColor} />
+                <View
+                  key={field.label}
+                  style={[
+                    styles.profileRow,
+                    { borderBottomColor: mutedColor + "30" },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.profileIconWrap,
+                      { backgroundColor: tintColor + "18" },
+                    ]}
+                  >
+                    <MaterialIcons
+                      name={field.icon}
+                      size={18}
+                      color={tintColor}
+                    />
                   </View>
                   <View style={styles.profileTextWrap}>
-                    <Text style={[styles.profileLabel, { color: mutedColor }]}>{field.label}</Text>
-                    <Text style={[styles.profileValue, { color: textColor }]}>{field.displayValue}</Text>
+                    <Text style={[styles.profileLabel, { color: mutedColor }]}>
+                      {field.label}
+                    </Text>
+                    <Text style={[styles.profileValue, { color: textColor }]}>
+                      {field.displayValue}
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -277,7 +354,7 @@ export default function ProfileScreen() {
             </Text>
 
             <TouchableOpacity
-              onPress={() => router.push('/compte/qr')}
+              onPress={() => router.push("/compte/qr")}
               style={[
                 styles.settingItem,
                 {
@@ -315,7 +392,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push('/compte/mot-de-passe')}
+              onPress={() => router.push("/compte/mot-de-passe")}
               style={[
                 styles.settingItem,
                 {
@@ -354,10 +431,7 @@ export default function ProfileScreen() {
 
             {/* App Settings */}
             <Text
-              style={[
-                styles.sectionTitle,
-                { color: textColor, marginTop: 24 },
-              ]}
+              style={[styles.sectionTitle, { color: textColor, marginTop: 24 }]}
             >
               Application
             </Text>
@@ -400,11 +474,9 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-    
-
           {/* Logout Button */}
           <AuthButton
-            title={isLoading ? 'Déconnexion...' : 'Se déconnecter'}
+            title={isLoading ? "Déconnexion..." : "Se déconnecter"}
             onPress={handleLogout}
             loading={isLoading}
             disabled={isLoading}
@@ -426,22 +498,21 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
- 
   profileHero: {
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 18,
     marginBottom: 20,
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOpacity: 0.06,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   avatarHeroWrap: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 14,
   },
   avatarHeroImage: {
@@ -450,34 +521,34 @@ const styles = StyleSheet.create({
     borderRadius: 54,
   },
   avatarLoadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     borderRadius: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
   editBadge: {
-    position: 'absolute',
+    position: "absolute",
     right: 2,
     bottom: 2,
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: "#ffffff",
   },
   heroTextWrap: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   heroName: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   heroEmail: {
     marginTop: 4,
@@ -489,11 +560,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -503,8 +574,8 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
   },
   userInfo: {
@@ -512,32 +583,32 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   settingsSection: {
     flex: 1,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
     marginTop: 8,
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
   settingItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   settingIcon: {
@@ -545,7 +616,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   settingDescription: {
@@ -559,15 +630,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     gap: 4,
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -576,21 +647,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileTextWrap: {
     flex: 1,
   },
   profileLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: "600",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   profileValue: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: 2,
   },
   popupTestDescription: {
@@ -599,8 +670,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   popupActionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   popupActionChip: {
@@ -610,6 +681,6 @@ const styles = StyleSheet.create({
   },
   popupActionText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 });

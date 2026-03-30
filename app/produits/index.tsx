@@ -1,44 +1,70 @@
-import { AppHeader } from '@/components/app-header';
-import { EmptyResultsCard } from '@/components/empty-results-card';
-import { ProductImage } from '@/components/product-image';
-import { useAuthContext } from '@/hooks/auth-context';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { getfetchProduits } from '@/services/api-service';
-import { getCacheData, PRODUITS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
-import { sharedStyles } from '@/styles/shared';
-import { formatAmount } from '@/tools/tools';
-import { listProduits } from '@/types/produits.type';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from "@/components/app-header";
+import { EmptyResultsCard } from "@/components/empty-results-card";
+import { ProductImage } from "@/components/product-image";
+import { useAuthContext } from "@/hooks/auth-context";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { getfetchProduits } from "@/services/api-service";
+import {
+  getCacheData,
+  PRODUITS_LIST_CACHE_KEY,
+  setCacheData,
+} from "@/services/cache-service";
+import { sharedStyles } from "@/styles/shared";
+import { formatAmount } from "@/tools/tools";
+import { listProduits } from "@/types/produits.type";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProduitsScreen() {
   const router = useRouter();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const [query, setQuery] = useState('');
-  const [produits, setProduits] = useState<listProduits>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [activeFamille, setActiveFamille] = useState('Toutes');
+  const {
+    backgroundColor,
+    textColor,
+    tintColor,
+    cardColor,
+    mutedColor,
+    borderColor,
+  } = useAppTheme();
+  const [query, setQuery] = useState("");
+  const [produits, setProduits] = useState<listProduits>({
+    meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+    data: [],
+  });
+  const [activeFamille, setActiveFamille] = useState("Toutes");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const { userToken } = useAuthContext();
-  const MAIN_ACCOUNT_FILTER = 'Non définie';
+  const MAIN_ACCOUNT_FILTER = "Non définie";
 
-   const filteredProducts = useMemo(() => {
+  const filteredProducts = useMemo(() => {
     return produits.data.filter((product) => {
       const matchesQuery =
         product.designation.toLowerCase().includes(query.toLowerCase()) ||
         product.reference.toLowerCase().includes(query.toLowerCase());
-      
-      const matchesFamille = activeFamille === 'Toutes' ? true : product.nomfamille === activeFamille;
+
+      const matchesFamille =
+        activeFamille === "Toutes"
+          ? true
+          : product.nomfamille === activeFamille;
 
       return matchesQuery && matchesFamille;
     });
-  }, [activeFamille, query]);
-
+  }, [activeFamille, produits.data, query]);
 
   const loadProduits = useCallback(async () => {
     if (!userToken) {
@@ -48,22 +74,30 @@ export default function ProduitsScreen() {
     try {
       setIsLoading(true);
       setIsError(false);
-      
-      // Try to load from cache first
-      const cachedData = await getCacheData<listProduits>(PRODUITS_LIST_CACHE_KEY);
 
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
+      // Try to load from cache first
+      const cachedData = await getCacheData<listProduits>(
+        PRODUITS_LIST_CACHE_KEY,
+      );
+
+      if (
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0
+      ) {
         setProduits(cachedData);
       }
 
       // Fetch from API to update
       const data = await getfetchProduits(userToken);
 
-      alert(JSON.stringify(data));
       setProduits(data);
       setIsOfflineMode(false);
     } catch {
-      setProduits({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
+      setProduits({
+        meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+        data: [],
+      });
       setIsError(true);
       setIsOfflineMode(true);
     } finally {
@@ -71,29 +105,30 @@ export default function ProduitsScreen() {
     }
   }, [userToken]);
 
-
- const familles = [
-    'Toutes',
+  const familles = [
+    "Toutes",
     MAIN_ACCOUNT_FILTER,
     ...Array.from(
       new Set(
         produits.data
           .map((f) => f.nomfamille)
-          .filter((nomfamille): nomfamille is string => typeof nomfamille === 'string' && nomfamille.trim().length > 0)
-      )
+          .filter(
+            (nomfamille): nomfamille is string =>
+              typeof nomfamille === "string" && nomfamille.trim().length > 0,
+          ),
+      ),
     ),
   ];
 
   familles.sort((a, b) => {
-    if (a === 'Toutes') return -1;
-    if (b === 'Toutes') return 1;
+    if (a === "Toutes") return -1;
+    if (b === "Toutes") return 1;
     if (a === MAIN_ACCOUNT_FILTER) return -1;
     if (b === MAIN_ACCOUNT_FILTER) return 1;
     return a.localeCompare(b);
   });
 
-
-useEffect(() => {
+  useEffect(() => {
     loadProduits();
   }, [loadProduits]);
 
@@ -118,13 +153,32 @@ useEffect(() => {
   }, [userToken]);
 
   return (
-    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-        <AppHeader showBack title="Liste des produits" subtitle="Prix et familles" />
+        <AppHeader
+          showBack
+          title="Liste des produits"
+          subtitle="Prix et familles"
+        />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
+      <ScrollView
+        contentContainerStyle={sharedStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={tintColor}
+          />
+        }
+      >
         <View style={sharedStyles.container}>
-          <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}> 
+          <View
+            style={[
+              sharedStyles.searchBox,
+              { backgroundColor: cardColor, borderColor },
+            ]}
+          >
             <MaterialIcons name="search" size={20} color={mutedColor} />
             <TextInput
               value={query}
@@ -154,7 +208,14 @@ useEffect(() => {
                     },
                   ]}
                 >
-                  <Text style={[sharedStyles.filterLabel, { color: isActive ? '#ffffff' : textColor }]}>{famille}</Text>
+                  <Text
+                    style={[
+                      sharedStyles.filterLabel,
+                      { color: isActive ? "#ffffff" : textColor },
+                    ]}
+                  >
+                    {famille}
+                  </Text>
                 </TouchableOpacity>
               );
             }}
@@ -186,7 +247,12 @@ useEffect(() => {
                 renderItem={({ item: product }) => (
                   <TouchableOpacity
                     activeOpacity={0.85}
-                    onPress={() => router.push(`/produits/${product.id}` as never)}
+                    onPress={() =>
+                      router.push({
+                        pathname: `/produits/${product.id}`,
+                        params: { produit: JSON.stringify(product) },
+                      } as never)
+                    }
                     style={[styles.productCard, { backgroundColor: cardColor }]}
                   >
                     <View style={styles.productTopRow}>
@@ -197,12 +263,31 @@ useEffect(() => {
                         resizeMode="cover"
                       />
                       <View style={styles.productInfo}>
-                        <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
+                        <Text
+                          style={[styles.productName, { color: textColor }]}
+                        >
+                          {product.designation}
+                        </Text>
                         <View style={styles.productMetaRow}>
-                          <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
-                          <Text style={[styles.priceInlineValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
+                          <Text
+                            style={[styles.productSku, { color: mutedColor }]}
+                          >
+                            Réf: {product.reference}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.priceInlineValue,
+                              { color: textColor },
+                            ]}
+                          >
+                            {formatAmount(product.prixVenteTTC)}
+                          </Text>
                         </View>
-                        <Text style={[styles.familyValue, { color: tintColor }]}>{product.nomfamille || MAIN_ACCOUNT_FILTER}</Text>
+                        <Text
+                          style={[styles.familyValue, { color: tintColor }]}
+                        >
+                          {product.nomfamille || MAIN_ACCOUNT_FILTER}
+                        </Text>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -217,24 +302,23 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
- 
   loaderBlock: {
     paddingVertical: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   productCard: {
     borderRadius: 20,
     padding: 16,
     gap: 12,
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   productTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: 10,
   },
   productInfo: {
@@ -247,16 +331,16 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   productSku: {
     fontSize: 12,
     marginTop: 4,
   },
   productMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: 12,
   },
   stockLabel: {
@@ -264,17 +348,17 @@ const styles = StyleSheet.create({
   },
   stockValue: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 4,
   },
   priceInlineValue: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: "900",
     marginTop: 4,
   },
   familyValue: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: 6,
   },
 });

@@ -1,36 +1,99 @@
-import { AppHeader } from '@/components/app-header';
-import { ProductImage } from '@/components/product-image';
-import { produitsFakeData } from '@/data/datas.fake';
-import { useAuthContext } from '@/hooks/auth-context';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { sharedStyles } from '@/styles/shared';
-import { formatAmount } from '@/tools/tools';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppHeader } from "@/components/app-header";
+import { EmptyResultsCard } from "@/components/empty-results-card";
+import apiConfig from "@/config/api";
+import { useAuthContext } from "@/hooks/auth-context";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { sharedStyles } from "@/styles/shared.js";
+import { formatAmount } from "@/tools/tools";
+import { Produit } from "@/types/produits.type";
+import { useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Image, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProduitDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { produit: produitParam } = useLocalSearchParams<{
+    id: string;
+    produit?: string;
+  }>();
+
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } =
+    useAppTheme();
   const { userToken } = useAuthContext();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const [productImage, setProductImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
-  const product = produitsFakeData.data.find((item) => item.id === id);
+  // Parse produit data once and memoize it
+  const produit_item = useMemo(() => {
+    if (produitParam) {
+      try {
+        return JSON.parse(produitParam) as Produit;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [produitParam]);
 
-  if (!product) {
+  // Fetch product image from API
+  useEffect(() => {
+    if (!produit_item?.id || !userToken) {
+      setImageLoading(false);
+      return;
+    }
+
+    const fetchProductImage = async () => {
+      try {
+        setImageLoading(true);
+        setImageError(false);
+
+        // Try to fetch image from API endpoint
+        const imageUrl = `${apiConfig.baseURL}${apiConfig.endpoints.produits}/${produit_item.id}/image`;
+
+        // Try fetching from API
+        const response = await fetch(imageUrl, {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
+        if (response.ok) {
+          setProductImage(imageUrl);
+        } else {
+          setImageError(true);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération de l'image:", error);
+        setImageError(true);
+      } finally {
+        setImageLoading(false);
+      }
+    };
+
+    fetchProductImage();
+  }, [produit_item?.id, userToken]);
+
+  if (!produit_item) {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
-        <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-          <AppHeader showBack title="Détail produit" subtitle="Produit introuvable" />
+        <View style={sharedStyles.fixedHeader}>
+          <AppHeader
+            showBack
+            title="Détail produit"
+            subtitle="Document introuvable"
+          />
         </View>
         <ScrollView contentContainerStyle={sharedStyles.scrollContent}>
           <View style={sharedStyles.container}>
-            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}>
-              <MaterialIcons name="error-outline" size={30} color="#dc2626" />
-              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Produit introuvable</Text>
-              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Ce produit n'existe pas ou a été supprimé.</Text>
-            </View>
+            <EmptyResultsCard
+              iconName="error-outline"
+              title="Produit introuvable"
+              subtitle="Ce produit n'existe pas ou a été supprimé."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -39,100 +102,188 @@ export default function ProduitDetailScreen() {
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
-      <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-        <AppHeader showBack title="Détail produit" subtitle={product.reference} />
+      <View style={sharedStyles.fixedHeader}>
+        <AppHeader
+          showBack
+          title="Détail du produit"
+          subtitle={produit_item.reference ?? "Référence inconnue"}
+        />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={sharedStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={sharedStyles.container}>
-          <View style={[styles.headerCard, { backgroundColor: cardColor }]}>
-            <ProductImage
-              productId={product.id}
-              userToken={userToken}
-              style={styles.productImage}
-              resizeMode="cover"
-            />
-            <View style={styles.productTextBlock}>
-              <Text style={[styles.productName, { color: textColor }]}>{product.designation}</Text>
-              <View style={[styles.categoryTag, { backgroundColor: `${tintColor}18` }]}>
-                <Text style={[styles.categoryText, { color: tintColor }]}>{product.nomfamille}</Text>
-              </View>
-            </View>
+          {/* Product Image */}
+          <View
+            style={{
+              width: "100%",
+              height: 250,
+              borderRadius: 12,
+              marginBottom: 20,
+              backgroundColor: cardColor,
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            {imageLoading ? (
+              <ActivityIndicator size="large" color={tintColor} />
+            ) : productImage && !imageError ? (
+              <Image
+                source={{ uri: productImage }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  resizeMode: "contain",
+                }}
+              />
+            ) : (
+              <Image
+                source={require("@/assets/images/produit.png")}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  resizeMode: "contain",
+                }}
+              />
+            )}
           </View>
 
-          <View style={[styles.detailCard, { backgroundColor: cardColor }]}>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: mutedColor }]}>Référence</Text>
-              <Text style={[styles.detailValue, { color: textColor }]}>{product.reference}</Text>
+          {/* Header Card - Informations principales */}
+          <View
+            style={[
+              sharedStyles.headerCard,
+              {
+                backgroundColor: cardColor,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              },
+            ]}
+          >
+            <View style={sharedStyles.headerTopRow}>
+              <Text
+                style={[sharedStyles.clientName, { color: textColor }]}
+                numberOfLines={2}
+              >
+                {produit_item.designation?.trim() || "Désignation inconnue"}
+              </Text>
             </View>
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: mutedColor }]}>Prix unitaire</Text>
-              <Text style={[styles.detailValue, { color: textColor }]}>{formatAmount(product.prixVenteTTC)}</Text>
+
+            <View style={sharedStyles.metaRow}>
+              <Text
+                style={[
+                  sharedStyles.metaCaption,
+                  { color: mutedColor, fontSize: 13 },
+                ]}
+              >
+                Référence :
+              </Text>
+              <Text
+                style={[
+                  sharedStyles.metaCaption,
+                  { color: textColor, fontWeight: "600", fontSize: 13 },
+                ]}
+              >
+                {produit_item.reference ?? "—"}
+              </Text>
             </View>
-          
+            <View style={sharedStyles.metaRow}>
+              <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                Famille : {produit_item.nomfamille ?? "—"}
+              </Text>
+            </View>
+            {produit_item.unit && (
+              <View style={sharedStyles.metaRow}>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  Unité : {produit_item.unit}
+                </Text>
+              </View>
+            )}
+            {produit_item.txTva !== undefined && (
+              <View style={sharedStyles.metaRow}>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  TVA : {produit_item.txTva}%
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Summary Card - Prix */}
+          <View
+            style={[
+              sharedStyles.summaryCard,
+              {
+                backgroundColor: cardColor,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
+              },
+            ]}
+          >
+            {produit_item.prixVenteHT !== undefined && (
+              <View style={sharedStyles.summaryRow}>
+                <Text
+                  style={[
+                    sharedStyles.totalLabel,
+                    { color: textColor, fontSize: 14 },
+                  ]}
+                >
+                  Prix unitaire HT
+                </Text>
+                <Text
+                  style={[
+                    sharedStyles.totalValue,
+                    { color: tintColor, fontWeight: "bold", fontSize: 16 },
+                  ]}
+                >
+                  {formatAmount(produit_item.prixVenteHT)}
+                </Text>
+              </View>
+            )}
+            {produit_item.prixVenteTTC !== undefined && (
+              <View
+                style={[
+                  sharedStyles.summaryRow,
+                  {
+                    borderTopWidth: 1,
+                    borderTopColor: mutedColor + "30",
+                    paddingTop: 12,
+                    marginTop: 8,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    sharedStyles.totalLabel,
+                    { color: textColor, fontSize: 14 },
+                  ]}
+                >
+                  Prix unitaire TTC
+                </Text>
+                <Text
+                  style={[
+                    sharedStyles.totalValue,
+                    { color: tintColor, fontWeight: "bold", fontSize: 16 },
+                  ]}
+                >
+                  {formatAmount(produit_item.prixVenteTTC)}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  headerCard: {
-    borderRadius: 20,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  productImage: {
-    width: 84,
-    height: 84,
-    borderRadius: 16,
-  },
-  productTextBlock: {
-    flex: 1,
-    gap: 10,
-  },
-  productName: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  categoryTag: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  detailCard: {
-    borderRadius: 20,
-    padding: 16,
-    gap: 14,
-    shadowColor: '#000000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  detailLabel: {
-    fontSize: 14,
-  },
-  detailValue: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});

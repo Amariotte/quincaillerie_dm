@@ -1,27 +1,45 @@
-import { AppHeader } from '@/components/app-header';
-import { SkeletonCard } from '@/components/skeleton-loader';
-import { menuItems } from '@/data/menus';
-import { useAuthContext } from '@/hooks/auth-context';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { fetchSoldeCompte, getfetchRecentMouvements, getStats } from '@/services/api-service';
-import { BALANCE_CACHE_KEY, getCacheData, RECENTS_MOUVEMENTS_CACHE_KEY, setCacheData, STAT_DATA_CACHE_KEY } from '@/services/cache-service';
-import COLORS from '@/styles/colors';
-import { sharedStyles } from '@/styles/shared.js';
-import { formatAmount, formatDate } from '@/tools/tools';
-import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
-import { stat } from '@/types/other.type';
-import { SoldeResponse } from '@/types/solde.type';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './styles.js';
+import { AppHeader } from "@/components/app-header";
+import { SkeletonCard } from "@/components/skeleton-loader";
+import { menuItems } from "@/data/menus";
+import { useAuthContext } from "@/hooks/auth-context";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import {
+  fetchSoldeCompte,
+  getfetchRecentMouvements,
+  getStats,
+} from "@/services/api-service";
+import {
+  BALANCE_CACHE_KEY,
+  getCacheData,
+  RECENTS_MOUVEMENTS_CACHE_KEY,
+  setCacheData,
+  STAT_DATA_CACHE_KEY,
+} from "@/services/cache-service";
+import COLORS from "@/styles/colors";
+import { sharedStyles } from "@/styles/shared.js";
+import { formatAmount, formatDate } from "@/tools/tools";
+import { listMouvements, typeMouvementColorMap } from "@/types/mouvements.type";
+import { stat } from "@/types/other.type";
+import { SoldeResponse } from "@/types/solde.type";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import styles from "./styles.js";
 
 type PeriodSection = {
   key: string;
   title: string;
-  data: listMouvements['data'];
+  data: listMouvements["data"];
 };
 
 function parseMouvementDate(value: string): Date | null {
@@ -56,17 +74,17 @@ function isSameDay(first: Date, second: Date): boolean {
   );
 }
 
-function getSignedAmountDisplay(mouvement: listMouvements['data'][number]) {
+function getSignedAmountDisplay(mouvement: listMouvements["data"][number]) {
   const absoluteAmount = Math.abs(Number(mouvement.montant) || 0);
 
-  if (mouvement.libType === 'Réglement' || mouvement.libType === 'Commission') {
+  if (mouvement.libType === "Réglement" || mouvement.libType === "Commission") {
     return {
       label: `+ ${formatAmount(absoluteAmount)}`,
-      color: typeMouvementColorMap['Réglement'],
+      color: typeMouvementColorMap["Réglement"],
     };
   }
 
-  if (mouvement.libType === 'Vente' || mouvement.libType === 'Décaissement') {
+  if (mouvement.libType === "Vente" || mouvement.libType === "Décaissement") {
     return {
       label: `- ${formatAmount(absoluteAmount)}`,
       color: COLORS.errorColor,
@@ -81,15 +99,20 @@ function getSignedAmountDisplay(mouvement: listMouvements['data'][number]) {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } = useAppTheme();
+  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } =
+    useAppTheme();
   const { userToken } = useAuthContext();
 
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [recentMouvements, setRecentMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] = useState(true);
+  const [recentMouvements, setRecentMouvements] = useState<listMouvements>({
+    meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 },
+    data: [],
+  });
+  const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] =
+    useState(true);
   const [statInfos, setStatInfos] = useState<stat | null>(null);
 
   const loadBalance = useCallback(async () => {
@@ -108,7 +131,7 @@ export default function HomeScreen() {
       }
 
       if (!userToken) {
-        throw new Error('Token utilisateur manquant');
+        throw new Error("Token utilisateur manquant");
       }
 
       const solde = await fetchSoldeCompte(userToken);
@@ -116,13 +139,9 @@ export default function HomeScreen() {
       setAccountBalance(Number(solde));
       setIsOfflineMode(false);
 
-      await setCacheData(
-        BALANCE_CACHE_KEY,
-        { solde: solde },
-      );
+      await setCacheData(BALANCE_CACHE_KEY, { solde: solde });
     } catch {
       setIsOfflineMode(true);
-
     } finally {
       setIsLoadingBalance(false);
     }
@@ -137,7 +156,7 @@ export default function HomeScreen() {
       if (!userToken) {
         return;
       }
-      const statInfos = await getStats( userToken ?? '');
+      const statInfos = await getStats(userToken ?? "");
       setStatInfos(statInfos);
       await setCacheData(STAT_DATA_CACHE_KEY, statInfos);
     } catch (ex) {
@@ -145,18 +164,19 @@ export default function HomeScreen() {
     }
   }, [userToken]);
 
- 
-   const loadRecentMouvements = useCallback(async () => {
+  const loadRecentMouvements = useCallback(async () => {
     setIsLoadingRecentMouvements(true);
     try {
-      const cached = await getCacheData<listMouvements>(RECENTS_MOUVEMENTS_CACHE_KEY);
+      const cached = await getCacheData<listMouvements>(
+        RECENTS_MOUVEMENTS_CACHE_KEY,
+      );
       if (cached && cached.data.length > 0) {
         setRecentMouvements(cached);
       }
       if (!userToken) {
         return;
       }
-      const data = await getfetchRecentMouvements(userToken ?? '');
+      const data = await getfetchRecentMouvements(userToken ?? "");
       setRecentMouvements(data);
       await setCacheData(RECENTS_MOUVEMENTS_CACHE_KEY, data);
     } catch (ex) {
@@ -175,75 +195,86 @@ export default function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([loadBalance(), loadRecentMouvements(), loadStatData()]);
+      await Promise.all([
+        loadBalance(),
+        loadRecentMouvements(),
+        loadStatData(),
+      ]);
     } finally {
       setIsRefreshing(false);
     }
   }, [loadBalance, loadRecentMouvements, loadStatData]);
 
- 
   const handleMenuPress = (itemId: string) => {
-    if (itemId === 'ventes') {
-      router.push('/ventes' as never);
+    if (itemId === "ventes") {
+      router.push("/ventes" as never);
       return;
     }
 
-    if (itemId === 'proformas') {
-      router.push('/proformas' as never);
+    if (itemId === "proformas") {
+      router.push("/proformas" as never);
       return;
     }
 
-    if (itemId === 'bons') {
-      router.push('/bons' as never);
+    if (itemId === "bons") {
+      router.push("/bons" as never);
       return;
     }
 
-    if (itemId === 'reglements') {
-      router.push('/reglements' as never);
+    if (itemId === "reglements") {
+      router.push("/reglements" as never);
       return;
     }
 
-    if (itemId === 'produits') {
-      router.push('/produits' as never);
+    if (itemId === "produits") {
+      router.push("/produits" as never);
       return;
     }
 
-    if (itemId === 'bonsAchats') {
-      router.push('/bonsAchats' as never);
+    if (itemId === "bonsAchats") {
+      router.push("/bonsAchats" as never);
       return;
     }
 
-    if (itemId === 'transactions') {
-      router.push('/transactions' as never);
+    if (itemId === "transactions") {
+      router.push("/transactions" as never);
       return;
     }
 
-    if (itemId === 'promotions') {
-      router.push('/promotions' as never);
+    if (itemId === "promotions") {
+      router.push("/promotions" as never);
       return;
     }
 
-    if (itemId === 'operations') {
-      router.push('/operations' as never);
+    if (itemId === "operations") {
+      router.push("/operations" as never);
       return;
     }
 
-    if (itemId === 'commissions') {
-      router.push('/commissions' as never);
+    if (itemId === "commissions") {
+      router.push("/commissions" as never);
       return;
     }
 
-    if (itemId === 'cartes') {
-      router.push('/cartes' as never);
+    if (itemId === "cartes") {
+      router.push("/cartes" as never);
       return;
     }
 
-    if (itemId === 'devis') {
-      router.push('/devis/nouveau');
+    if (itemId === "devis") {
+      router.push("/devis/nouveau");
       return;
     }
 
-    Alert.alert('Bientot disponible', 'Ce module n\'est pas encore relie dans cette version.');
+    if (itemId === "sous-comptes") {
+      router.push("/sous-comptes" as never);
+      return;
+    }
+
+    Alert.alert(
+      "Bientot disponible",
+      "Ce module n'est pas encore relie dans cette version.",
+    );
   };
 
   const renderMenuItem = ({ item }: { item: (typeof menuItems)[number] }) => (
@@ -252,25 +283,32 @@ export default function HomeScreen() {
       style={[
         styles.menuCard,
         { backgroundColor: cardColor },
-        item.featured && { backgroundColor: item.tint, justifyContent: 'center' },
+        item.featured && {
+          backgroundColor: item.tint,
+          justifyContent: "center",
+        },
       ]}
     >
       <View
         style={[
           styles.menuIcon,
-          { backgroundColor: item.featured ? 'rgba(255,255,255,0.18)' : `${item.tint}18` },
+          {
+            backgroundColor: item.featured
+              ? "rgba(255,255,255,0.18)"
+              : `${item.tint}18`,
+          },
         ]}
       >
         <MaterialIcons
           name={item.icon as any}
           size={26}
-          color={item.featured ? '#ffffff' : item.tint}
+          color={item.featured ? "#ffffff" : item.tint}
         />
       </View>
       <Text
         style={[
           styles.menuLabel,
-          { color: item.featured ? '#ffffff' : textColor },
+          { color: item.featured ? "#ffffff" : textColor },
         ]}
       >
         {item.title}
@@ -278,30 +316,52 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentMouvement = ({ item: mouvement }: { item: listMouvements['data'][number] }) => (
+  const renderRecentMouvement = ({
+    item: mouvement,
+  }: {
+    item: listMouvements["data"][number];
+  }) =>
     (() => {
       const signedAmount = getSignedAmountDisplay(mouvement);
 
       return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={() => handleRecentMouvementPress(mouvement)}
-      style={[styles.transactionCard, { backgroundColor: cardColor }]}
-    >
-      <View style={[styles.transactionIcon, { backgroundColor: `${(typeMouvementColorMap[mouvement.libType] || tintColor)}15` }]}> 
-        <MaterialIcons name="sync-alt" size={20} color={typeMouvementColorMap[mouvement.libType] || tintColor} />
-      </View>
-      <View style={styles.transactionContent}>
-        <Text style={[styles.transactionLabel, { color: textColor }]}>{mouvement.libType} n° {mouvement.codeOp}</Text>
-        <Text style={[styles.transactionDate, { color: mutedColor }]}>{formatDate(mouvement.dateOp)}</Text>
-      </View>
-      <View style={styles.transactionRight}>
-        <Text style={[styles.transactionAmount, { color: signedAmount.color }]}>{signedAmount.label}</Text>
-      </View>
-    </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => handleRecentMouvementPress(mouvement)}
+          style={[styles.transactionCard, { backgroundColor: cardColor }]}
+        >
+          <View
+            style={[
+              styles.transactionIcon,
+              {
+                backgroundColor: `${typeMouvementColorMap[mouvement.libType] || tintColor}15`,
+              },
+            ]}
+          >
+            <MaterialIcons
+              name="sync-alt"
+              size={20}
+              color={typeMouvementColorMap[mouvement.libType] || tintColor}
+            />
+          </View>
+          <View style={styles.transactionContent}>
+            <Text style={[styles.transactionLabel, { color: textColor }]}>
+              {mouvement.libType} n° {mouvement.codeOp}
+            </Text>
+            <Text style={[styles.transactionDate, { color: mutedColor }]}>
+              {formatDate(mouvement.dateOp)}
+            </Text>
+          </View>
+          <View style={styles.transactionRight}>
+            <Text
+              style={[styles.transactionAmount, { color: signedAmount.color }]}
+            >
+              {signedAmount.label}
+            </Text>
+          </View>
+        </TouchableOpacity>
       );
-    })()
-  );
+    })();
 
   const groupedRecentSections = useMemo<PeriodSection[]>(() => {
     const now = new Date();
@@ -312,7 +372,7 @@ export default function HomeScreen() {
     beforeYesterday.setDate(today.getDate() - 2);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const buckets: Record<string, listMouvements['data']> = {
+    const buckets: Record<string, listMouvements["data"]> = {
       today: [],
       yesterday: [],
       beforeYesterday: [],
@@ -352,75 +412,118 @@ export default function HomeScreen() {
     }
 
     return [
-      { key: 'today', title: "Aujourd'hui", data: buckets.today },
-      { key: 'yesterday', title: 'Hier', data: buckets.yesterday },
-      { key: 'beforeYesterday', title: 'Avant-hier', data: buckets.beforeYesterday },
-      { key: 'thisMonth', title: 'Ce mois', data: buckets.thisMonth },
-      { key: 'older', title: 'Plus anciens', data: buckets.older },
+      { key: "today", title: "Aujourd'hui", data: buckets.today },
+      { key: "yesterday", title: "Hier", data: buckets.yesterday },
+      {
+        key: "beforeYesterday",
+        title: "Avant-hier",
+        data: buckets.beforeYesterday,
+      },
+      { key: "thisMonth", title: "Ce mois", data: buckets.thisMonth },
+      { key: "older", title: "Plus anciens", data: buckets.older },
     ].filter((section) => section.data.length > 0);
   }, [recentMouvements.data]);
 
-  const handleRecentMouvementPress = (mouvement: listMouvements['data'][number]) => {
-    if (mouvement.libType === 'Vente') {
+  const handleRecentMouvementPress = (
+    mouvement: listMouvements["data"][number],
+  ) => {
+    if (mouvement.libType === "Vente") {
       router.push(`/ventes/${mouvement.id}` as never);
       return;
     }
 
-    if (mouvement.libType === 'Réglement') {
+    if (mouvement.libType === "Réglement") {
       router.push(`/reglements/${mouvement.id}` as never);
       return;
     }
 
-    if (mouvement.libType === 'Commission') {
+    if (mouvement.libType === "Commission") {
       router.push(`/commissions/${mouvement.id}` as never);
       return;
     }
 
-    if (mouvement.libType === 'Décaissement') {
-      router.push('/operations' as never);
+    if (mouvement.libType === "Décaissement") {
+      router.push("/operations" as never);
       return;
     }
 
-    Alert.alert('Détail indisponible', 'Aucun écran de détail n\'est associé à ce type pour le moment.');
+    Alert.alert(
+      "Détail indisponible",
+      "Aucun écran de détail n'est associé à ce type pour le moment.",
+    );
   };
 
   return (
-    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-        <AppHeader title="Tableau de bord" subtitle="Vue globale de vos opérations" isOffline={isOfflineMode} />
+        <AppHeader
+          title="Tableau de bord"
+          subtitle="Vue globale de vos opérations"
+          isOffline={isOfflineMode}
+        />
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={tintColor}
+          />
+        }
+      >
         <View style={styles.container}>
-          <View style={[styles.balanceCard, { backgroundColor: cardColor }]}> 
+          <View style={[styles.balanceCard, { backgroundColor: cardColor }]}>
             <View style={styles.balanceRow}>
               <View>
                 <Text style={[styles.balanceAmount, { color: tintColor }]}>
                   {isLoadingBalance
-                    ? 'Chargement...'
+                    ? "Chargement..."
                     : accountBalance !== null
                       ? formatAmount(accountBalance)
-                      : 'Solde indisponible'}
+                      : "Solde indisponible"}
                 </Text>
-                <Text style={[styles.balanceCaption, { color: '#f59e0b' }]}>Mon solde courant</Text>
+                <Text style={[styles.balanceCaption, { color: "#f59e0b" }]}>
+                  Mon solde courant
+                </Text>
               </View>
-              <TouchableOpacity onPress={() => { loadBalance(); loadRecentMouvements(); loadStatData(); }} style={[styles.depositButton, { backgroundColor: tintColor }]}> 
+              <TouchableOpacity
+                onPress={() => {
+                  loadBalance();
+                  loadRecentMouvements();
+                  loadStatData();
+                }}
+                style={[styles.depositButton, { backgroundColor: tintColor }]}
+              >
                 <MaterialIcons name="refresh" size={18} color="#ffffff" />
               </TouchableOpacity>
             </View>
 
-
             <View style={styles.metricsRow}>
               <View style={styles.metricBlock}>
-                <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures non soldées</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteNonSoldee.nbre ?? 0}</Text>
+                <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                  Factures non soldées
+                </Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>
+                  {statInfos?.venteNonSoldee.nbre ?? 0}
+                </Text>
               </View>
               <View style={styles.metricBlock}>
-                <Text style={[styles.metricLabel, { color: mutedColor }]}>Factures échues</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.venteEchue.nbre ?? 0}</Text>
+                <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                  Factures échues
+                </Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>
+                  {statInfos?.venteEchue.nbre ?? 0}
+                </Text>
               </View>
               <View style={styles.metricBlock}>
-                <Text style={[styles.metricLabel, { color: mutedColor }]}>Promotions actives</Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>{statInfos?.promotionActive ?? 0}</Text>
+                <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                  Promotions actives
+                </Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>
+                  {statInfos?.promotionActive ?? 0}
+                </Text>
               </View>
             </View>
           </View>
@@ -438,11 +541,22 @@ export default function HomeScreen() {
             ItemSeparatorComponent={() => <View style={styles.menuSeparator} />}
           />
 
-
           <View style={styles.transactionsHeader}>
-            <Text style={[styles.sectionTitle, styles.transactionTitle, { color: textColor }]}>20 Dernières transactions</Text>
-            <TouchableOpacity onPress={() => router.push('/transactions' as never)}>
-              <Text style={[styles.seeAllText, { color: tintColor }]}>Voir tout</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                styles.transactionTitle,
+                { color: textColor },
+              ]}
+            >
+              20 Dernières transactions
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push("/transactions" as never)}
+            >
+              <Text style={[styles.seeAllText, { color: tintColor }]}>
+                Voir tout
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -454,19 +568,40 @@ export default function HomeScreen() {
                 <SkeletonCard lines={2} />
               </>
             ) : recentMouvements.data.length === 0 ? (
-              <View style={[styles.transactionCard, { backgroundColor: cardColor, justifyContent: 'center' }]}>
-                <Text style={[styles.transactionLabel, { color: mutedColor, textAlign: 'center' }]}>Aucune transaction recente</Text>
+              <View
+                style={[
+                  styles.transactionCard,
+                  { backgroundColor: cardColor, justifyContent: "center" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.transactionLabel,
+                    { color: mutedColor, textAlign: "center" },
+                  ]}
+                >
+                  Aucune transaction recente
+                </Text>
               </View>
             ) : (
               groupedRecentSections.map((section) => (
                 <View key={section.key} style={styles.transactionSectionBlock}>
-                  <Text style={[styles.transactionSectionHeader, { color: textColor }]}>{section.title}</Text>
+                  <Text
+                    style={[
+                      styles.transactionSectionHeader,
+                      { color: textColor },
+                    ]}
+                  >
+                    {section.title}
+                  </Text>
                   <FlatList
                     data={section.data}
                     keyExtractor={(item) => `${section.key}-${String(item.id)}`}
                     renderItem={renderRecentMouvement}
                     scrollEnabled={false}
-                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                    ItemSeparatorComponent={() => (
+                      <View style={{ height: 10 }} />
+                    )}
                   />
                 </View>
               ))

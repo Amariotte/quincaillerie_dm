@@ -1,96 +1,99 @@
-
 export const formatAmount = (amount: number | string | null | undefined) => {
   const normalized =
-    typeof amount === 'number'
+    typeof amount === "number"
       ? amount
-      : typeof amount === 'string'
-        ? Number(amount.replace(/\s/g, '').replace(',', '.'))
+      : typeof amount === "string"
+        ? Number(amount.replace(/\s/g, "").replace(",", "."))
         : 0;
 
   const safeValue = Number.isFinite(normalized) ? normalized : 0;
-  return `${safeValue.toLocaleString('fr-FR')} FCFA`;
+  return `${safeValue.toLocaleString("fr-FR")} FCFA`;
 };
 
-export const MAIN_ACCOUNT_FILTER = 'Compte principal';
+export const MAIN_ACCOUNT_FILTER = "Compte principal";
 
+export const isModeDemoEnabled = (): boolean => {
+  return process.env.EXPO_PUBLIC_MODE_DEMO === "true";
+};
 
-  
- export const isModeDemoEnabled = (): boolean => {
-    return process.env.EXPO_PUBLIC_MODE_DEMO === 'true';
+export const toComparableDate = (
+  value: Date | string | null | undefined,
+): string | null => {
+  if (!value) {
+    return null;
   }
 
-
- export const toComparableDate = (value: Date | string | null | undefined): string | null => {
-    if (!value) {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
       return null;
     }
 
-    if (value instanceof Date) {
-      if (Number.isNaN(value.getTime())) {
-        return null;
-      }
+    const day = value.getDate();
+    const month = value.getMonth() + 1;
+    const year = value.getFullYear();
+    return `${year}${String(month).padStart(2, "0")}${String(day).padStart(2, "0")}`;
+  }
 
-      const day = value.getDate();
-      const month = value.getMonth() + 1;
-      const year = value.getFullYear();
-      return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
+  const raw = value.trim();
+  if (!raw) {
+    return null;
+  }
+
+  // Handles dd/mm/yyyy first to avoid locale parsing ambiguity.
+  const slashParts = raw.split("/");
+  if (slashParts.length === 3) {
+    const [day, month, year] = slashParts;
+    const dayNum = Number(day);
+    const monthNum = Number(month);
+    const yearNum = Number(year);
+
+    if (
+      Number.isInteger(dayNum) &&
+      Number.isInteger(monthNum) &&
+      Number.isInteger(yearNum) &&
+      dayNum >= 1 &&
+      dayNum <= 31 &&
+      monthNum >= 1 &&
+      monthNum <= 12 &&
+      yearNum >= 1900
+    ) {
+      return `${yearNum}${String(monthNum).padStart(2, "0")}${String(dayNum).padStart(2, "0")}`;
     }
+  }
 
-    const raw = value.trim();
-    if (!raw) {
-      return null;
-    }
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
 
-    // Handles dd/mm/yyyy first to avoid locale parsing ambiguity.
-    const slashParts = raw.split('/');
-    if (slashParts.length === 3) {
-      const [day, month, year] = slashParts;
-      const dayNum = Number(day);
-      const monthNum = Number(month);
-      const yearNum = Number(year);
-
-      if (
-        Number.isInteger(dayNum) &&
-        Number.isInteger(monthNum) &&
-        Number.isInteger(yearNum) &&
-        dayNum >= 1 && dayNum <= 31 &&
-        monthNum >= 1 && monthNum <= 12 &&
-        yearNum >= 1900
-      ) {
-        return `${yearNum}${String(monthNum).padStart(2, '0')}${String(dayNum).padStart(2, '0')}`;
-      }
-    }
-
-    const parsed = new Date(raw);
-    if (Number.isNaN(parsed.getTime())) {
-      return null;
-    }
-
-    const day = parsed.getDate();
-    const month = parsed.getMonth() + 1;
-    const year = parsed.getFullYear();
-    return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
-  };
+  const day = parsed.getDate();
+  const month = parsed.getMonth() + 1;
+  const year = parsed.getFullYear();
+  return `${year}${String(month).padStart(2, "0")}${String(day).padStart(2, "0")}`;
+};
 
 export const buildSousCompteFilters = <T>(
   items: T[],
   getLabel: (item: T) => string | null | undefined,
 ): string[] => {
   const filters = [
-    'Tous',
+    "Tous",
     MAIN_ACCOUNT_FILTER,
     ...Array.from(
       new Set(
         items
           .map(getLabel)
-          .filter((label): label is string => typeof label === 'string' && label.trim().length > 0)
-      )
+          .filter(
+            (label): label is string =>
+              typeof label === "string" && label.trim().length > 0,
+          ),
+      ),
     ),
   ];
 
   filters.sort((a, b) => {
-    if (a === 'Tous') return -1;
-    if (b === 'Tous') return 1;
+    if (a === "Tous") return -1;
+    if (b === "Tous") return 1;
     if (a === MAIN_ACCOUNT_FILTER) return -1;
     if (b === MAIN_ACCOUNT_FILTER) return 1;
     return a.localeCompare(b);
@@ -103,9 +106,9 @@ export const matchesSousCompteFilter = (
   activeFilter: string,
   label: string | null | undefined,
 ): boolean => {
-  const hasLabel = typeof label === 'string' && label.trim().length > 0;
+  const hasLabel = typeof label === "string" && label.trim().length > 0;
 
-  if (activeFilter === 'Tous') {
+  if (activeFilter === "Tous") {
     return true;
   }
 
@@ -122,26 +125,35 @@ export const matchesDateRange = (
   endDateQuery: string,
 ): boolean => {
   const parseInputDate = (s: string): Date | null => {
-    const [d, m, y] = s.split('/');
+    const [d, m, y] = s.split("/");
     if (!d || !m || !y) return null;
     const dt = new Date(Number(y), Number(m) - 1, Number(d));
     return isNaN(dt.getTime()) ? null : dt;
   };
 
-  const startParsed = startDateQuery.trim().length > 0 ? parseInputDate(startDateQuery.trim()) : null;
-  const endParsed = endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
+  const startParsed =
+    startDateQuery.trim().length > 0
+      ? parseInputDate(startDateQuery.trim())
+      : null;
+  const endParsed =
+    endDateQuery.trim().length > 0 ? parseInputDate(endDateQuery.trim()) : null;
   const startComparable = startParsed ? toComparableDate(startParsed) : null;
   const endComparable = endParsed ? toComparableDate(endParsed) : null;
-  const afterStart = !startComparable || !issueComparable || issueComparable >= startComparable;
-  const beforeEnd = !endComparable || !issueComparable || issueComparable <= endComparable;
+  const afterStart =
+    !startComparable || !issueComparable || issueComparable >= startComparable;
+  const beforeEnd =
+    !endComparable || !issueComparable || issueComparable <= endComparable;
 
   return afterStart && beforeEnd;
 };
 
 export const formatDate = (pDate: Date | string | null | undefined) => {
-  if (!pDate) return '—';
+  if (!pDate) return "—";
   const date = new Date(pDate);
-  if (isNaN(date.getTime())) return '—';
-  const hasTime = date.getHours() > 0 || date.getMinutes() > 0 || date.getSeconds() > 0;
-  return hasTime ? date.toLocaleString('fr-FR') : date.toLocaleDateString('fr-FR');
+  if (isNaN(date.getTime())) return "—";
+  const hasTime =
+    date.getHours() > 0 || date.getMinutes() > 0 || date.getSeconds() > 0;
+  return hasTime
+    ? date.toLocaleString("fr-FR")
+    : date.toLocaleDateString("fr-FR");
 };
