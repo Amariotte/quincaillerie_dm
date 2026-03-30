@@ -6,6 +6,7 @@ const apiConfig = {
   baseURL: resolvedBaseUrl || (__DEV__ ? fallbackDevBaseUrl : ""),
   endpoints: {
     login: "/auth/login",
+    refresh: "/auth/refresh",
     logout: "/auth/logout",
     currentUser: "/auth/me",
     profilePhoto: "/auth/photos",

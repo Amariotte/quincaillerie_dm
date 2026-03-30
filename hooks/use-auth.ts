@@ -1,15 +1,20 @@
-import { userDataFake } from '@/data/datas.fake';
-import { setCacheUserCode } from '@/services/cache-service';
-import { fetchConnectedUser, signInApi, signOutApi } from '@/services/user-service';
-import { user } from '@/types/user.type';
-import { useState } from 'react';
+import { userDataFake } from "@/data/datas.fake";
+import { setCacheUserCode } from "@/services/cache-service";
+import {
+  fetchConnectedUser,
+  refreshAccessTokenApi,
+  signInApi,
+  signOutApi,
+} from "@/services/user-service";
+import { user } from "@/types/user.type";
+import { useCallback, useState } from "react";
 
 const DEMO_DELAY_MS = 700;
-const DEMO_TOKEN = 'demo-token';
+const DEMO_TOKEN = "demo-token";
 
 export const DEMO_ACCOUNT = {
-  login: 'demo',
-  password: 'demo123'
+  login: "demo",
+  password: "demo123",
 };
 
 function wait(ms: number) {
@@ -20,6 +25,7 @@ export interface AuthState {
   isLoading: boolean;
   isSignout: boolean;
   userToken: string | null;
+  refreshToken: string | null;
   user: user | null;
   profilePhotoVersion: number;
 }
@@ -29,6 +35,7 @@ export interface UseAuthReturn extends AuthState {
   signInDemo: () => Promise<void>;
   signOut: () => Promise<void>;
   clearAuthSession: () => void;
+  refreshAccessToken: () => Promise<string | null>;
   refreshUserProfile: () => Promise<void>;
   refreshProfilePhoto: () => void;
   error: string | null;
@@ -39,34 +46,75 @@ export function useAuth(): UseAuthReturn {
     isLoading: false,
     isSignout: false,
     userToken: null,
+    refreshToken: null,
     user: null,
     profilePhotoVersion: 0,
   });
 
   const [error, setError] = useState<string | null>(null);
 
-  const applyAuthenticatedState = (token: string, user: AuthState['user']) => {
+  const applyAuthenticatedState = (
+    token: string,
+    refreshToken: string | null,
+    user: AuthState["user"],
+  ) => {
     setCacheUserCode(user?.code ?? null);
     setState({
       isLoading: false,
       isSignout: false,
       userToken: token,
+      refreshToken,
       user,
       profilePhotoVersion: 0,
     });
   };
 
-  const clearAuthSession = () => {
+  const clearAuthSession = useCallback(() => {
     setCacheUserCode(null);
     setState({
       isLoading: false,
       isSignout: true,
       userToken: null,
+      refreshToken: null,
       user: null,
       profilePhotoVersion: 0,
     });
     setError(null);
-  };
+  }, []);
+
+  const refreshAccessToken = useCallback(async () => {
+    if (!state.refreshToken) {
+      return null;
+    }
+
+    if (state.userToken === DEMO_TOKEN) {
+      return state.userToken;
+    }
+
+    try {
+      const authRes = await refreshAccessTokenApi(state.refreshToken);
+      const nextAccessToken =
+        typeof authRes?.access_token === "string" ? authRes.access_token : "";
+
+      if (!nextAccessToken) {
+        throw new Error("Réponse invalide du serveur de rafraîchissement");
+      }
+
+      setCacheUserCode(authRes.user?.code ?? state.user?.code ?? null);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        isSignout: false,
+        userToken: nextAccessToken,
+        refreshToken: authRes.refresh_token || prev.refreshToken,
+        user: authRes.user ?? prev.user,
+      }));
+
+      return nextAccessToken;
+    } catch {
+      return null;
+    }
+  }, [state.refreshToken, state.user, state.userToken]);
 
   const loadUserProfile = async (token: string) => {
     try {
@@ -96,11 +144,11 @@ export function useAuth(): UseAuthReturn {
     try {
       await wait(DEMO_DELAY_MS);
 
-      applyAuthenticatedState(DEMO_TOKEN, userDataFake);
+      applyAuthenticatedState(DEMO_TOKEN, null, userDataFake);
       await loadUserProfile(DEMO_TOKEN);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Erreur de connexion en mode demo';
+        err instanceof Error ? err.message : "Erreur de connexion en mode demo";
       setError(errorMessage);
       setState((prev) => ({ ...prev, isLoading: false }));
       throw err;
@@ -114,29 +162,33 @@ export function useAuth(): UseAuthReturn {
     try {
       // Validate input
       if (!login || !password) {
-        throw new Error('Veuillez entrer votre login et mot de passe');
+        throw new Error("Veuillez entrer votre login et mot de passe");
       }
 
-      if (login.trim().toLowerCase() === DEMO_ACCOUNT.login &&
+      if (
+        login.trim().toLowerCase() === DEMO_ACCOUNT.login &&
         password === DEMO_ACCOUNT.password
       ) {
         await wait(DEMO_DELAY_MS);
-        applyAuthenticatedState(DEMO_TOKEN, userDataFake);
+        applyAuthenticatedState(DEMO_TOKEN, null, userDataFake);
         await loadUserProfile(DEMO_TOKEN);
         return;
       }
 
       const authRes = await signInApi(login, password);
-      applyAuthenticatedState(authRes.access_token, authRes.user);
+      applyAuthenticatedState(
+        authRes.access_token,
+        authRes.refresh_token,
+        authRes.user,
+      );
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Erreur de connexion';
+        err instanceof Error ? err.message : "Erreur de connexion";
       setError(errorMessage);
       setState((prev) => ({ ...prev, isLoading: false }));
       throw err;
     }
   };
-
 
   const signOut = async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -150,14 +202,12 @@ export function useAuth(): UseAuthReturn {
       }
 
       // Call API
-      await signOutApi(state.userToken ?? '');
+      await signOutApi(state.userToken ?? "");
 
       clearAuthSession();
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Erreur lors de la déconnexion';
+        err instanceof Error ? err.message : "Erreur lors de la déconnexion";
       setError(errorMessage);
       setState((prev) => ({ ...prev, isLoading: false }));
       throw err;
@@ -170,6 +220,7 @@ export function useAuth(): UseAuthReturn {
     signInDemo,
     signOut,
     clearAuthSession,
+    refreshAccessToken,
     refreshUserProfile,
     refreshProfilePhoto,
     error,

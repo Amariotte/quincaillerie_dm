@@ -15,6 +15,7 @@ import { AuthProvider, useAuthContext } from "@/hooks/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     setApiErrorPopupHandler,
+    setTokenRefreshHandler,
     setUnauthorizedHandler,
 } from "@/services/api-client";
 import { useEffect, useState } from "react";
@@ -25,7 +26,7 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { userToken, clearAuthSession } = useAuthContext();
+  const { userToken, clearAuthSession, refreshAccessToken } = useAuthContext();
   const segments = useSegments();
   const isAuthRoute = segments[0] === "(auth)";
   const [apiPopupState, setApiPopupState] = useState<{
@@ -42,11 +43,13 @@ function RootLayoutNav() {
 
   useEffect(() => {
     setUnauthorizedHandler(clearAuthSession);
+    setTokenRefreshHandler(refreshAccessToken);
 
     return () => {
       setUnauthorizedHandler(null);
+      setTokenRefreshHandler(null);
     };
-  }, [clearAuthSession]);
+  }, [clearAuthSession, refreshAccessToken]);
 
   useEffect(() => {
     if (isAuthRoute) {
