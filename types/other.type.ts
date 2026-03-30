@@ -16,4 +16,18 @@ export type stat = {
     total: number;
   };
   promotionActive: number;
+  sousCompte: number;
 };
+
+
+export type dataChart = {
+  mois: string;
+  vente: number;
+  decaissement: number;
+  commission: number;
+  reglement: number;
+  encaissement: number;
+  entree: number;
+  sortie: number;
+};
+  

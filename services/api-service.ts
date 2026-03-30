@@ -3,6 +3,7 @@ import {
   bonAchatsFakeData,
   bonLivraisonsFakeData,
   commissionsFakeData,
+  dataChartsFakeData,
   facturesFakeData,
   mouvementsFakeData,
   operationsFakeData,
@@ -22,7 +23,7 @@ import { devis, devisLigneEdit, listDevis } from "@/types/devis.type";
 import { facture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
 import { listOperations } from "@/types/operations.type";
-import { stat } from "@/types/other.type";
+import { dataChart, stat } from "@/types/other.type";
 import { listProduits } from "@/types/produits.type";
 import { listPromotions, promotion } from "@/types/promotions.type";
 import { listReglements, reglement } from "@/types/reglements.type";
@@ -332,6 +333,21 @@ export async function getfetchReglements(
 
   const data = await getJsonAuth<listReglements>(
     `${apiConfig.endpoints.reglements}`,
+    token,
+  );
+  return data;
+}
+
+
+export async function getfetchStatistiques(
+  token: string,
+): Promise<dataChart[]> {
+  if (isModeDemoEnabled()) {
+    return dataChartsFakeData;
+  }
+
+  const data = await getJsonAuth<dataChart[]>(
+    `${apiConfig.endpoints.statistiques}`,
     token,
   );
   return data;

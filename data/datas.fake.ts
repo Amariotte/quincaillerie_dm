@@ -5,7 +5,7 @@ import { devis, listDevis } from "@/types/devis.type";
 import { detailsFacture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
 import { listOperations, operation } from "@/types/operations.type";
-import { meta, stat } from "@/types/other.type";
+import { dataChart, meta, stat } from "@/types/other.type";
 import { listProduits } from "@/types/produits.type";
 import { listPromotions } from "@/types/promotions.type";
 import { listReglements, reglement } from "@/types/reglements.type";
@@ -35,6 +35,7 @@ export const statsFake: stat = {
     total: 100000,
   },
   promotionActive: 5,
+  sousCompte: 10,
 };
 
 export const produitsFakeData: listProduits = {
@@ -601,6 +602,41 @@ export const sousComptes: sousCompte[] = [
     email: "b@gmail.com",
   },
 ];
+
+export const dataChartsFakeData: dataChart[] = [
+  {
+    mois: "Janvier",
+    vente: 150000,
+    decaissement: 50000,
+    commission: 7500,
+    reglement: 120000,
+    encaissement: 100000,
+    entree: 150000,
+    sortie: 50000,
+  },
+  {
+    mois: "Février",  
+    vente: 200000,
+    decaissement: 80000,
+    commission: 10000,  
+    reglement: 180000,
+    encaissement: 150000,
+    entree: 200000, 
+    sortie: 80000,
+  },
+  {   
+    mois: "Mars",
+    vente: 250000,
+    decaissement: 120000, 
+    commission: 12500,
+    reglement: 220000,
+    encaissement: 200000,
+    entree: 250000, 
+    sortie: 120000,
+  }
+];
+
+
 
 export const reglementsFakeData: listReglements = {
   meta: metaFakeData,

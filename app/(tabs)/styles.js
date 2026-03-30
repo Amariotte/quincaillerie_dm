@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
   chartCard: {
     borderRadius: 20,
     padding: 16,
+    minHeight: 360,
     marginBottom: 20,
     shadowColor: "#000000",
     shadowOpacity: 0.06,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   chartBarsWrap: {
-    height: 150,
+    height: 240,
     width: "100%",
     flexDirection: "row",
     alignItems: "flex-end",

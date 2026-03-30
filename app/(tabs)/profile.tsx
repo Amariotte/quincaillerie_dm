@@ -1,14 +1,14 @@
 import { AppHeader } from "@/components/app-header";
 import { AuthButton } from "@/components/auth-button";
 import {
-    FeedbackPopup,
-    FeedbackPopupType,
+  FeedbackPopup,
+  FeedbackPopupType,
 } from "@/components/ui/feedback-popup";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
-    getConnectedUserProfilePhotoSource,
-    updateConnectedUserProfilePhoto,
+  getConnectedUserProfilePhotoSource,
+  updateConnectedUserProfilePhoto,
 } from "@/services/user-service";
 import { sharedStyles } from "@/styles/shared";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,13 +17,13 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -234,7 +234,7 @@ export default function ProfileScreen() {
     setIsUploadingPhoto(true);
 
     try {
-      await updateConnectedUserProfilePhoto(userToken, {
+      const successMessage = await updateConnectedUserProfilePhoto(userToken, {
         uri: selectedAsset.uri,
         fileName: selectedAsset.fileName,
         mimeType: selectedAsset.mimeType,
@@ -243,7 +243,7 @@ export default function ProfileScreen() {
       openPopup(
         "success",
         "Photo mise à jour",
-        "Votre photo de profil a été modifiée.",
+        successMessage || "Votre photo de profil a été modifiée.",
       );
     } catch (error) {
       setLocalAvatarPreviewUri(null);
@@ -437,7 +437,7 @@ export default function ProfileScreen() {
             </Text>
 
             <TouchableOpacity
-              onPress={() => router.push("/compte/a-propos")}
+              onPress={() => router.push("../compte/a-propos")}
               style={[
                 styles.settingItem,
                 {

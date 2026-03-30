@@ -5,8 +5,8 @@ import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
   fetchSoldeCompte,
-  getfetchMouvements,
   getfetchRecentMouvements,
+  getfetchStatistiques,
   getStats,
 } from "@/services/api-service";
 import {
@@ -15,13 +15,13 @@ import {
   RECENTS_MOUVEMENTS_CACHE_KEY,
   setCacheData,
   STAT_DATA_CACHE_KEY,
-  TRANSACTIONS_LIST_CACHE_KEY,
+  STATISTIQUES_LIST_CACHE_KEY
 } from "@/services/cache-service";
 import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared.js";
 import { formatAmount, formatDate } from "@/tools/tools";
 import { listMouvements, typeMouvementColorMap } from "@/types/mouvements.type";
-import { stat } from "@/types/other.type";
+import { dataChart, stat } from "@/types/other.type";
 import { SoldeResponse } from "@/types/solde.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -78,6 +78,7 @@ const monthlyChartSeries = [
 ] as const;
 
 type MonthlyChartSeriesKey = (typeof monthlyChartSeries)[number]["key"];
+const CHART_BAR_MAX_HEIGHT = 240;
 
 function parseMouvementDate(value: string): Date | null {
   const direct = new Date(value);
@@ -111,88 +112,65 @@ function isSameDay(first: Date, second: Date): boolean {
   );
 }
 
-function getMonthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+function getChartMonthDate(value: string): Date | null {
+  const normalized = value.trim();
+  const compactMonth = normalized.match(/^(\d{4})(\d{2})$/);
+
+  if (compactMonth) {
+    const year = Number(compactMonth[1]);
+    const month = Number(compactMonth[2]);
+    if (month >= 1 && month <= 12) {
+      const parsed = new Date(year, month - 1, 1);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+  }
+
+  const direct = new Date(normalized);
+  if (!Number.isNaN(direct.getTime())) {
+    return new Date(direct.getFullYear(), direct.getMonth(), 1);
+  }
+
+  return null;
 }
 
-function getMonthlyLabel(date: Date): string {
+function getChartMonthLabel(value: string): string {
+  const monthDate = getChartMonthDate(value);
+  if (!monthDate) {
+    return value;
+  }
+
   return new Intl.DateTimeFormat("fr-FR", {
     month: "short",
     year: "2-digit",
-  }).format(date);
+  }).format(monthDate);
 }
 
-function createLastTwelveMonths(): MonthlyChartItem[] {
-  const now = new Date();
-  const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const months: MonthlyChartItem[] = [];
-
-  for (let offset = 11; offset >= 0; offset -= 1) {
-    const monthDate = new Date(
-      currentMonthDate.getFullYear(),
-      currentMonthDate.getMonth() - offset,
-      1,
-    );
-
-    months.push({
-      key: getMonthKey(monthDate),
-      label: getMonthlyLabel(monthDate),
-      ventes: 0,
-      reglements: 0,
-      decaissements: 0,
-      entrees: 0,
-      commissions: 0,
-      sorties: 0,
-    });
-  }
-
-  return months;
-}
-
-function aggregateMonthlyMouvements(
-  mouvements: listMouvements["data"],
+function mapStatistiquesToMonthlyChartData(
+  statistiques: dataChart[],
 ): MonthlyChartItem[] {
-  const months = createLastTwelveMonths();
-  const monthMap = new Map(months.map((month) => [month.key, month]));
+  return [...statistiques]
+    .sort((first, second) => {
+      const firstDate = getChartMonthDate(first.mois);
+      const secondDate = getChartMonthDate(second.mois);
 
-  for (const mouvement of mouvements) {
-    const mouvementDate = parseMouvementDate(mouvement.dateOp);
-    if (!mouvementDate) {
-      continue;
-    }
+      if (firstDate && secondDate) {
+        return firstDate.getTime() - secondDate.getTime();
+      }
 
-    const bucket = monthMap.get(getMonthKey(mouvementDate));
-    if (!bucket) {
-      continue;
-    }
-
-    const amount = Math.abs(Number(mouvement.montant) || 0);
-
-    if (mouvement.libType === "Vente") {
-      bucket.ventes += amount;
-      bucket.sorties += amount;
-      continue;
-    }
-
-    if (mouvement.libType === "Réglement") {
-      bucket.reglements += amount;
-      bucket.entrees += amount;
-      continue;
-    }
-
-    if (mouvement.libType === "Commission") {
-      bucket.commissions += amount;
-      bucket.entrees += amount;
-      continue;
-    }
-
-    if (mouvement.libType === "Décaissement") {
-      bucket.decaissements += amount;
-      bucket.sorties += amount;
-    }
-  }
-
-  return months;
+      return first.mois.localeCompare(second.mois);
+    })
+    .map((item, index) => ({
+      key: `${item.mois}-${index}`,
+      label: getChartMonthLabel(item.mois),
+      ventes: Number(item.vente) || 0,
+      reglements: Number(item.reglement) || 0,
+      decaissements: Number(item.decaissement) || 0,
+      entrees: Number(item.entree) || 0,
+      commissions: Number(item.commission) || 0,
+      sorties: Number(item.sortie) || 0,
+    }));
 }
 
 function getSignedAmountDisplay(mouvement: listMouvements["data"][number]) {
@@ -235,10 +213,7 @@ export default function HomeScreen() {
   const [isLoadingRecentMouvements, setIsLoadingRecentMouvements] =
     useState(true);
   const [statInfos, setStatInfos] = useState<stat | null>(null);
-  const [allMouvements, setAllMouvements] = useState<listMouvements>({
-    meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 },
-    data: [],
-  });
+  const [chartStatistiques, setChartStatistiques] = useState<dataChart[]>([]);
   const [isLoadingMonthlyChart, setIsLoadingMonthlyChart] = useState(true);
   const [selectedChartSeries, setSelectedChartSeries] = useState<
     MonthlyChartSeriesKey[]
@@ -319,20 +294,20 @@ export default function HomeScreen() {
   const loadMonthlyChartData = useCallback(async () => {
     setIsLoadingMonthlyChart(true);
     try {
-      const cached = await getCacheData<listMouvements>(
-        TRANSACTIONS_LIST_CACHE_KEY,
+      const cached = await getCacheData<dataChart[]>(
+        STATISTIQUES_LIST_CACHE_KEY,
       );
-      if (cached?.data?.length) {
-        setAllMouvements(cached);
+      if (cached?.length) {
+        setChartStatistiques(cached);
       }
 
       if (!userToken) {
         return;
       }
 
-      const data = await getfetchMouvements(userToken);
-      setAllMouvements(data);
-      await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
+      const data = await getfetchStatistiques(userToken);
+      setChartStatistiques(data);
+      await setCacheData(STATISTIQUES_LIST_CACHE_KEY, data);
       setIsOfflineMode(false);
     } catch {
       setIsOfflineMode(true);
@@ -363,8 +338,8 @@ export default function HomeScreen() {
   }, [loadBalance, loadMonthlyChartData, loadRecentMouvements, loadStatData]);
 
   const monthlyChartData = useMemo(
-    () => aggregateMonthlyMouvements(allMouvements.data),
-    [allMouvements.data],
+    () => mapStatistiquesToMonthlyChartData(chartStatistiques),
+    [chartStatistiques],
   );
 
   const visibleChartSeries = useMemo(
@@ -741,6 +716,8 @@ export default function HomeScreen() {
                   {statInfos?.venteEchue.nbre ?? 0}
                 </Text>
               </View>
+              
+               {(statInfos?.promotionActive ?? 0) > 0 && (
               <View style={styles.metricBlock}>
                 <Text style={[styles.metricLabel, { color: mutedColor }]}>
                   Promotions actives
@@ -749,6 +726,18 @@ export default function HomeScreen() {
                   {statInfos?.promotionActive ?? 0}
                 </Text>
               </View>
+              )}
+                
+                {(statInfos?.sousCompte ?? 0) > 0 && (
+                <View style={styles.metricBlock}>
+                <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                  Sous-comptes
+                </Text>
+                <Text style={[styles.metricValue, { color: textColor }]}>
+                  {statInfos?.sousCompte ?? 0}
+                </Text>
+              </View>
+              )}
             </View>
           </View>
 
@@ -844,7 +833,7 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {isLoadingMonthlyChart && allMouvements.data.length === 0 ? (
+            {isLoadingMonthlyChart && chartStatistiques.length === 0 ? (
               <SkeletonCard lines={4} />
             ) : !hasChartData ? (
               <View style={styles.chartEmptyState}>
@@ -907,7 +896,7 @@ export default function HomeScreen() {
                           const value = item[series.key];
                           const height = Math.max(
                             6,
-                            (value / monthlyChartMax) * 150,
+                            (value / monthlyChartMax) * CHART_BAR_MAX_HEIGHT,
                           );
 
                           return (

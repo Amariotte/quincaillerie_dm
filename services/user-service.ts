@@ -22,6 +22,10 @@ type NativeUploadFilePart = {
   type: string;
 };
 
+type UpdateProfilePhotoResponse = {
+  message?: string;
+};
+
 export async function fetchConnectedUser(userToken: string): Promise<user> {
   if (!userToken) {
     throw new Error("Token utilisateur manquant");
@@ -75,7 +79,7 @@ export function getConnectedUserProfilePhotoSource(
 export async function updateConnectedUserProfilePhoto(
   userToken: string,
   photo: ProfilePhotoFile,
-): Promise<void> {
+): Promise<string> {
   if (!userToken) {
     throw new Error("Token utilisateur manquant");
   }
@@ -85,7 +89,7 @@ export async function updateConnectedUserProfilePhoto(
   }
 
   if (isModeDemoEnabled()) {
-    return;
+    return "Photo mise à jour avec succès";
   }
 
   const normalizedFileName =
@@ -100,27 +104,16 @@ export async function updateConnectedUserProfilePhoto(
 
   formData.append("file", filePart as unknown as Blob);
 
-  try {
-    await uploadMultipartAuth<void>(
-      apiConfig.endpoints.profilePhoto,
-      userToken,
-      formData,
-      "PUT",
-    );
-  } catch (error) {
-    const httpError = error as Partial<Error & { status?: number }>;
-    if (httpError.status === 404 || httpError.status === 405) {
-      await uploadMultipartAuth<void>(
-        apiConfig.endpoints.profilePhoto,
-        userToken,
-        formData,
-        "POST",
-      );
-      return;
-    }
+  const response = await uploadMultipartAuth<UpdateProfilePhotoResponse>(
+    apiConfig.endpoints.profilePhoto,
+    userToken,
+    formData,
+    "POST",
+  );
 
-    throw error;
-  }
+  alert(response?.message?.trim());
+
+  return response?.message?.trim() || "Photo mise à jour avec succès";
 }
 
 export async function signInApi(

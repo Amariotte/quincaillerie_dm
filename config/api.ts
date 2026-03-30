@@ -24,6 +24,7 @@ const apiConfig = {
     devis: "/devis",
     bonLivraisons: "/bon-livraisons",
     sousComptes: "/sous-comptes",
+      statistiques: "/statistiques",
   },
 };
 
