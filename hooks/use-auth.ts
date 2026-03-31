@@ -7,10 +7,14 @@ import {
   signOutApi,
 } from "@/services/user-service";
 import { user } from "@/types/user.type";
-import { useCallback, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback, useEffect, useState } from "react";
 
 const DEMO_DELAY_MS = 700;
 const DEMO_TOKEN = "demo-token";
+const AUTH_TOKEN_STORAGE_KEY = "auth.token";
+const AUTH_REFRESH_TOKEN_STORAGE_KEY = "auth.refresh-token";
+const AUTH_USER_STORAGE_KEY = "auth.user";
 
 export const DEMO_ACCOUNT = {
   login: "demo",
@@ -43,7 +47,7 @@ export interface UseAuthReturn extends AuthState {
 
 export function useAuth(): UseAuthReturn {
   const [state, setState] = useState<AuthState>({
-    isLoading: false,
+    isLoading: true,
     isSignout: false,
     userToken: null,
     refreshToken: null,
@@ -53,24 +57,50 @@ export function useAuth(): UseAuthReturn {
 
   const [error, setError] = useState<string | null>(null);
 
+  const persistAuthSession = useCallback(
+    async (
+      token: string | null,
+      refreshToken: string | null,
+      authenticatedUser: AuthState["user"],
+    ) => {
+      await Promise.all([
+        token
+          ? AsyncStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token)
+          : AsyncStorage.removeItem(AUTH_TOKEN_STORAGE_KEY),
+        refreshToken
+          ? AsyncStorage.setItem(AUTH_REFRESH_TOKEN_STORAGE_KEY, refreshToken)
+          : AsyncStorage.removeItem(AUTH_REFRESH_TOKEN_STORAGE_KEY),
+        authenticatedUser
+          ? AsyncStorage.setItem(
+              AUTH_USER_STORAGE_KEY,
+              JSON.stringify(authenticatedUser),
+            )
+          : AsyncStorage.removeItem(AUTH_USER_STORAGE_KEY),
+      ]);
+    },
+    [],
+  );
+
   const applyAuthenticatedState = (
     token: string,
     refreshToken: string | null,
-    user: AuthState["user"],
+    authenticatedUser: AuthState["user"],
   ) => {
-    setCacheUserCode(user?.code ?? null);
+    setCacheUserCode(authenticatedUser?.code ?? null);
+    void persistAuthSession(token, refreshToken, authenticatedUser);
     setState({
       isLoading: false,
       isSignout: false,
       userToken: token,
       refreshToken,
-      user,
+      user: authenticatedUser,
       profilePhotoVersion: 0,
     });
   };
 
   const clearAuthSession = useCallback(() => {
     setCacheUserCode(null);
+    void persistAuthSession(null, null, null);
     setState({
       isLoading: false,
       isSignout: true,
@@ -80,7 +110,75 @@ export function useAuth(): UseAuthReturn {
       profilePhotoVersion: 0,
     });
     setError(null);
-  }, []);
+  }, [persistAuthSession]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const restoreSession = async () => {
+      try {
+        const [storedToken, storedRefreshToken, storedUserRaw] =
+          await Promise.all([
+            AsyncStorage.getItem(AUTH_TOKEN_STORAGE_KEY),
+            AsyncStorage.getItem(AUTH_REFRESH_TOKEN_STORAGE_KEY),
+            AsyncStorage.getItem(AUTH_USER_STORAGE_KEY),
+          ]);
+
+        if (!storedToken) {
+          if (isMounted) {
+            setState((prev) => ({ ...prev, isLoading: false }));
+          }
+          return;
+        }
+
+        const storedUser = storedUserRaw
+          ? (JSON.parse(storedUserRaw) as user)
+          : storedToken === DEMO_TOKEN
+            ? userDataFake
+            : null;
+
+        setCacheUserCode(storedUser?.code ?? null);
+
+        if (isMounted) {
+          setState({
+            isLoading: false,
+            isSignout: false,
+            userToken: storedToken,
+            refreshToken: storedRefreshToken,
+            user: storedUser,
+            profilePhotoVersion: 0,
+          });
+        }
+
+        if (storedToken === DEMO_TOKEN && !storedUserRaw) {
+          await persistAuthSession(
+            storedToken,
+            storedRefreshToken,
+            userDataFake,
+          );
+        }
+      } catch {
+        setCacheUserCode(null);
+        await persistAuthSession(null, null, null);
+        if (isMounted) {
+          setState({
+            isLoading: false,
+            isSignout: true,
+            userToken: null,
+            refreshToken: null,
+            user: null,
+            profilePhotoVersion: 0,
+          });
+        }
+      }
+    };
+
+    void restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [persistAuthSession]);
 
   const refreshAccessToken = useCallback(async () => {
     if (!state.refreshToken) {
@@ -100,6 +198,11 @@ export function useAuth(): UseAuthReturn {
         throw new Error("Réponse invalide du serveur de rafraîchissement");
       }
 
+      await persistAuthSession(
+        nextAccessToken,
+        authRes.refresh_token || state.refreshToken,
+        authRes.user ?? state.user,
+      );
       setCacheUserCode(authRes.user?.code ?? state.user?.code ?? null);
       setState((prev) => ({
         ...prev,
@@ -114,11 +217,21 @@ export function useAuth(): UseAuthReturn {
     } catch {
       return null;
     }
-  }, [state.refreshToken, state.user, state.userToken]);
+  }, [persistAuthSession, state.refreshToken, state.user, state.userToken]);
 
-  const loadUserProfile = async (token: string) => {
+  const loadUserProfile = async (
+    token: string,
+    refreshToken?: string | null,
+  ) => {
     try {
-      const profile = await fetchConnectedUser(token);
+      const profile =
+        token === DEMO_TOKEN ? userDataFake : await fetchConnectedUser(token);
+
+      await persistAuthSession(
+        token,
+        refreshToken ?? state.refreshToken,
+        profile,
+      );
       setCacheUserCode(profile?.code ?? null);
       setState((prev) => ({ ...prev, user: profile }));
     } catch {
@@ -145,7 +258,7 @@ export function useAuth(): UseAuthReturn {
       await wait(DEMO_DELAY_MS);
 
       applyAuthenticatedState(DEMO_TOKEN, null, userDataFake);
-      await loadUserProfile(DEMO_TOKEN);
+      await loadUserProfile(DEMO_TOKEN, null);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur de connexion en mode demo";
@@ -181,6 +294,9 @@ export function useAuth(): UseAuthReturn {
         authRes.refresh_token,
         authRes.user,
       );
+      if (!authRes.user) {
+        await loadUserProfile(authRes.access_token, authRes.refresh_token);
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur de connexion";

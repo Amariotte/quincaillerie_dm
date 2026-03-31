@@ -2,18 +2,14 @@ import { AppHeader } from "@/components/app-header";
 import { EmptyResultsCard } from "@/components/empty-results-card";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-
-import {
-  SOUS_COMPTES_LIST_CACHE_KEY,
-  getCacheData,
-  setCacheData,
-} from "@/services/cache-service";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { sharedStyles } from "@/styles/shared.js";
 
 import { getfetchSousComptes } from "@/services/api-service";
+import { SOUS_COMPTES_LIST_CACHE_KEY } from "@/services/cache-service";
 import { listSousComptes } from "@/types/sousCompte.type.js";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -28,6 +24,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "./style.js";
 
 export default function SousComptesScreen() {
+  const initialSousComptes = useMemo<listSousComptes>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+      data: [],
+    }),
+    [],
+  );
   const {
     backgroundColor,
     textColor,
@@ -37,73 +40,25 @@ export default function SousComptesScreen() {
     borderColor,
   } = useAppTheme();
   const { userToken } = useAuthContext();
-
-  const [sousComptes, setSousComptes] = useState<listSousComptes>({
-    meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
-    data: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isError, setIsError] = useState(false);
-
   const [query, setQuery] = useState("");
-
-  const loadSousComptes = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listSousComptes>(
-        SOUS_COMPTES_LIST_CACHE_KEY,
-      );
-      if (
+  const {
+    data: sousComptes,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listSousComptes>({
+    cacheKey: SOUS_COMPTES_LIST_CACHE_KEY,
+    initialData: initialSousComptes,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchSousComptes(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
         cachedData &&
         Array.isArray(cachedData.data) &&
-        cachedData.data.length > 0
-      ) {
-        setSousComptes(cachedData);
-      }
-
-      // Fetch from API to update
-      const data = await getfetchSousComptes(userToken);
-      setSousComptes(data);
-      await setCacheData(SOUS_COMPTES_LIST_CACHE_KEY, data);
-    } catch {
-      setSousComptes({
-        meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
-        data: [],
-      });
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    loadSousComptes();
-  }, [loadSousComptes]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-      const data = await getfetchSousComptes(userToken);
-      setSousComptes(data);
-      await setCacheData(SOUS_COMPTES_LIST_CACHE_KEY, data);
-      setIsError(false);
-    } catch {
-      setIsError(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
+        cachedData.data.length > 0,
+      ),
+  });
 
   const filteredSousComptes = sousComptes.data.filter((sousCompte) => {
     const matchesQuery = sousCompte.nom

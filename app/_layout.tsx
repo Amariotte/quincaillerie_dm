@@ -1,22 +1,23 @@
 import {
-    DarkTheme,
-    DefaultTheme,
-    ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
 } from "@react-navigation/native";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 
 import {
-    FeedbackPopup,
-    FeedbackPopupType,
+  FeedbackPopup,
+  FeedbackPopupType,
 } from "@/components/ui/feedback-popup";
 import { AuthProvider, useAuthContext } from "@/hooks/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
-    setApiErrorPopupHandler,
-    setTokenRefreshHandler,
-    setUnauthorizedHandler,
+  setApiErrorPopupHandler,
+  setTokenRefreshHandler,
+  setUnauthorizedHandler,
 } from "@/services/api-client";
 import { useEffect, useState } from "react";
 
@@ -26,7 +27,8 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { userToken, clearAuthSession, refreshAccessToken } = useAuthContext();
+  const { userToken, isLoading, clearAuthSession, refreshAccessToken } =
+    useAuthContext();
   const segments = useSegments();
   const isAuthRoute = segments[0] === "(auth)";
   const [apiPopupState, setApiPopupState] = useState<{
@@ -73,7 +75,18 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      {userToken == null ? (
+      {isLoading ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colorScheme === "dark" ? "#000000" : "#ffffff",
+          }}
+        >
+          <ActivityIndicator size="large" />
+        </View>
+      ) : userToken == null ? (
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack>
