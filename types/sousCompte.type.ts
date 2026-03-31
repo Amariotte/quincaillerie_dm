@@ -7,7 +7,6 @@ export type sousCompte = {
   ncc: string;
   mobile: string;
   email: string;
-  solde?: number | null;
 };
 
 export type listSousComptes = {

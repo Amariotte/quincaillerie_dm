@@ -2,15 +2,15 @@ import { AppHeader } from "@/components/app-header";
 import { EmptyResultsCard } from "@/components/empty-results-card";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { getfetchSousComptes } from "@/services/api-service";
+
 import {
   SOUS_COMPTES_LIST_CACHE_KEY,
   getCacheData,
   setCacheData,
 } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared.js";
-import { formatAmount } from "@/tools/tools";
 
+import { getfetchSousComptes } from "@/services/api-service";
 import { listSousComptes } from "@/types/sousCompte.type.js";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
@@ -113,19 +113,6 @@ export default function SousComptesScreen() {
     return matchesQuery;
   });
 
-  const getSousCompteBalance = (value: number | string | null | undefined) => {
-    if (typeof value === "number") {
-      return Number.isFinite(value) ? value : null;
-    }
-
-    if (typeof value === "string") {
-      const normalized = Number(value.replace(/\s/g, "").replace(",", "."));
-      return Number.isFinite(normalized) ? normalized : null;
-    }
-
-    return null;
-  };
-
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
@@ -212,16 +199,6 @@ export default function SousComptesScreen() {
               scrollEnabled={false}
               contentContainerStyle={sharedStyles.listBlock}
               renderItem={({ item: sousCompte }) => {
-                const balance = getSousCompteBalance(sousCompte.solde);
-                const balanceColor =
-                  balance === null
-                    ? textColor
-                    : balance < 0
-                      ? "#dc2626"
-                      : balance > 0
-                        ? "#16a34a"
-                        : textColor;
-
                 return (
                   <TouchableOpacity
                     activeOpacity={0.85}
@@ -266,22 +243,6 @@ export default function SousComptesScreen() {
                       </Text>
                       <Text style={[styles.metaValue, { color: textColor }]}>
                         {sousCompte.email || "Aucun email"}
-                      </Text>
-                    </View>
-
-                    <View style={styles.invoiceMetaRow}>
-                      <Text
-                        style={[
-                          sharedStyles.metaCaption,
-                          { color: mutedColor },
-                        ]}
-                      >
-                        Solde
-                      </Text>
-                      <Text style={[styles.metaValue, { color: balanceColor }]}>
-                        {balance === null
-                          ? "Solde indisponible"
-                          : formatAmount(balance)}
                       </Text>
                     </View>
                   </TouchableOpacity>

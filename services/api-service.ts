@@ -15,11 +15,6 @@ import {
   sousComptesFakeData,
   statsFake,
 } from "@/data/datas.fake";
-import {
-  SOUS_COMPTES_BALANCES_CACHE_KEY,
-  getCacheData,
-  setCacheData,
-} from "@/services/cache-service";
 import { isModeDemoEnabled } from "@/tools/tools";
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
 import { bonLivraison, listBonLivraisons } from "@/types/bon-livraisons.type";
@@ -35,9 +30,7 @@ import { listReglements, reglement } from "@/types/reglements.type";
 import { SoldeResponse } from "@/types/solde.type";
 import { listSousComptes } from "@/types/sousCompte.type";
 import { getJsonAuth, postJsonAuth } from "./api-client";
-
 const LIMIT_RECENT_TRANSACTIONS = 20;
-type SousCompteBalanceCache = Record<string, number>;
 
 function parseSoldeValue(
   rawBalance: number | string | null | undefined,
@@ -49,17 +42,6 @@ function parseSoldeValue(
   }
 
   return parsedBalance;
-}
-
-function tryParseSoldeValue(
-  rawBalance: number | string | null | undefined,
-): number | null {
-  if (rawBalance === null || rawBalance === undefined || rawBalance === "") {
-    return null;
-  }
-
-  const parsedBalance = Number(rawBalance);
-  return Number.isFinite(parsedBalance) ? parsedBalance : null;
 }
 
 export function getSoldeFromFakeData(): number {
@@ -83,15 +65,11 @@ export async function fetchSousCompteSolde(
   sousCompteId: string,
 ): Promise<number> {
   if (isModeDemoEnabled()) {
-    const fakeSousCompte = sousComptesFakeData.data.find(
-      (sousCompte) => sousCompte.id === sousCompteId,
-    );
-
-    return parseSoldeValue(fakeSousCompte?.solde);
+    return getSoldeFromFakeData();
   }
 
   const payload = await getJsonAuth<SoldeResponse>(
-    `${apiConfig.endpoints.sousComptes}/${sousCompteId}/solde`,
+    `${apiConfig.endpoints.sousComptes}/${sousCompteId}/soldes`,
     token,
   );
 
@@ -135,68 +113,7 @@ export async function getfetchSousComptes(
     `${apiConfig.endpoints.sousComptes}`,
     token,
   );
-
-  const cachedBalances =
-    (await getCacheData<SousCompteBalanceCache>(
-      SOUS_COMPTES_BALANCES_CACHE_KEY,
-    )) ?? {};
-  const nextBalanceCache: SousCompteBalanceCache = { ...cachedBalances };
-
-  const normalizedSousComptes = data.data.map((item) => {
-    const inlineBalance = tryParseSoldeValue(item.solde);
-    const cachedBalance = tryParseSoldeValue(cachedBalances[String(item.id)]);
-    const resolvedBalance = inlineBalance ?? cachedBalance;
-
-    if (inlineBalance !== null) {
-      nextBalanceCache[String(item.id)] = inlineBalance;
-    }
-
-    return {
-      ...item,
-      solde: resolvedBalance,
-    };
-  });
-
-  const sousCompteIdsToFetch = normalizedSousComptes
-    .filter((item) => item.solde === null)
-    .map((item) => String(item.id));
-
-  if (sousCompteIdsToFetch.length === 0) {
-    await setCacheData(SOUS_COMPTES_BALANCES_CACHE_KEY, nextBalanceCache);
-    return {
-      ...data,
-      data: normalizedSousComptes,
-    };
-  }
-
-  const sousComptesWithBalance = await Promise.all(
-    normalizedSousComptes.map(async (item) => {
-      if (item.solde !== null) {
-        return item;
-      }
-
-      try {
-        const solde = await fetchSousCompteSolde(token, String(item.id));
-        nextBalanceCache[String(item.id)] = solde;
-        return {
-          ...item,
-          solde,
-        };
-      } catch {
-        return {
-          ...item,
-          solde: null,
-        };
-      }
-    }),
-  );
-
-  await setCacheData(SOUS_COMPTES_BALANCES_CACHE_KEY, nextBalanceCache);
-
-  return {
-    ...data,
-    data: sousComptesWithBalance,
-  };
+  return data;
 }
 
 export async function getfetchBonAchats(token: string): Promise<listBonAchats> {

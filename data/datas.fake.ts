@@ -430,7 +430,6 @@ export const sousComptes: sousCompte[] = [
     ncc: "NCC-001",
     mobile: "0123456789",
     email: "email@example.com",
-    solde: -125000,
   },
   {
     id: "reg-002",
@@ -439,7 +438,6 @@ export const sousComptes: sousCompte[] = [
     ncc: "NCC-002",
     mobile: "0123456789",
     email: "b@gmail.com",
-    solde: 245000,
   },
 ];
 
