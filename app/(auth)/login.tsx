@@ -13,6 +13,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   ScrollView,
   Text,
@@ -28,6 +29,7 @@ export default function LoginScreen() {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
   const [focusedField, setFocusedField] = useState<"login" | "password" | null>(
     null,
   );
@@ -47,6 +49,28 @@ export default function LoginScreen() {
     mail: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
     phone: process.env.EXPO_PUBLIC_SUPPORT_PHONE,
   };
+
+  const supportContacts = [
+    {
+      city: "Abidjan",
+      phone: process.env.EXPO_PUBLIC_SUPPORT_PHONE_ABIDJAN,
+    },
+    {
+      city: "Bouake",
+      phone: process.env.EXPO_PUBLIC_SUPPORT_PHONE_BOUAKE,
+    },
+    {
+      city: "Dabakala",
+      phone: process.env.EXPO_PUBLIC_SUPPORT_PHONE_DABAKALA,
+    },
+  ].filter(
+    (
+      contact,
+    ): contact is {
+      city: string;
+      phone: string;
+    } => typeof contact.phone === "string" && contact.phone.trim().length > 0,
+  );
 
   type ExternalLinkOptions = {
     url?: string;
@@ -68,15 +92,30 @@ export default function LoginScreen() {
     }
 
     for (const appUrl of appUrls) {
-      const canOpenApp = await Linking.canOpenURL(appUrl);
-      if (canOpenApp) {
-        await Linking.openURL(appUrl);
-        return;
+      try {
+        const canOpenApp = await Linking.canOpenURL(appUrl);
+        if (canOpenApp) {
+          await Linking.openURL(appUrl);
+          return;
+        }
+      } catch {
+        // Ignore unsupported app schemes and continue with the next fallback.
       }
     }
 
     if (!url) {
       Alert.alert("Lien indisponible", `Impossible d'ouvrir ${label}.`);
+      return;
+    }
+
+    const isWebUrl = /^https?:\/\//i.test(url);
+
+    if (isWebUrl) {
+      try {
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert("Lien indisponible", `Impossible d'ouvrir ${label}.`);
+      }
       return;
     }
 
@@ -99,6 +138,12 @@ export default function LoginScreen() {
     openExternalLink({
       url: socialLinks.phone ? `tel:${socialLinks.phone}` : undefined,
       label: "téléphone",
+    });
+
+  const handleOpenAgencyCall = (city: string, phone: string) =>
+    openExternalLink({
+      url: `tel:${phone.replace(/\s/g, "")}`,
+      label: `support ${city}`,
     });
 
   const facebookDeepLink = socialLinks.facebook
@@ -196,7 +241,7 @@ export default function LoginScreen() {
                 </View>
               )}
 
-              <Text style={styles.loginLabel}>Nom d'utilisateur</Text>
+              <Text style={styles.loginLabel}>Nom d&apos;utilisateur</Text>
               <View
                 style={[
                   styles.inputRow,
@@ -307,7 +352,7 @@ export default function LoginScreen() {
 
               <View style={styles.dividerRow}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>Ou continuer avec</Text>
+                <Text style={styles.dividerText}>Nos reseaux sociaux</Text>
                 <View style={styles.dividerLine} />
               </View>
 
@@ -424,7 +469,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.bottomHelpRow}
               activeOpacity={0.8}
-              onPress={handleOpenCall}
+              onPress={() => setIsSupportModalVisible(true)}
             >
               <FontAwesome
                 name="headphones"
@@ -432,12 +477,94 @@ export default function LoginScreen() {
                 color={COLORS.primaryColor}
               />
               <Text style={styles.bottomHelpText}>
-                Besoin d'aide ? Contactez le support
+                Besoin d&apos;aide ? Contactez le support
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={isSupportModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSupportModalVisible(false)}
+      >
+        <View style={styles.supportModalOverlay}>
+          <View style={styles.supportModalCard}>
+            <View style={styles.supportModalHeader}>
+              <View>
+                <Text style={styles.supportModalTitle}>Support</Text>
+                <Text style={styles.supportModalSubtitle}>
+                  Email et contacts des agences
+                </Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setIsSupportModalVisible(false)}
+                style={styles.supportModalCloseButton}
+              >
+                <FontAwesome
+                  name="close"
+                  size={16}
+                  color={COLORS.primaryColor}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {socialLinks.mail && (
+              <TouchableOpacity
+                style={styles.supportInfoRow}
+                activeOpacity={0.85}
+                onPress={handleOpenMail}
+              >
+                <View style={styles.supportInfoIconWrap}>
+                  <FontAwesome
+                    name="envelope"
+                    size={16}
+                    color={COLORS.primaryColor}
+                  />
+                </View>
+                <View style={styles.supportInfoTextBlock}>
+                  <Text style={styles.supportInfoLabel}>Email</Text>
+                  <Text style={styles.supportInfoValue}>
+                    {socialLinks.mail}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {supportContacts.map((contact) => (
+              <TouchableOpacity
+                key={contact.city}
+                style={styles.supportInfoRow}
+                activeOpacity={0.85}
+                onPress={() =>
+                  handleOpenAgencyCall(contact.city, contact.phone)
+                }
+              >
+                <View style={styles.supportInfoIconWrap}>
+                  <FontAwesome
+                    name="phone"
+                    size={16}
+                    color={COLORS.primaryColor}
+                  />
+                </View>
+                <View style={styles.supportInfoTextBlock}>
+                  <Text style={styles.supportInfoLabel}>{contact.city}</Text>
+                  <Text style={styles.supportInfoValue}>{contact.phone}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+
+            {!socialLinks.mail && supportContacts.length === 0 && (
+              <Text style={styles.supportEmptyText}>
+                Aucune information de support n&apos;est configurée.
+              </Text>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

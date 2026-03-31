@@ -15,6 +15,11 @@ import {
   sousComptesFakeData,
   statsFake,
 } from "@/data/datas.fake";
+import {
+  SOUS_COMPTES_BALANCES_CACHE_KEY,
+  getCacheData,
+  setCacheData,
+} from "@/services/cache-service";
 import { isModeDemoEnabled } from "@/tools/tools";
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
 import { bonLivraison, listBonLivraisons } from "@/types/bon-livraisons.type";
@@ -32,14 +37,33 @@ import { listSousComptes } from "@/types/sousCompte.type";
 import { getJsonAuth, postJsonAuth } from "./api-client";
 
 const LIMIT_RECENT_TRANSACTIONS = 20;
+type SousCompteBalanceCache = Record<string, number>;
 
-export function getSoldeFromFakeData(): number {
-  const parsedBalance = Number(soldeFake.solde);
+function parseSoldeValue(
+  rawBalance: number | string | null | undefined,
+): number {
+  const parsedBalance = Number(rawBalance);
+
   if (Number.isNaN(parsedBalance)) {
     throw new Error("Format de solde invalide");
   }
 
   return parsedBalance;
+}
+
+function tryParseSoldeValue(
+  rawBalance: number | string | null | undefined,
+): number | null {
+  if (rawBalance === null || rawBalance === undefined || rawBalance === "") {
+    return null;
+  }
+
+  const parsedBalance = Number(rawBalance);
+  return Number.isFinite(parsedBalance) ? parsedBalance : null;
+}
+
+export function getSoldeFromFakeData(): number {
+  return parseSoldeValue(soldeFake.solde);
 }
 
 export async function fetchSoldeCompte(token: string): Promise<number> {
@@ -51,14 +75,27 @@ export async function fetchSoldeCompte(token: string): Promise<number> {
     apiConfig.endpoints.soldes,
     token,
   );
-  const rawBalance = payload?.solde;
-  const parsedBalance = Number(rawBalance);
+  return parseSoldeValue(payload?.solde);
+}
 
-  if (Number.isNaN(parsedBalance)) {
-    throw new Error("Format de solde invalide");
+export async function fetchSousCompteSolde(
+  token: string,
+  sousCompteId: string,
+): Promise<number> {
+  if (isModeDemoEnabled()) {
+    const fakeSousCompte = sousComptesFakeData.data.find(
+      (sousCompte) => sousCompte.id === sousCompteId,
+    );
+
+    return parseSoldeValue(fakeSousCompte?.solde);
   }
 
-  return parsedBalance;
+  const payload = await getJsonAuth<SoldeResponse>(
+    `${apiConfig.endpoints.sousComptes}/${sousCompteId}/solde`,
+    token,
+  );
+
+  return parseSoldeValue(payload?.solde);
 }
 
 export async function getfetchPromotions(
@@ -98,7 +135,68 @@ export async function getfetchSousComptes(
     `${apiConfig.endpoints.sousComptes}`,
     token,
   );
-  return data;
+
+  const cachedBalances =
+    (await getCacheData<SousCompteBalanceCache>(
+      SOUS_COMPTES_BALANCES_CACHE_KEY,
+    )) ?? {};
+  const nextBalanceCache: SousCompteBalanceCache = { ...cachedBalances };
+
+  const normalizedSousComptes = data.data.map((item) => {
+    const inlineBalance = tryParseSoldeValue(item.solde);
+    const cachedBalance = tryParseSoldeValue(cachedBalances[String(item.id)]);
+    const resolvedBalance = inlineBalance ?? cachedBalance;
+
+    if (inlineBalance !== null) {
+      nextBalanceCache[String(item.id)] = inlineBalance;
+    }
+
+    return {
+      ...item,
+      solde: resolvedBalance,
+    };
+  });
+
+  const sousCompteIdsToFetch = normalizedSousComptes
+    .filter((item) => item.solde === null)
+    .map((item) => String(item.id));
+
+  if (sousCompteIdsToFetch.length === 0) {
+    await setCacheData(SOUS_COMPTES_BALANCES_CACHE_KEY, nextBalanceCache);
+    return {
+      ...data,
+      data: normalizedSousComptes,
+    };
+  }
+
+  const sousComptesWithBalance = await Promise.all(
+    normalizedSousComptes.map(async (item) => {
+      if (item.solde !== null) {
+        return item;
+      }
+
+      try {
+        const solde = await fetchSousCompteSolde(token, String(item.id));
+        nextBalanceCache[String(item.id)] = solde;
+        return {
+          ...item,
+          solde,
+        };
+      } catch {
+        return {
+          ...item,
+          solde: null,
+        };
+      }
+    }),
+  );
+
+  await setCacheData(SOUS_COMPTES_BALANCES_CACHE_KEY, nextBalanceCache);
+
+  return {
+    ...data,
+    data: sousComptesWithBalance,
+  };
 }
 
 export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
@@ -337,7 +435,6 @@ export async function getfetchReglements(
   );
   return data;
 }
-
 
 export async function getfetchStatistiques(
   token: string,

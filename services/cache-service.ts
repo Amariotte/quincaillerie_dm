@@ -14,8 +14,8 @@ export const DEVIS_LIST_CACHE_KEY = "devis.list.cache.v1";
 export const BONS_LIVRAISONS_LIST_CACHE_KEY = "bons.list.cache.v1";
 export const BONS_ACHATS_LIST_CACHE_KEY = "bons-achats.list.cache.v1";
 export const SOUS_COMPTES_LIST_CACHE_KEY = "sous-comptes.list.cache.v1";
+export const SOUS_COMPTES_BALANCES_CACHE_KEY = "sous-comptes.balances.cache.v1";
 export const STATISTIQUES_LIST_CACHE_KEY = "statistiques.list.cache.v1";
-
 
 let currentUserCode: string | null = null;
 
