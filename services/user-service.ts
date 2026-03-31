@@ -16,12 +16,6 @@ export type ProfilePhotoFile = {
   mimeType?: string | null;
 };
 
-type NativeUploadFilePart = {
-  uri: string;
-  name: string;
-  type: string;
-};
-
 type UpdateProfilePhotoResponse = {
   message?: string;
 };
@@ -94,15 +88,16 @@ export async function updateConnectedUserProfilePhoto(
 
   const normalizedFileName =
     photo.fileName?.trim() || `profile-${Date.now()}.jpg`;
+
   const normalizedMimeType = photo.mimeType?.trim() || "image/jpeg";
+
   const formData = new FormData();
-  const filePart: NativeUploadFilePart = {
+
+  formData.append("file", {
     uri: photo.uri,
     name: normalizedFileName,
     type: normalizedMimeType,
-  };
-
-  formData.append("file", filePart as unknown as Blob);
+  } as any);
 
   const response = await uploadMultipartAuth<UpdateProfilePhotoResponse>(
     apiConfig.endpoints.profilePhoto,
@@ -110,8 +105,6 @@ export async function updateConnectedUserProfilePhoto(
     formData,
     "POST",
   );
-
-  alert(response?.message?.trim());
 
   return response?.message?.trim() || "Photo mise à jour avec succès";
 }
