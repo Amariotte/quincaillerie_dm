@@ -3,15 +3,15 @@ import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { getfetchCommissions } from '@/services/api-service';
-import { COMMISSIONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { COMMISSIONS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { listCommissions } from '@/types/commissions.type';
-import { factureStatus } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -28,72 +28,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function CommissionsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const { userToken } = useAuthContext();
-
-  const [commissions, setCommissions] = useState<listCommissions>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeClient, setActiveClient] = useState('Tous');
-  const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
-  const loadCommissions = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      
-      // Try to load from cache first
-      const cachedData = await getCacheData<listCommissions>(COMMISSIONS_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setCommissions(cachedData);
-      }
+    const initialCommissions = useMemo<listCommissions>(
+        () => ({
+          meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+          data: [],
+        }),
+        [],
+      );
 
-      // Fetch from API to update
-      const data = await getfetchCommissions(userToken);
-      setCommissions(data);
-      setIsOfflineMode(false);
-      await setCacheData(COMMISSIONS_LIST_CACHE_KEY, data);
-    } catch {
-      setCommissions({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
 
-  useEffect(() => {
-    loadCommissions();
-  }, [loadCommissions]);
+const { userToken } = useAuthContext();
+  const {
+    data: commissions,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listCommissions>({
+    cacheKey: COMMISSIONS_LIST_CACHE_KEY,
+    initialData: initialCommissions,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchCommissions(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-      const data = await getfetchCommissions(userToken);
-      setCommissions(data);
-      setIsOfflineMode(false);
-      await setCacheData(COMMISSIONS_LIST_CACHE_KEY, data);
-      setIsError(false);
-    } catch {
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
 
   const sousCompteFilters = buildSousCompteFilters(
         commissions.data,

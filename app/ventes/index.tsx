@@ -3,14 +3,15 @@ import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { getfetchFactures } from '@/services/api-service';
-import { FACTURES_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { FACTURES_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { factureStatus, listFactures, statusFactureColorMap } from '@/types/factures.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -29,13 +30,35 @@ const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'No
 export default function FacturesScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const { userToken } = useAuthContext();
 
-  const [factures, setFactures] = useState<listFactures>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const initialFactures = useMemo<listFactures>(
+      () => ({
+        meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+        data: [],
+      }),
+      [],
+    );
+
+const { userToken } = useAuthContext();
+  const {
+    data: factures,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listFactures>({
+    cacheKey: FACTURES_LIST_CACHE_KEY,
+    initialData: initialFactures,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchFactures(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
+
 
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
@@ -43,58 +66,7 @@ export default function FacturesScreen() {
   const [activeClient, setActiveClient] = useState('Tous');
   const [activeStatus, setActiveStatus] = useState<'Toutes' | factureStatus>('Toutes');
 
-  const loadFactures = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listFactures>(FACTURES_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setFactures(cachedData);
-      }
-
-      // Fetch from API to update
-      const data = await getfetchFactures(userToken);
-      setFactures(data);
-      setIsOfflineMode(false);
-      await setCacheData(FACTURES_LIST_CACHE_KEY, data);
-    } catch {
-      setFactures({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    loadFactures();
-  }, [loadFactures]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-      const data = await getfetchFactures(userToken);
-      setFactures(data);
-      setIsOfflineMode(false);
-      await setCacheData(FACTURES_LIST_CACHE_KEY, data);
-      setIsError(false);
-    } catch {
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
-
+ 
 
   const sousCompteFilters = buildSousCompteFilters(
       factures.data,

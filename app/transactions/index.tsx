@@ -2,16 +2,16 @@ import { AppHeader } from '@/components/app-header';
 import { DateRangePicker } from '@/components/date-range-picker';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { getfetchMouvements } from '@/services/api-service';
-import { getCacheData, setCacheData, TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
+import { TRANSACTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
 import COLORS from '@/styles/colors';
 import { sharedStyles } from '@/styles/shared';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { listMouvements, typeMouvementColorMap } from '@/types/mouvements.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -53,68 +53,42 @@ function getSignedAmountDisplay(tx: listMouvements['data'][number]) {
 export default function TransactionsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const offlineBg = useThemeColor({ light: '#fff7ed', dark: '#431407' }, 'background');
-  const offlineText = useThemeColor({ light: '#c2410c', dark: '#fb923c' }, 'text');
-  const { userToken } = useAuthContext();
 
-  const [mouvements, setMouvements] = useState<listMouvements>({ meta: { page: 1, next: 2, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [query, setQuery] = useState('');
   const normalizedQuery = useMemo(() => query.trim().toLowerCase(), [query]);
   const [activeType, setActiveType] = useState<'Tous' | listMouvements['data'][number]['libType']>('Tous');
 
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
+  const initialMouvements = useMemo<listMouvements>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, 
+      data: [],
+    }),
+    []
+  );
 
-  const loadMouvements = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
+const { userToken } = useAuthContext();
+  const {
+    data: mouvements,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listMouvements>({
 
-    setIsLoading(true);
-    try {
-      const cached = await getCacheData<listMouvements>(TRANSACTIONS_LIST_CACHE_KEY);
-      if (cached && cached.data.length > 0) {
-        setMouvements(cached);
-      }
+    cacheKey: TRANSACTIONS_LIST_CACHE_KEY,
+    initialData: initialMouvements,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchMouvements(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
 
-      const data = await getfetchMouvements(userToken);
-      setMouvements(data);
-      setIsOfflineMode(false);
-      await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
-    } catch {
-      setIsOfflineMode(true);
-     
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    loadMouvements();
-  }, [loadMouvements]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-
-      const data = await getfetchMouvements(userToken);
-      setMouvements(data);
-      setIsOfflineMode(false);
-      await setCacheData(TRANSACTIONS_LIST_CACHE_KEY, data);
-    } catch {
-      setIsOfflineMode(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
 
   const typeFilters: Array<'Tous' | listMouvements['data'][number]['libType']> = useMemo(
     () => [

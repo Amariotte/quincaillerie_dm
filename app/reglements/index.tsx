@@ -7,31 +7,31 @@ import { getfetchReglements } from "@/services/api-service";
 import { REGLEMENTS_LIST_CACHE_KEY } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared.js";
 import {
-    buildSousCompteFilters,
-    formatAmount,
-    formatDate,
-    MAIN_ACCOUNT_FILTER,
-    matchesDateRange,
-    matchesSousCompteFilter,
-    toComparableDate,
+  buildSousCompteFilters,
+  formatAmount,
+  formatDate,
+  MAIN_ACCOUNT_FILTER,
+  matchesDateRange,
+  matchesSousCompteFilter,
+  toComparableDate,
 } from "@/tools/tools";
 import {
-    listReglements,
-    statusEncaisse,
-    statusEncaisseColorMap,
+  listReglements,
+  statusEncaisse,
+  statusEncaisseColorMap,
 } from "@/types/reglements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -45,6 +45,7 @@ export default function ReglementsScreen() {
     mutedColor,
     borderColor,
   } = useAppTheme();
+  
   const initialReglements = useMemo<listReglements>(
     () => ({
       meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
@@ -481,7 +482,6 @@ export default function ReglementsScreen() {
                     </View>
 
                     <View style={sharedStyles.invoiceBottomRow}>
-                      <View style={sharedStyles.amountBlock}>
                         <Text
                           style={[
                             sharedStyles.amountText,
@@ -490,7 +490,7 @@ export default function ReglementsScreen() {
                         >
                           {formatAmount(reglement.montantReg)}
                         </Text>
-                      </View>
+
                       <TouchableOpacity
                         onPress={() =>
                           router.push(`/reglements/${reglement.id}` as never)

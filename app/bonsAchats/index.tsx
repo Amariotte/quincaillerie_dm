@@ -3,14 +3,15 @@ import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { getfetchBonAchatById, getfetchBonAchats } from '@/services/api-service';
-import { BONS_ACHATS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { BONS_ACHATS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatAmount, formatDate } from '@/tools/tools';
 import { bonAchat, listBonAchats } from '@/types/bon-achats.type.js';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import {
   ActivityIndicator,
   FlatList,
@@ -38,71 +39,40 @@ function isExpiredBon(bon: bonAchat): boolean {
 export default function BonsAchatsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const { userToken } = useAuthContext();
-
-  const [bonAchats, setBonAchats] = useState<listBonAchats>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isError, setIsError] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-
   const [query, setQuery] = useState('');
   const [selectedBonId, setSelectedBonId] = useState<string | null>(null);
   const [selectedBonDetail, setSelectedBonDetail] = useState<bonAchat | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<BonStatusFilter>('all');
+  const initialBonAchats = useMemo<listBonAchats>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+      data: [],
+    }),
+    []
+  );
+const { userToken } = useAuthContext();
 
-  const loadBons = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listBonAchats>(BONS_ACHATS_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setBonAchats(cachedData);
-      }
+  const {
+    data: bonAchats,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listBonAchats>({
 
-      // Fetch from API to update
-      const data = await getfetchBonAchats(userToken);
-      setBonAchats(data);
-      setIsOfflineMode(false);
-      await setCacheData(BONS_ACHATS_LIST_CACHE_KEY, data);
-    } catch {
-      setBonAchats({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    loadBons();
-  }, [loadBons]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-      const data = await getfetchBonAchats(userToken);
-      setBonAchats(data);
-      setIsOfflineMode(false);
-      await setCacheData(BONS_ACHATS_LIST_CACHE_KEY, data);
-      setIsError(false);
-    } catch {
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
+    cacheKey: BONS_ACHATS_LIST_CACHE_KEY,
+    initialData: initialBonAchats,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchBonAchats(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
 
 
   const filteredBons = useMemo(() => {

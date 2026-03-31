@@ -3,18 +3,20 @@ import { DateRangePicker } from '@/components/date-range-picker';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { getfetchBonLivraisons } from '@/services/api-service';
-import { BONS_LIVRAISONS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
+import { BONS_LIVRAISONS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
 import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
 import { listBonLivraisons } from '@/types/bon-livraisons.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -26,50 +28,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function BonsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const { userToken } = useAuthContext();
 
-  const [bonLivraisons, setBonLivraisons] = useState<listBonLivraisons>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const initialBonLivraisons = useMemo<listBonLivraisons>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+      data: [],
+    }),
+    []
+  );
+
+const { userToken } = useAuthContext();
+  const {
+    data: bonLivraisons,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listBonLivraisons>({
+
+    cacheKey: BONS_LIVRAISONS_LIST_CACHE_KEY,
+    initialData: initialBonLivraisons,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchBonLivraisons(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
+
 
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
-  const [activeClient, setActiveClient] = useState('Tous');
-
-  const loadBons = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listBonLivraisons>(BONS_LIVRAISONS_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setBonLivraisons(cachedData);
-      }
-
-      // Fetch from API to update
-      const data = await getfetchBonLivraisons(userToken);
-      setBonLivraisons(data);
-      setIsOfflineMode(false);
-      await setCacheData(BONS_LIVRAISONS_LIST_CACHE_KEY, data);
-    } catch {
-      setBonLivraisons({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    loadBons();
-  }, [loadBons]);
-
 
   const filteredBons = bonLivraisons.data.filter((bon) => {
     const matchesQuery =
@@ -88,7 +80,7 @@ export default function BonsScreen() {
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Bons de livraison" subtitle="Suivi des livraisons et des réceptions" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 

@@ -3,18 +3,17 @@ import { EmptyResultsCard } from "@/components/empty-results-card";
 import { ProductImage } from "@/components/product-image";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { getfetchProduits } from "@/services/api-service";
 import {
-  getCacheData,
-  PRODUITS_LIST_CACHE_KEY,
-  setCacheData,
+  PRODUITS_LIST_CACHE_KEY
 } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared";
 import { formatAmount } from "@/tools/tools";
 import { listProduits } from "@/types/produits.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -39,17 +38,37 @@ export default function ProduitsScreen() {
     borderColor,
   } = useAppTheme();
   const [query, setQuery] = useState("");
-  const [produits, setProduits] = useState<listProduits>({
-    meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+
+  const initialProduits = useMemo<listProduits>(
+    () => ({    
+  meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
     data: [],
-  });
+  }), []);
+
   const [activeFamille, setActiveFamille] = useState("Toutes");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const { userToken } = useAuthContext();
   const MAIN_ACCOUNT_FILTER = "Non définie";
+
+const { userToken } = useAuthContext();
+  const {
+    data: produits,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listProduits>({
+
+    cacheKey: PRODUITS_LIST_CACHE_KEY,
+    initialData: initialProduits,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchProduits(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
+
 
   const filteredProducts = useMemo(() => {
     return produits.data.filter((product) => {
@@ -66,44 +85,6 @@ export default function ProduitsScreen() {
     });
   }, [activeFamille, produits.data, query]);
 
-  const loadProduits = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-
-      // Try to load from cache first
-      const cachedData = await getCacheData<listProduits>(
-        PRODUITS_LIST_CACHE_KEY,
-      );
-
-      if (
-        cachedData &&
-        Array.isArray(cachedData.data) &&
-        cachedData.data.length > 0
-      ) {
-        setProduits(cachedData);
-      }
-
-      // Fetch from API to update
-      const data = await getfetchProduits(userToken);
-
-      setProduits(data);
-      setIsOfflineMode(false);
-    } catch {
-      setProduits({
-        meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
-        data: [],
-      });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
 
   const familles = [
     "Toutes",
@@ -128,29 +109,6 @@ export default function ProduitsScreen() {
     return a.localeCompare(b);
   });
 
-  useEffect(() => {
-    loadProduits();
-  }, [loadProduits]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      if (!userToken) {
-        setIsRefreshing(false);
-        return;
-      }
-      const data = await getfetchProduits(userToken);
-      setProduits(data);
-      setIsOfflineMode(false);
-      await setCacheData(PRODUITS_LIST_CACHE_KEY, data);
-      setIsError(false);
-    } catch {
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [userToken]);
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
