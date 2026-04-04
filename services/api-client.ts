@@ -19,6 +19,12 @@ const API_POPUP_COOLDOWN_MS = 1500;
 
 type HttpApiError = Error & { status: number; errorApi?: errorApi };
 
+export type RequestBehaviorOptions = {
+  canRetryAuth?: boolean;
+  suppressErrorPopup?: boolean;
+  suppressUnauthorizedHandler?: boolean;
+};
+
 function showApiErrorPopup(title: string, message: string) {
   const now = Date.now();
   const popupKey = `${title}|${message}`;
@@ -136,13 +142,24 @@ async function refreshAccessToken(): Promise<string | null> {
 async function handleUnauthorizedResponse(
   response: Response,
   apiMessage: string,
+  options?: RequestBehaviorOptions,
 ) {
+  if (options?.suppressUnauthorizedHandler) {
+    const error = new Error(
+      apiMessage || `Erreur API (${response.status})`,
+    ) as HttpApiError;
+    error.status = response.status;
+    throw error;
+  }
+
   if (!isHandlingUnauthorized) {
     isHandlingUnauthorized = true;
-    showApiErrorPopup(
-      "Session expirée",
-      apiMessage || "Votre session a expiré. Veuillez vous reconnecter.",
-    );
+    if (!options?.suppressErrorPopup) {
+      showApiErrorPopup(
+        "Session expirée",
+        apiMessage || "Votre session a expiré. Veuillez vous reconnecter.",
+      );
+    }
     try {
       await unauthorizedHandler?.();
     } finally {
@@ -160,7 +177,7 @@ async function handleUnauthorizedResponse(
 async function requestJson<T>(
   endpoint: string,
   init?: RequestInit,
-  canRetryAuth = true,
+  options?: RequestBehaviorOptions,
 ): Promise<T> {
   try {
     const headers = new Headers(init?.headers ?? {});
@@ -186,7 +203,10 @@ async function requestJson<T>(
       if (response.status === 401) {
         const currentAuthorization = headers.get("Authorization");
 
-        if (canRetryAuth && currentAuthorization?.startsWith("Bearer ")) {
+        if (
+          options?.canRetryAuth !== false &&
+          currentAuthorization?.startsWith("Bearer ")
+        ) {
           const refreshedToken = await refreshAccessToken();
 
           if (refreshedToken) {
@@ -199,7 +219,10 @@ async function requestJson<T>(
                 ...init,
                 headers: retryHeaders,
               },
-              false,
+              {
+                ...options,
+                canRetryAuth: false,
+              },
             );
           }
         }
@@ -210,9 +233,9 @@ async function requestJson<T>(
         error.status = response.status;
         error.errorApi = parsedApiError ?? undefined;
 
-        await handleUnauthorizedResponse(response, apiMessage);
+        await handleUnauthorizedResponse(response, apiMessage, options);
         throw error;
-      } else {
+      } else if (!options?.suppressErrorPopup) {
         showApiErrorPopup(
           apiTitle,
           apiMessage || `Erreur API (${response.status})`,
@@ -242,7 +265,9 @@ async function requestJson<T>(
 
     const networkMessage =
       "Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.";
-    showApiErrorPopup("Erreur réseau", networkMessage);
+    if (!options?.suppressErrorPopup) {
+      showApiErrorPopup("Erreur réseau", networkMessage);
+    }
 
     const networkError = new Error(networkMessage) as HttpApiError;
     networkError.status = 0;
@@ -253,7 +278,7 @@ async function requestJson<T>(
 async function requestMultipart<T>(
   endpoint: string,
   init?: RequestInit,
-  canRetryAuth = true,
+  options?: RequestBehaviorOptions,
 ): Promise<T> {
   try {
     const headers = new Headers(init?.headers ?? {});
@@ -274,7 +299,10 @@ async function requestMultipart<T>(
       if (response.status === 401) {
         const currentAuthorization = headers.get("Authorization");
 
-        if (canRetryAuth && currentAuthorization?.startsWith("Bearer ")) {
+        if (
+          options?.canRetryAuth !== false &&
+          currentAuthorization?.startsWith("Bearer ")
+        ) {
           const refreshedToken = await refreshAccessToken();
 
           if (refreshedToken) {
@@ -287,7 +315,10 @@ async function requestMultipart<T>(
                 ...init,
                 headers: retryHeaders,
               },
-              false,
+              {
+                ...options,
+                canRetryAuth: false,
+              },
             );
           }
         }
@@ -298,9 +329,9 @@ async function requestMultipart<T>(
         error.status = response.status;
         error.errorApi = parsedApiError ?? undefined;
 
-        await handleUnauthorizedResponse(response, apiMessage);
+        await handleUnauthorizedResponse(response, apiMessage, options);
         throw error;
-      } else {
+      } else if (!options?.suppressErrorPopup) {
         showApiErrorPopup(
           apiTitle,
           apiMessage || `Erreur API (${response.status})`,
@@ -330,7 +361,9 @@ async function requestMultipart<T>(
 
     const networkMessage =
       "Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.";
-    showApiErrorPopup("Erreur réseau", networkMessage);
+    if (!options?.suppressErrorPopup) {
+      showApiErrorPopup("Erreur réseau", networkMessage);
+    }
 
     const networkError = new Error(networkMessage) as HttpApiError;
     networkError.status = 0;
@@ -356,11 +389,12 @@ export async function getJsonAuth<T>(
 export async function postJson<TResponse, TBody = unknown>(
   endpoint: string,
   body?: TBody,
+  options?: RequestBehaviorOptions,
 ): Promise<TResponse> {
   return requestJson<TResponse>(endpoint, {
     method: "POST",
     body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  }, options);
 }
 
 export async function postJsonAuth<TResponse, TBody = unknown>(

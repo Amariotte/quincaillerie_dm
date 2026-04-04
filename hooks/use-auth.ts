@@ -1,10 +1,10 @@
 import { userDataFake } from "@/data/datas.fake";
 import { setCacheUserCode } from "@/services/cache-service";
 import {
-    fetchConnectedUser,
-    refreshAccessTokenApi,
-    signInApi,
-    signOutApi,
+  fetchConnectedUser,
+  refreshAccessTokenApi,
+  signInApi,
+  signOutApi,
 } from "@/services/user-service";
 import { user } from "@/types/user.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -131,31 +131,71 @@ export function useAuth(): UseAuthReturn {
           return;
         }
 
-        const storedUser = storedUserRaw
-          ? (JSON.parse(storedUserRaw) as user)
-          : storedToken === DEMO_TOKEN
-            ? userDataFake
-            : null;
+        if (storedToken === DEMO_TOKEN) {
+          const demoUser = storedUserRaw
+            ? (JSON.parse(storedUserRaw) as user)
+            : userDataFake;
 
-        setCacheUserCode(storedUser?.code ?? null);
+          setCacheUserCode(demoUser?.code ?? null);
+
+          if (isMounted) {
+            setState({
+              isLoading: false,
+              isSignout: false,
+              userToken: storedToken,
+              refreshToken: storedRefreshToken,
+              user: demoUser,
+              profilePhotoVersion: 0,
+            });
+          }
+
+          if (!storedUserRaw) {
+            await persistAuthSession(
+              storedToken,
+              storedRefreshToken,
+              userDataFake,
+            );
+          }
+
+          return;
+        }
+
+        let nextToken = storedToken;
+        let nextRefreshToken = storedRefreshToken;
+        let authenticatedUser = storedUserRaw
+          ? (JSON.parse(storedUserRaw) as user)
+          : null;
+
+        try {
+          authenticatedUser = await fetchConnectedUser(storedToken);
+        } catch {
+          if (!storedRefreshToken) {
+            throw new Error("Session expirée");
+          }
+
+          const refreshedSession = await refreshAccessTokenApi(storedRefreshToken);
+          nextToken = refreshedSession.access_token;
+          nextRefreshToken = refreshedSession.refresh_token || storedRefreshToken;
+          authenticatedUser =
+            refreshedSession.user ?? (await fetchConnectedUser(nextToken));
+        }
+
+        await persistAuthSession(
+          nextToken,
+          nextRefreshToken,
+          authenticatedUser,
+        );
+        setCacheUserCode(authenticatedUser?.code ?? null);
 
         if (isMounted) {
           setState({
             isLoading: false,
             isSignout: false,
-            userToken: storedToken,
-            refreshToken: storedRefreshToken,
-            user: storedUser,
+            userToken: nextToken,
+            refreshToken: nextRefreshToken,
+            user: authenticatedUser,
             profilePhotoVersion: 0,
           });
-        }
-
-        if (storedToken === DEMO_TOKEN && !storedUserRaw) {
-          await persistAuthSession(
-            storedToken,
-            storedRefreshToken,
-            userDataFake,
-          );
         }
       } catch {
         setCacheUserCode(null);

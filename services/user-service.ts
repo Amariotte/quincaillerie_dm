@@ -4,10 +4,10 @@ import { isModeDemoEnabled } from "@/tools/tools";
 import { AuthResponse, user } from "@/types/user.type";
 import { ImageSource } from "expo-image";
 import {
-  getJsonAuth,
-  postJson,
-  postJsonAuth,
-  uploadMultipartAuth,
+    getJsonAuth,
+    postJson,
+    postJsonAuth,
+    uploadMultipartAuth,
 } from "./api-client";
 
 export type ProfilePhotoFile = {
@@ -120,7 +120,14 @@ export async function signInApi(
     const data = await postJson<
       AuthResponse,
       { login: string; password: string }
-    >(apiConfig.endpoints.login, { login, password });
+    >(
+      apiConfig.endpoints.login,
+      { login, password },
+      {
+        suppressErrorPopup: true,
+        suppressUnauthorizedHandler: true,
+      },
+    );
 
     const token =
       typeof data?.access_token === "string" ? data.access_token : "";

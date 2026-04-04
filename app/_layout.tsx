@@ -3,7 +3,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
@@ -19,18 +19,62 @@ import {
   setTokenRefreshHandler,
   setUnauthorizedHandler,
 } from "@/services/api-client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
+const hiddenHeaderOptions = { headerShown: false };
+
+const authenticatedScreens = [
+  "(tabs)",
+  "ventes/index",
+  "ventes/[id]",
+  "proformas/index",
+  "proformas/[id]",
+  "bons/index",
+  "bons/[id]",
+  "reglements/index",
+  "reglements/[id]",
+  "produits/index",
+  "produits/[id]",
+  "bonsAchats/index",
+  "bonsAchats/[id]",
+  "transactions/index",
+  "transactions/[id]",
+  "promotions/index",
+  "promotions/[id]",
+  "operations/index",
+  "operations/[id]",
+  "commissions/index",
+  "commissions/[id]",
+  "sous-comptes/index",
+  "devis/nouveau",
+  "compte/qr",
+  "compte/mot-de-passe",
+  "compte/a-propos",
+] as const;
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { userToken, isLoading, clearAuthSession, refreshAccessToken } =
     useAuthContext();
+  const router = useRouter();
   const segments = useSegments();
   const isAuthRoute = segments[0] === "(auth)";
+  const isAuthenticated = Boolean(userToken);
+  // True only during the very first session restore — becomes false once and stays false.
+  const initialLoadDone = useRef(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && !initialLoadDone.current) {
+      initialLoadDone.current = true;
+      setIsInitializing(false);
+    }
+  }, [isLoading]);
+
   const [apiPopupState, setApiPopupState] = useState<{
     visible: boolean;
     type: FeedbackPopupType;
@@ -73,9 +117,24 @@ function RootLayoutNav() {
     };
   }, [isAuthRoute]);
 
+  useEffect(() => {
+    if (isInitializing) {
+      return;
+    }
+
+    if (isAuthenticated && isAuthRoute) {
+      router.replace("/(tabs)");
+      return;
+    }
+
+    if (!isAuthenticated && !isAuthRoute) {
+      router.replace("/(auth)");
+    }
+  }, [isAuthenticated, isAuthRoute, isInitializing, router]);
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      {isLoading ? (
+      {isInitializing ? (
         <View
           style={{
             flex: 1,
@@ -86,90 +145,19 @@ function RootLayoutNav() {
         >
           <ActivityIndicator size="large" />
         </View>
-      ) : userToken == null ? (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      ) : !isAuthenticated ? (
+        <Stack screenOptions={hiddenHeaderOptions}>
+          <Stack.Screen name="(auth)" options={hiddenHeaderOptions} />
         </Stack>
       ) : (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="ventes/index" options={{ headerShown: false }} />
-          <Stack.Screen name="ventes/[id]" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="proformas/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="proformas/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="bons/index" options={{ headerShown: false }} />
-          <Stack.Screen name="bons/[id]" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="reglements/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="reglements/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="produits/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="produits/[id]" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="bonsAchats/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="bonsAchats/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="transactions/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="transactions/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="promotions/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="promotions/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="operations/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="operations/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="commissions/index"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="commissions/[id]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen name="cartes/index" options={{ headerShown: false }} />
-          <Stack.Screen name="cartes/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="devis/nouveau" options={{ headerShown: false }} />
-          <Stack.Screen name="compte/qr" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="compte/mot-de-passe"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="compte/a-propos"
-            options={{ headerShown: false }}
-          />
+        <Stack screenOptions={hiddenHeaderOptions}>
+          {authenticatedScreens.map((screenName) => (
+            <Stack.Screen
+              key={screenName}
+              name={screenName}
+              options={hiddenHeaderOptions}
+            />
+          ))}
           <Stack.Screen
             name="modal"
             options={{
