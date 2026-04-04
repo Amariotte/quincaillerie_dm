@@ -1,14 +1,15 @@
 import { AppHeader } from "@/components/app-header";
 import { AuthButton } from "@/components/auth-button";
 import {
-    FeedbackPopup,
-    FeedbackPopupType,
+  ConfirmationPopup,
+  FeedbackPopup,
+  FeedbackPopupType,
 } from "@/components/ui/feedback-popup";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
-    getConnectedUserProfilePhotoSource,
-    updateConnectedUserProfilePhoto,
+  getConnectedUserProfilePhotoSource,
+  updateConnectedUserProfilePhoto,
 } from "@/services/user-service";
 import { sharedStyles } from "@/styles/shared";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,13 +18,12 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -77,6 +77,8 @@ export default function ProfileScreen() {
   const [localAvatarPreviewUri, setLocalAvatarPreviewUri] = useState<
     string | null
   >(null);
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    useState(false);
   const [popupState, setPopupState] = useState<{
     visible: boolean;
     type: FeedbackPopupType;
@@ -175,25 +177,18 @@ export default function ProfileScreen() {
   }, [user]);
 
   const handleLogout = () => {
-    Alert.alert("Déconnexion", "Êtes-vous sûr de vouloir vous déconnecter?", [
-      {
-        text: "Annuler",
-        onPress: () => {},
-        style: "cancel",
-      },
-      {
-        text: "Déconnexion",
-        onPress: async () => {
-          try {
-            await signOut();
-            router.replace("/(auth)" as never);
-          } catch {
-            router.replace("/(auth)" as never);
-          }
-        },
-        style: "destructive",
-      },
-    ]);
+    setIsLogoutConfirmationVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setIsLogoutConfirmationVisible(false);
+
+    try {
+      await signOut();
+      router.replace("/(auth)" as never);
+    } catch {
+      router.replace("/(auth)" as never);
+    }
   };
 
   const handleChangeProfileImage = async () => {
@@ -489,6 +484,17 @@ export default function ProfileScreen() {
         title={popupState.title}
         message={popupState.message}
         onClose={() => setPopupState((prev) => ({ ...prev, visible: false }))}
+      />
+
+      <ConfirmationPopup
+        visible={isLogoutConfirmationVisible}
+        type="info"
+        title="Déconnexion"
+        message="Êtes-vous sûr de vouloir vous déconnecter ?"
+        confirmLabel="Déconnexion"
+        cancelLabel="Annuler"
+        onCancel={() => setIsLogoutConfirmationVisible(false)}
+        onConfirm={confirmLogout}
       />
     </SafeAreaView>
   );
