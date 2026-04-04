@@ -1,9 +1,7 @@
 const resolvedBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
-const fallbackDevBaseUrl = "http://localhost:3000/api";
-
 const apiConfig = {
-  baseURL: resolvedBaseUrl || (__DEV__ ? fallbackDevBaseUrl : ""),
+  baseURL: resolvedBaseUrl ? resolvedBaseUrl : undefined,
   endpoints: {
     login: "/auth/login",
     refresh: "/auth/refresh",
