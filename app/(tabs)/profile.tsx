@@ -1,14 +1,14 @@
 import { AppHeader } from "@/components/app-header";
 import { AuthButton } from "@/components/auth-button";
 import {
-  FeedbackPopup,
-  FeedbackPopupType,
+    FeedbackPopup,
+    FeedbackPopupType,
 } from "@/components/ui/feedback-popup";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
-  getConnectedUserProfilePhotoSource,
-  updateConnectedUserProfilePhoto,
+    getConnectedUserProfilePhotoSource,
+    updateConnectedUserProfilePhoto,
 } from "@/services/user-service";
 import { sharedStyles } from "@/styles/shared";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,13 +17,13 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -245,13 +245,9 @@ export default function ProfileScreen() {
         "Photo mise à jour",
         successMessage || "Votre photo de profil a été modifiée.",
       );
-    } catch (error) {
+    } catch {
       setLocalAvatarPreviewUri(null);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "La mise à jour de la photo a échoué.";
-      openPopup("error", "Erreur", message);
+      // error already displayed globally by api-client
     } finally {
       setIsUploadingPhoto(false);
     }

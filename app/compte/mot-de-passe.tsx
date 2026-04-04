@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { FeedbackPopup } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { getApiErrorPopupHandler, setApiErrorPopupHandler } from '@/services/api-client';
 import { updatePasswordApi } from '@/services/user-service';
 import { sharedStyles } from '@/styles/shared.js';
 import React, { useState } from 'react';
@@ -43,16 +44,22 @@ export default function ChangePasswordScreen() {
     setErrorMessage('');
     setIsSubmitting(true);
 
+    const prevHandler = getApiErrorPopupHandler();
+    setApiErrorPopupHandler((payload) => {
+      setErrorMessage(payload.message);
+    });
+
     try {
       await updatePasswordApi(userToken, currentPassword, nextPassword);
       setCurrentPassword('');
       setNextPassword('');
       setConfirmPassword('');
       setIsSuccessPopupVisible(true);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Impossible de modifier le mot de passe.');
+    } catch {
+      // error message already set by inline handler above
     } finally {
       setIsSubmitting(false);
+      setApiErrorPopupHandler(prevHandler);
     }
   };
 

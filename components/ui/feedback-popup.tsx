@@ -2,26 +2,39 @@ import COLORS from '@/styles/colors';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-export type FeedbackPopupType = 'error' | 'success' | 'info';
+export type PopupType = 'error' | 'success' | 'info';
+export type FeedbackPopupType = PopupType;
 
-export type FeedbackPopupProps = {
+type BasePopupProps = {
   visible: boolean;
-  type: FeedbackPopupType;
+  type: PopupType;
   title: string;
   message: string;
+};
+
+export type MessagePopupProps = BasePopupProps & {
   onClose: () => void;
   buttonLabel?: string;
 };
 
-const popupConfig: Record<FeedbackPopupType, {
+export type ConfirmationPopupProps = BasePopupProps & {
+  onConfirm: () => void;
+  onCancel: () => void;
+  confirmLabel?: string;
+  cancelLabel?: string;
+};
+
+export type FeedbackPopupProps = MessagePopupProps;
+
+const popupConfig: Record<PopupType, {
   icon: keyof typeof MaterialIcons.glyphMap;
   iconColor: string;
   iconBackground: string;
@@ -43,14 +56,27 @@ const popupConfig: Record<FeedbackPopupType, {
   },
 };
 
-export function FeedbackPopup({
+type PopupCardProps = BasePopupProps & {
+  onRequestClose: () => void;
+  onBackdropPress?: () => void;
+  primaryLabel: string;
+  onPrimaryPress: () => void;
+  secondaryLabel?: string;
+  onSecondaryPress?: () => void;
+};
+
+function PopupCard({
   visible,
   type,
   title,
   message,
-  onClose,
-  buttonLabel = 'Fermer',
-}: FeedbackPopupProps) {
+  onRequestClose,
+  onBackdropPress,
+  primaryLabel,
+  onPrimaryPress,
+  secondaryLabel,
+  onSecondaryPress,
+}: PopupCardProps) {
   const config = popupConfig[type];
 
   return (
@@ -58,9 +84,9 @@ export function FeedbackPopup({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={onRequestClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} onPress={onBackdropPress}>
         <Pressable style={styles.card} onPress={() => {}}>
           <View style={[styles.iconWrap, { backgroundColor: config.iconBackground }]}>
             <MaterialIcons name={config.icon} size={34} color={config.iconColor} />
@@ -69,17 +95,87 @@ export function FeedbackPopup({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
 
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={onClose}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionButtonText}>{buttonLabel}</Text>
-          </TouchableOpacity>
+          {onSecondaryPress ? (
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onSecondaryPress}
+                style={[styles.actionButton, styles.cancelButton]}
+              >
+                <Text style={[styles.actionButtonText, styles.cancelButtonText]}>{secondaryLabel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={onPrimaryPress}
+                style={styles.actionButton}
+              >
+                <Text style={styles.actionButtonText}>{primaryLabel}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onPrimaryPress}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionButtonText}>{primaryLabel}</Text>
+            </TouchableOpacity>
+          )}
         </Pressable>
       </Pressable>
     </Modal>
   );
+}
+
+export function MessagePopup({
+  visible,
+  type,
+  title,
+  message,
+  onClose,
+  buttonLabel = 'Fermer',
+}: MessagePopupProps) {
+  return (
+    <PopupCard
+      visible={visible}
+      type={type}
+      title={title}
+      message={message}
+      onRequestClose={onClose}
+      onBackdropPress={onClose}
+      primaryLabel={buttonLabel}
+      onPrimaryPress={onClose}
+    />
+  );
+}
+
+export function ConfirmationPopup({
+  visible,
+  type,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Valider',
+  cancelLabel = 'Annuler',
+}: ConfirmationPopupProps) {
+  return (
+    <PopupCard
+      visible={visible}
+      type={type}
+      title={title}
+      message={message}
+      onRequestClose={onCancel}
+      primaryLabel={confirmLabel}
+      onPrimaryPress={onConfirm}
+      secondaryLabel={cancelLabel}
+      onSecondaryPress={onCancel}
+    />
+  );
+}
+
+export function FeedbackPopup(props: FeedbackPopupProps) {
+  return <MessagePopup {...props} />;
 }
 
 const styles = StyleSheet.create({
@@ -125,18 +221,33 @@ const styles = StyleSheet.create({
     color: '#4b5563',
     textAlign: 'center',
   },
-  actionButton: {
-    minWidth: 140,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
     marginTop: 22,
+    width: '100%',
+  },
+  actionButton: {
+    flex: 1,
+    minWidth: 100,
+    marginTop: 0,
     borderRadius: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: COLORS.primaryColor,
     alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
   },
   actionButtonText: {
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
+  },
+  cancelButtonText: {
+    color: '#6b7280',
   },
 });

@@ -1,10 +1,10 @@
 import { userDataFake } from "@/data/datas.fake";
 import { setCacheUserCode } from "@/services/cache-service";
 import {
-  fetchConnectedUser,
-  refreshAccessTokenApi,
-  signInApi,
-  signOutApi,
+    fetchConnectedUser,
+    refreshAccessTokenApi,
+    signInApi,
+    signOutApi,
 } from "@/services/user-service";
 import { user } from "@/types/user.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -262,8 +262,17 @@ export function useAuth(): UseAuthReturn {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur de connexion en mode demo";
+      setCacheUserCode(null);
+      await persistAuthSession(null, null, null);
+      setState({
+        isLoading: false,
+        isSignout: true,
+        userToken: null,
+        refreshToken: null,
+        user: null,
+        profilePhotoVersion: 0,
+      });
       setError(errorMessage);
-      setState((prev) => ({ ...prev, isLoading: false }));
       throw err;
     }
   };
@@ -300,8 +309,17 @@ export function useAuth(): UseAuthReturn {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erreur de connexion";
+      setCacheUserCode(null);
+      await persistAuthSession(null, null, null);
+      setState({
+        isLoading: false,
+        isSignout: true,
+        userToken: null,
+        refreshToken: null,
+        user: null,
+        profilePhotoVersion: 0,
+      });
       setError(errorMessage);
-      setState((prev) => ({ ...prev, isLoading: false }));
       throw err;
     }
   };

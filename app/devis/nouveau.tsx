@@ -1,5 +1,5 @@
 ﻿import { AppHeader } from '@/components/app-header';
-import { FeedbackPopup, FeedbackPopupType } from '@/components/ui/feedback-popup';
+import { ConfirmationPopup, FeedbackPopupType, MessagePopup } from '@/components/ui/feedback-popup';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
 import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, postValidateDevis, updateDevisLigne } from '@/services/api-service';
@@ -54,14 +54,21 @@ export default function ProformaSaisieScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [popupType, setPopupType] = useState<FeedbackPopupType>('info');
-  const [popupTitle, setPopupTitle] = useState('Information');
-  const [popupMessage, setPopupMessage] = useState('');
-  const [popupButtonLabel, setPopupButtonLabel] = useState('Fermer');
-  const [popupCloseAction, setPopupCloseAction] = useState<(() => void) | null>(null);
+  const [messagePopupVisible, setMessagePopupVisible] = useState(false);
+  const [messagePopupType, setMessagePopupType] = useState<FeedbackPopupType>('info');
+  const [messagePopupTitle, setMessagePopupTitle] = useState('Information');
+  const [messagePopupMessage, setMessagePopupMessage] = useState('');
+  const [messagePopupButtonLabel, setMessagePopupButtonLabel] = useState('Fermer');
+  const [messagePopupCloseAction, setMessagePopupCloseAction] = useState<(() => void) | null>(null);
 
-  const openPopup = useCallback(
+  const [confirmPopupVisible, setConfirmPopupVisible] = useState(false);
+  const [confirmPopupTitle, setConfirmPopupTitle] = useState('Confirmation');
+  const [confirmPopupMessage, setConfirmPopupMessage] = useState('');
+  const [confirmPopupConfirmLabel, setConfirmPopupConfirmLabel] = useState('Valider');
+  const [confirmPopupCancelLabel, setConfirmPopupCancelLabel] = useState('Annuler');
+  const [confirmPopupAction, setConfirmPopupAction] = useState<(() => void) | null>(null);
+
+  const openMessagePopup = useCallback(
     (
       type: FeedbackPopupType,
       title: string,
@@ -69,24 +76,56 @@ export default function ProformaSaisieScreen() {
       buttonLabel = 'Fermer',
       onCloseAction?: () => void,
     ) => {
-      setPopupType(type);
-      setPopupTitle(title);
-      setPopupMessage(message);
-      setPopupButtonLabel(buttonLabel);
-      setPopupCloseAction(() => onCloseAction ?? null);
-      setPopupVisible(true);
+      setMessagePopupType(type);
+      setMessagePopupTitle(title);
+      setMessagePopupMessage(message);
+      setMessagePopupButtonLabel(buttonLabel);
+      setMessagePopupCloseAction(() => onCloseAction ?? null);
+      setMessagePopupVisible(true);
     },
     [],
   );
 
-  const closePopup = useCallback(() => {
-    setPopupVisible(false);
-    const action = popupCloseAction;
-    setPopupCloseAction(null);
+  const closeMessagePopup = useCallback(() => {
+    setMessagePopupVisible(false);
+    const action = messagePopupCloseAction;
+    setMessagePopupCloseAction(null);
     if (action) {
       action();
     }
-  }, [popupCloseAction]);
+  }, [messagePopupCloseAction]);
+
+  const openConfirmationPopup = useCallback(
+    (
+      title: string,
+      message: string,
+      onConfirmAction: () => void,
+      confirmLabel = 'Valider',
+      cancelLabel = 'Annuler',
+    ) => {
+      setConfirmPopupTitle(title);
+      setConfirmPopupMessage(message);
+      setConfirmPopupConfirmLabel(confirmLabel);
+      setConfirmPopupCancelLabel(cancelLabel);
+      setConfirmPopupAction(() => onConfirmAction);
+      setConfirmPopupVisible(true);
+    },
+    [],
+  );
+
+  const closeConfirmationPopup = useCallback(() => {
+    setConfirmPopupVisible(false);
+    setConfirmPopupAction(null);
+  }, []);
+
+  const confirmPopup = useCallback(() => {
+    const action = confirmPopupAction;
+    setConfirmPopupVisible(false);
+    setConfirmPopupAction(null);
+    if (action) {
+      action();
+    }
+  }, [confirmPopupAction]);
 
   const applyUpdatedDevis = useCallback((dev: devis | null) => {
     if (!dev) {
@@ -183,10 +222,10 @@ export default function ProformaSaisieScreen() {
           applyUpdatedDevis(updatedDevis);
         }
       } catch {
-        openPopup('error', 'Erreur', "La mise à jour de la ligne du devis a échoué.");
+        // error displayed globally by api-client
       }
     },
-    [applyUpdatedDevis, openPopup, proforma?.id, userToken],
+    [applyUpdatedDevis, proforma?.id, userToken],
   );
 
   // Suppression locale d'une ligne
@@ -201,9 +240,9 @@ export default function ProformaSaisieScreen() {
       const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
       applyUpdatedDevis(updatedDevis);
     } catch {
-      openPopup('error', 'Erreur', 'La suppression de la ligne a échoué.');
+      // error displayed globally by api-client
     }
-  }, [applyUpdatedDevis, openPopup, proforma?.id, userToken]);
+  }, [applyUpdatedDevis, proforma?.id, userToken]);
 
   // Ajout d'un produit depuis le catalogue
   const addProduct = useCallback(
@@ -221,11 +260,11 @@ export default function ProformaSaisieScreen() {
           const updatedDevis = await postDevisLigne(userToken, ligne, proforma?.id);
           applyUpdatedDevis(updatedDevis);
         } catch {
-          openPopup('error', 'Erreur', "L'ajout de la ligne a échoué.");
+          // error displayed globally by api-client
         }
       }
     },
-    [applyUpdatedDevis, lines, openPopup, proforma?.id, userToken],
+    [applyUpdatedDevis, lines, proforma?.id, userToken],
   );
 
   const handleValidate = async () => {
@@ -233,11 +272,11 @@ export default function ProformaSaisieScreen() {
     const devisId = proforma?.id;
 
     if (lines.length === 0) {
-      openPopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
+      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
       return;
     }
     if (!token || !devisId) {
-      openPopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
+      openMessagePopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
       return;
     }
 
@@ -245,7 +284,7 @@ export default function ProformaSaisieScreen() {
     try {
       await postValidateDevis(token, devisId);
 
-      openPopup(
+      openMessagePopup(
         'success',
         'Devis validé',
         'Le devis a été validé.',
@@ -253,22 +292,40 @@ export default function ProformaSaisieScreen() {
         () => router.back(),
       );
     } catch {
-      openPopup('error', 'Erreur', "La validation du devis a échoué.");
+      // error displayed globally by api-client
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleValidateRequest = useCallback(() => {
+    if (lines.length === 0) {
+      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
+      return;
+    }
+    if (!userToken || !proforma?.id) {
+      openMessagePopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
+      return;
+    }
+    openConfirmationPopup(
+      'Confirmer la validation',
+      'Le devis sera validé et ne pourra plus être modifié. Continuer ?',
+      handleValidate,
+      'Valider',
+      'Annuler',
+    );
+  }, [lines.length, userToken, proforma?.id, openMessagePopup, openConfirmationPopup, handleValidate]);
+
   const handleSave = () => {
     if (lines.length === 0) {
-      openPopup('info', 'Aucun article', "Ajoutez au moins un produit avant d'enregistrer.");
+      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant d'enregistrer.");
       return;
     }
     setIsSaving(true);
     // Ici : appel API création/validation proforma
     setTimeout(() => {
       setIsSaving(false);
-      openPopup(
+      openMessagePopup(
         'success',
         'Devis enregistré',
         'Le devis a été enregistré. Retour en cours...',
@@ -490,7 +547,7 @@ export default function ProformaSaisieScreen() {
             </TouchableOpacity>
            
             <TouchableOpacity
-              onPress={handleValidate}
+              onPress={handleValidateRequest}
               disabled={isSaving}
               style={[styles.primaryBtn, { backgroundColor: tintColor, opacity: isSaving ? 0.7 : 1 }]}
             >
@@ -506,13 +563,23 @@ export default function ProformaSaisieScreen() {
 
         </View>
       </ScrollView>
-      <FeedbackPopup
-        visible={popupVisible}
-        type={popupType}
-        title={popupTitle}
-        message={popupMessage}
-        buttonLabel={popupButtonLabel}
-        onClose={closePopup}
+      <MessagePopup
+        visible={messagePopupVisible}
+        type={messagePopupType}
+        title={messagePopupTitle}
+        message={messagePopupMessage}
+        buttonLabel={messagePopupButtonLabel}
+        onClose={closeMessagePopup}
+      />
+      <ConfirmationPopup
+        visible={confirmPopupVisible}
+        type="info"
+        title={confirmPopupTitle}
+        message={confirmPopupMessage}
+        confirmLabel={confirmPopupConfirmLabel}
+        cancelLabel={confirmPopupCancelLabel}
+        onConfirm={confirmPopup}
+        onCancel={closeConfirmationPopup}
       />
     </SafeAreaView>
   );

@@ -6,17 +6,17 @@ import { useAppTheme } from '@/hooks/use-app-theme';
 import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cache-service';
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -70,9 +70,11 @@ export default function ProformasScreen() {
     }
   }, [userToken]);
 
-  useEffect(() => {
-    loadProformas();
-  }, [loadProformas]);
+  useFocusEffect(
+    useCallback(() => {
+      loadProformas();
+    }, [loadProformas]),
+  );
 
   const handleEditDevis = useCallback((devisId: string) => {
     router.push({ pathname: '/devis/nouveau', params: { id: devisId } });

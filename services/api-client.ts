@@ -109,6 +109,10 @@ export function setApiErrorPopupHandler(
   apiErrorPopupHandler = handler;
 }
 
+export function getApiErrorPopupHandler() {
+  return apiErrorPopupHandler;
+}
+
 export function setTokenRefreshHandler(
   handler: (() => Promise<string | null>) | null,
 ) {
