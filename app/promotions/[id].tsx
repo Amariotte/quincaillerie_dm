@@ -144,9 +144,12 @@ export default function PromotionDetailScreen() {
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Produit : {promotion.nomProduit ?? '—'}</Text>
             </View>
+
+            {promotion.nbMax > 0 && (
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Nombre : {promotion.nbMax ?? '—'}</Text>
             </View>
+            )}
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Description : {promotion.description ?? '—'}</Text>
             </View>

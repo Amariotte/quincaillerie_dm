@@ -202,8 +202,6 @@ export default function PromotionsScreen() {
               renderItem={({ item: promotion }) => {
                 const statusLabel = promotion.status;
                 const statusColor = statusPromotionColorMap[promotion.status] || tintColor;
-                const detailCount = promotion.details?.length ?? 0;
-                const hasDetailCount = detailCount > 0;
                 const volumeLabel = promotion.nbMax > 0
                   ? `${promotion.nbMax} unité${promotion.nbMax > 1 ? 's' : ''}`
                   : 'Non défini';
@@ -242,19 +240,19 @@ export default function PromotionsScreen() {
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Fin</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]}>{promotion.dateFin ? formatDate(promotion.dateFin) : '—'}</Text>
                       </View>
+
+                      {promotion.nbMax > 0 && (
                       <View style={[styles.quickFactCard, { backgroundColor: `${tintColor}10` }]}>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Volume</Text>
                         <Text style={[sharedStyles.metaValue, { color: textColor }]} numberOfLines={1}>{volumeLabel}</Text>
                       </View>
+                      )}
                     </View>
 
+                    
+
                     <View style={styles.footerRow}>
-                      <View style={styles.footerMetaRow}>
-                        <Text style={[styles.footerMetaText, { color: mutedColor }]}>Réf. {promotion.id}</Text>
-                        {hasDetailCount ? (
-                          <Text style={[styles.footerMetaText, { color: mutedColor }]}>{detailCount} palier{detailCount > 1 ? 's' : ''}</Text>
-                        ) : null}
-                      </View>
+                      
                       <View style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}> 
                         <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </View>

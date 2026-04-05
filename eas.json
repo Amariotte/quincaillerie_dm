@@ -1,23 +1,38 @@
 {
   "cli": {
     "version": ">= 18.5.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "requireCommit": true
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_MODE_DEMO": "true"
+      }
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://149.202.84.49/stock/api/mobile/v1",
+        "EXPO_PUBLIC_MODE_DEMO": "false"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://149.202.84.49/stock/api/mobile/v1",
+        "EXPO_PUBLIC_MODE_DEMO": "false"
+      },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       }
     }
   },
