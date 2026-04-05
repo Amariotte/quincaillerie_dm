@@ -8,7 +8,19 @@
     "scheme": "monprojetmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "149.202.84.49": {
+              "NSIncludesSubdomains": true,
+              "NSTemporaryExceptionAllowsInsecureHTTPLoads": true,
+              "NSTemporaryExceptionRequiresForwardSecrecy": false
+            }
+          }
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {

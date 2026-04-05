@@ -1,5 +1,6 @@
 import { getApiUrl } from "@/config/api";
 import { errorApi } from "@/types/errorAPI.type";
+import { Alert } from "react-native";
 
 let unauthorizedHandler: (() => void | Promise<void>) | null = null;
 let apiErrorPopupHandler:
@@ -259,10 +260,12 @@ async function requestJson<T>(
     return JSON.parse(rawBody) as T;
   } catch (error) {
     const httpError = error as Partial<HttpApiError>;
+
     if (typeof httpError?.status === "number") {
       throw error;
     }
 
+  
     const networkMessage =
       "Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.";
     if (!options?.suppressErrorPopup) {
