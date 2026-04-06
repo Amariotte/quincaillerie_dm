@@ -17,8 +17,8 @@ const BG_IMAGE   = path.join(ROOT, "assets", "images", "android-icon-background.
 const MONO_IMAGE = path.join(ROOT, "assets", "images", "android-icon-monochrome.png");
 const SPLASH_SRC = path.join(ROOT, "assets", "images", "splash-icon.png");
 
-// Couleur de fond adaptive icon (#E6F4FE) en RGBA int
-const BG_COLOR = 0xe6f4feff;
+// Couleur de fond adaptive icon (blanc) en RGBA int
+const BG_COLOR = 0xffffffff;
 
 // Densités + tailles Android standard
 const DENSITIES = [
@@ -59,12 +59,16 @@ async function main() {
     fs.mkdirSync(dir, { recursive: true });
     console.log(`\n${d.folder}`);
 
-    // ic_launcher.webp
-    const launcher = (await Jimp.read(LOGO)).resize(d.launcher, d.launcher, Jimp.RESIZE_BICUBIC);
+    // ic_launcher.webp - logo sur fond blanc
+    const launcher = new Jimp(d.launcher, d.launcher, BG_COLOR);
+    const launcherLogo = (await Jimp.read(LOGO)).resize(d.launcher, d.launcher, Jimp.RESIZE_BICUBIC);
+    launcher.composite(launcherLogo, 0, 0);
     await write(launcher, path.join(dir, "ic_launcher.webp"), d.launcher);
 
-    // ic_launcher_round.webp (même source)
-    const round = (await Jimp.read(LOGO)).resize(d.launcher, d.launcher, Jimp.RESIZE_BICUBIC);
+    // ic_launcher_round.webp - logo sur fond blanc
+    const round = new Jimp(d.launcher, d.launcher, BG_COLOR);
+    const roundLogo = (await Jimp.read(LOGO)).resize(d.launcher, d.launcher, Jimp.RESIZE_BICUBIC);
+    round.composite(roundLogo, 0, 0);
     await write(round, path.join(dir, "ic_launcher_round.webp"), d.launcher);
 
     // ic_launcher_foreground.webp — logo centré dans 66 % de la safe zone
@@ -76,13 +80,8 @@ async function main() {
     fgCanvas.composite(fgLogo, offset, offset);
     await write(fgCanvas, path.join(dir, "ic_launcher_foreground.webp"), fg);
 
-    // ic_launcher_background.webp — image de fond ou couleur unie
-    let bgCanvas;
-    if (bgExists) {
-      bgCanvas = (await Jimp.read(BG_IMAGE)).resize(fg, fg, Jimp.RESIZE_BICUBIC);
-    } else {
-      bgCanvas = new Jimp(fg, fg, BG_COLOR);
-    }
+    // ic_launcher_background.webp — fond blanc forcé
+    const bgCanvas = new Jimp(fg, fg, BG_COLOR);
     await write(bgCanvas, path.join(dir, "ic_launcher_background.webp"), fg);
 
     // ic_launcher_monochrome.webp — image monochrome ou logo brut

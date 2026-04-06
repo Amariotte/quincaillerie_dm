@@ -21,7 +21,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import styles from "./style.js";
 
 export default function SousComptesScreen() {
   const initialSousComptes = useMemo<listSousComptes>(
@@ -90,7 +89,7 @@ export default function SousComptesScreen() {
       >
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}>
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
                 Toutes les sous comptes
               </Text>
@@ -157,15 +156,15 @@ export default function SousComptesScreen() {
                 return (
                   <TouchableOpacity
                     activeOpacity={0.85}
-                    style={[styles.invoiceCard, { backgroundColor: cardColor }]}
+                    style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
                   >
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>
                           {sousCompte.nom}
                         </Text>
                         <Text
-                          style={[styles.invoiceClient, { color: mutedColor }]}
+                          style={[sharedStyles.invoiceClient, { color: mutedColor }]}
                         >
                           {sousCompte.description?.trim() ||
                             "Aucune description"}
@@ -173,7 +172,7 @@ export default function SousComptesScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <Text
                         style={[
                           sharedStyles.metaCaption,
@@ -182,12 +181,12 @@ export default function SousComptesScreen() {
                       >
                         Téléphone
                       </Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                         {sousCompte.mobile || "Aucun numéro"}
                       </Text>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <Text
                         style={[
                           sharedStyles.metaCaption,
@@ -196,7 +195,7 @@ export default function SousComptesScreen() {
                       >
                         Email
                       </Text>
-                      <Text style={[styles.metaValue, { color: textColor }]}>
+                      <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                         {sousCompte.email || "Aucun email"}
                       </Text>
                     </View>

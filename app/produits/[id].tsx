@@ -100,6 +100,8 @@ export default function ProduitDetailScreen() {
     );
   }
 
+    const detailLines = produit_item.detailPackage ?? [];
+
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={sharedStyles.fixedHeader}>
@@ -201,13 +203,7 @@ export default function ProduitDetailScreen() {
                 Famille : {produit_item.nomfamille ?? "—"}
               </Text>
             </View>
-            {produit_item.unit && (
-              <View style={sharedStyles.metaRow}>
-                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                  Unité : {produit_item.unit}
-                </Text>
-              </View>
-            )}
+        
             {produit_item.txTva !== undefined && (
               <View style={sharedStyles.metaRow}>
                 <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
@@ -215,7 +211,23 @@ export default function ProduitDetailScreen() {
                 </Text>
               </View>
             )}
+
           </View>
+
+
+           <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
+                      <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Composants</Text>
+                      <View style={sharedStyles.linesBlock}>
+                        {detailLines.map((line) => (
+                          <View key={line.id} style={sharedStyles.lineRow}>
+                            <View style={sharedStyles.lineLeft}>
+                              <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.nom}</Text>
+                            </View>
+                            <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.qte)}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
 
           {/* Summary Card - Prix */}
           <View

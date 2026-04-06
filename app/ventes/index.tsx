@@ -23,7 +23,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import styles from './style.js';
 
 const statusFilters: Array<'Toutes' | factureStatus> = ['Toutes', 'Soldée', 'Non soldée', 'Echue'];
 
@@ -104,17 +103,17 @@ const { userToken } = useAuthContext();
       <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}>
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les ventes</Text>
               <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} vente{totalCount > 1 ? 's' : ''}</Text>
               <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Ventes non soldées</Text>
               <Text style={[sharedStyles.statCount, { color: tintColor }]}>{unsettledCount} vente{unsettledCount > 1 ? 's' : ''}</Text>
               <Text style={[sharedStyles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: cardColor }]}> 
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
               <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Ventes échues</Text>
               <Text style={[sharedStyles.statCount, { color: '#dc2626' }]}>{overdueCount} vente{overdueCount > 1 ? 's' : ''}</Text>
               <Text style={[sharedStyles.statValue, { color: '#dc2626' }]}>{formatAmount(overdueAmount)}</Text>
@@ -227,41 +226,41 @@ const { userToken } = useAuthContext();
                 const statusColor = statusFactureColorMap[invoice.status];
 
                 return (
-                  <View style={[styles.invoiceCard, { backgroundColor: cardColor }]}> 
-                    <View style={styles.invoiceTopRow}>
-                      <View style={styles.invoiceRefBlock}>
-                        <Text style={[styles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
-                        <Text style={[styles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
+                  <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+                    <View style={sharedStyles.invoiceTopRow}>
+                      <View style={sharedStyles.invoiceRefBlock}>
+                        <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{invoice.codeVente}</Text>
+                        <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>{invoice.nomSousCompte?.trim() ? invoice.nomSousCompte : MAIN_ACCOUNT_FILTER}</Text>
                       </View>
                       <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                        <Text style={[styles.statusText, { color: statusColor }]}>{invoice.status}</Text>
+                        <Text style={[sharedStyles.statusText, { color: statusColor }]}>{invoice.status}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.invoiceMetaRow}>
+                    <View style={sharedStyles.invoiceMetaRow}>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                           {formatDate(invoice.dateVente)}
                         </Text>
                       </View>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Échéance</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{invoice.dateEchVente ? formatDate(invoice.dateEchVente) : '—'}</Text>
                       </View>
                       <View>
                         <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Articles</Text>
-                        <Text style={[styles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
+                        <Text style={[sharedStyles.metaValue, { color: textColor }]}>{invoice.nbProduits}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.invoiceBottomRow}>
-                      <Text style={[styles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
+                    <View style={sharedStyles.invoiceBottomRow}>
+                      <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(invoice.totalNetPayer)}</Text>
                       <TouchableOpacity
                         onPress={() => router.push(`/ventes/${invoice.id}` as never)}
-                        style={[styles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                        style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
                       >
-                        <Text style={[styles.actionText, { color: tintColor }]}>Voir détail</Text>
+                        <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

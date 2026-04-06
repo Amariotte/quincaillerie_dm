@@ -8,31 +8,31 @@ import { getfetchOperations } from "@/services/api-service";
 import { OPERATIONS_LIST_CACHE_KEY } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared";
 import {
-    buildSousCompteFilters,
-    formatAmount,
-    formatDate,
-    MAIN_ACCOUNT_FILTER,
-    matchesDateRange,
-    matchesSousCompteFilter,
-    toComparableDate,
+  buildSousCompteFilters,
+  formatAmount,
+  formatDate,
+  MAIN_ACCOUNT_FILTER,
+  matchesDateRange,
+  matchesSousCompteFilter,
+  toComparableDate,
 } from "@/tools/tools";
 import {
-    listOperations,
-    typeMouvementColorMap,
-    typeOperation,
+  listOperations,
+  typeMouvementColorMap,
+  typeOperation,
 } from "@/types/operations.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

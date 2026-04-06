@@ -5,11 +5,22 @@ export type Produit = {
   reference: string;
   designation: string;
   nomfamille: string;
-  unit?: string;
   prixVenteTTC: number;
   txTva?: number;
   prixVenteHT?: number;
+  detailPackage?: detailPackage[];
 };
+
+
+export type detailPackage = {
+  id: string;
+  nom: string;
+  qte: number; 
+  puVenteTTC: number;
+  puAchatHT: number;
+  taxe: number;
+};
+
 
 export type listProduits = {
   meta?: meta;
