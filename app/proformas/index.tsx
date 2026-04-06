@@ -7,19 +7,21 @@ import { DEVIS_LIST_CACHE_KEY, getCacheData, setCacheData } from '@/services/cac
 import { buildSousCompteFilters, formatAmount, formatDate, MAIN_ACCOUNT_FILTER, matchesDateRange, matchesSousCompteFilter, toComparableDate } from '@/tools/tools';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { deleteDevis, getfetchDevis } from '@/services/api-service';
 import { sharedStyles } from '@/styles/shared';
 import { devisStatus, listDevis, statusDevisColorMap } from '@/types/devis.type';
@@ -28,12 +30,16 @@ const statusFilters: Array<'Toutes' | devisStatus> = ['Toutes', 'En saisie', 'Va
 export default function ProformasScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const { userToken } = useAuthContext();
+  
+ const initialProformas = useMemo<listDevis>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+      data: [],
+    }),
+    []
+  );
 
-  const [proformas, setProformas] = useState<listDevis>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
 
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
@@ -42,38 +48,32 @@ export default function ProformasScreen() {
   const [activeStatus, setActiveStatus] = useState<'Toutes' | devisStatus>('Toutes');
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
-  const loadProformas = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setProformas(cachedData);
-      }
+const { userToken } = useAuthContext();
+  const {
+    data: proformas,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listDevis>({
 
-      // Fetch from API to update
-      const data = await getfetchDevis(userToken);
-      setProformas(data);
-      setIsOfflineMode(false);
-      await setCacheData(DEVIS_LIST_CACHE_KEY, data);
-    } catch {
-      setProformas({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
+    cacheKey: DEVIS_LIST_CACHE_KEY,
+    initialData: initialProformas,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchDevis(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
+
 
   useFocusEffect(
     useCallback(() => {
-      loadProformas();
-    }, [loadProformas]),
+      handleRefresh();
+    }, [handleRefresh]),
   );
 
   const handleEditDevis = useCallback((devisId: string) => {
@@ -97,11 +97,6 @@ export default function ProformasScreen() {
             try {
               setDeletingIds((prev) => (prev.includes(devisId) ? prev : [...prev, devisId]));
               await deleteDevis(userToken, devisId);
-
-              setProformas((prev) => ({
-                ...prev,
-                data: prev.data.filter((item) => item.id !== devisId),
-              }));
 
               const cachedData = await getCacheData<listDevis>(DEVIS_LIST_CACHE_KEY);
               const updatedData = (cachedData?.data ?? []).filter((item) => item.id !== devisId);
@@ -150,7 +145,14 @@ export default function ProformasScreen() {
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des devis" subtitle="Suivi des devis et proformas" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}  refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          tintColor={tintColor}
+        />
+      }>
+              
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 

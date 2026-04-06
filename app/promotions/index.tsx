@@ -2,17 +2,19 @@ import { AppHeader } from '@/components/app-header';
 import { DateRangePicker } from '@/components/date-range-picker';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useCachedResource } from '@/hooks/use-cached-resource';
 import { getfetchPromotions } from '@/services/api-service';
-import { getCacheData, PROMOTIONS_LIST_CACHE_KEY, setCacheData } from '@/services/cache-service';
+import { PROMOTIONS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared';
 import { formatDate, matchesDateRange, toComparableDate } from '@/tools/tools';
 import { listPromotions, promotionStatus, statusPromotionColorMap } from '@/types/promotions.type';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,51 +27,41 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function PromotionsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-
-  const { userToken } = useAuthContext();
-
-  const [promotions, setPromotions] = useState<listPromotions>({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-
+  const initialPromotions = useMemo<listPromotions>(
+    () => ({
+      meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
+      data: [],
+    }),
+    []
+  );
   const [query, setQuery] = useState('');
   const [startDateQuery, setStartDateQuery] = useState('');
   const [endDateQuery, setEndDateQuery] = useState('');
   const [activeStatus, setActiveStatus] = useState<promotionStatus | 'Tous'>('Tous');
 
 
-  const loadPromotions = useCallback(async () => {
-    if (!userToken) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      // Try to load from cache first
-      const cachedData = await getCacheData<listPromotions>(PROMOTIONS_LIST_CACHE_KEY);
-      if (cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0) {
-        setPromotions(cachedData);
-      }
 
-      // Fetch from API to update
-      const data = await getfetchPromotions(userToken);
-      setPromotions(data);
-      setIsOfflineMode(false);
-      await setCacheData(PROMOTIONS_LIST_CACHE_KEY, data);
-    } catch {
-      setPromotions({ meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 }, data: [] });
-      setIsError(true);
-      setIsOfflineMode(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userToken]);
+const { userToken } = useAuthContext();
+  const {
+    data: promotions,
+    isLoading,
+    isRefreshing,
+    isError,
+    refresh: handleRefresh,
+  } = useCachedResource<listPromotions>({
 
-  useEffect(() => {
-    loadPromotions();
-  }, [loadPromotions]);
+    cacheKey: PROMOTIONS_LIST_CACHE_KEY,
+    initialData: initialPromotions,
+    enabled: Boolean(userToken),
+    fetcher: async () => getfetchPromotions(userToken ?? ""),
+    hasUsableCachedData: (cachedData) =>
+      Boolean(
+        cachedData &&
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
+      ),
+  });
+
 
   const statusFilters = useMemo<Array<promotionStatus | 'Tous'>>(() => [
     'Tous',
@@ -105,14 +97,19 @@ export default function PromotionsScreen() {
   const totalCount = filteredPromotions.length;
   const activeCount = filteredPromotions.filter((promotion) => promotion.status === 'En cours').length;
   const upcomingCount = filteredPromotions.filter((promotion) => promotion.status === 'A venir').length;
-  const hasFilters = query.trim().length > 0 || startDateQuery.length > 0 || endDateQuery.length > 0 || activeStatus !== 'Tous';
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Liste des promotions" subtitle="Suivi des campagnes et disponibilités" />
       </View>
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false} refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          tintColor={tintColor}
+        />
+      }>
         <View style={sharedStyles.container}>
           <View style={sharedStyles.statsRow}>
             <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 

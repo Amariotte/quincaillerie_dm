@@ -116,7 +116,7 @@ function PopupCard({
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={onPrimaryPress}
-              style={styles.actionButton}
+              style={[styles.actionButton, styles.singleActionButton]}
             >
               <Text style={styles.actionButtonText}>{primaryLabel}</Text>
             </TouchableOpacity>
@@ -236,6 +236,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: COLORS.primaryColor,
     alignItems: 'center',
+  },
+  singleActionButton: {
+    flex: 0,
+    width: '100%',
+    marginTop: 22,
   },
   cancelButton: {
     backgroundColor: 'transparent',

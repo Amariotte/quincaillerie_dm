@@ -46,7 +46,7 @@ export default function ProduitsScreen() {
   }), []);
 
   const [activeFamille, setActiveFamille] = useState("Toutes");
-  const MAIN_ACCOUNT_FILTER = "Non définie";
+  const FAMILLE_NON_DEFINIE = "Non définie";
 
 const { userToken } = useAuthContext();
   const {
@@ -88,7 +88,7 @@ const { userToken } = useAuthContext();
 
   const familles = [
     "Toutes",
-    MAIN_ACCOUNT_FILTER,
+    FAMILLE_NON_DEFINIE,
     ...Array.from(
       new Set(
         produits.data
@@ -104,8 +104,8 @@ const { userToken } = useAuthContext();
   familles.sort((a, b) => {
     if (a === "Toutes") return -1;
     if (b === "Toutes") return 1;
-    if (a === MAIN_ACCOUNT_FILTER) return -1;
-    if (b === MAIN_ACCOUNT_FILTER) return 1;
+    if (a === FAMILLE_NON_DEFINIE) return -1;
+    if (b === FAMILLE_NON_DEFINIE) return 1;
     return a.localeCompare(b);
   });
 
@@ -244,7 +244,7 @@ const { userToken } = useAuthContext();
                         <Text
                           style={[styles.familyValue, { color: tintColor }]}
                         >
-                          {product.nomfamille || MAIN_ACCOUNT_FILTER}
+                          {product.nomfamille || FAMILLE_NON_DEFINIE}
                         </Text>
                       </View>
                     </View>
