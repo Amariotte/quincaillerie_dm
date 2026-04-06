@@ -1,4 +1,3 @@
-import apiConfig from "@/config/api";
 import { useAuthContext } from "@/hooks/auth-context";
 import { DEMO_ACCOUNT } from "@/hooks/use-auth";
 import COLORS from "@/styles/colors";
@@ -198,10 +197,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleShowBaseUrl = () => {
-    Alert.alert("Base URL", apiConfig.baseURL ?? "Non définie");
-  };
-
+ 
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -355,15 +351,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity
-                style={[styles.guestButton, isLoading && styles.buttonDisabled]}
-                onPress={handleShowBaseUrl}
-                disabled={isLoading}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.guestButtonText}>Afficher Base URL</Text>
-              </TouchableOpacity>
-
+          
               <View style={styles.dividerRow}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>Nos reseaux sociaux</Text>

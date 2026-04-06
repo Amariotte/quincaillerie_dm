@@ -10,6 +10,18 @@ export const formatAmount = (amount: number | string | null | undefined) => {
   return `${safeValue.toLocaleString("fr-FR")} FCFA`;
 };
 
+export const formatNumber = (amount: number | string | null | undefined) => {
+  const normalized =
+    typeof amount === "number"
+      ? amount
+      : typeof amount === "string"
+        ? Number(amount.replace(/\s/g, "").replace(",", "."))
+        : 0;
+
+  const safeValue = Number.isFinite(normalized) ? normalized : 0;
+  return `${safeValue.toLocaleString("fr-FR")}`;
+};
+
 export const MAIN_ACCOUNT_FILTER = "Compte principal";
 
 export const isModeDemoEnabled = (): boolean => {

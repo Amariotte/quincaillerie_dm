@@ -4,7 +4,7 @@ import apiConfig from "@/config/api";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { sharedStyles } from "@/styles/shared.js";
-import { formatAmount } from "@/tools/tools";
+import { formatAmount, formatNumber } from "@/tools/tools";
 import { Produit } from "@/types/produits.type";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -214,7 +214,7 @@ export default function ProduitDetailScreen() {
 
           </View>
 
-
+           {detailLines.length > 0 && (
            <View style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}> 
                       <Text style={[sharedStyles.sectionTitle, { color: textColor }]}>Composants</Text>
                       <View style={sharedStyles.linesBlock}>
@@ -223,11 +223,12 @@ export default function ProduitDetailScreen() {
                             <View style={sharedStyles.lineLeft}>
                               <Text style={[sharedStyles.lineLabel, { color: textColor }]}>{line.nom}</Text>
                             </View>
-                            <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatAmount(line.qte)}</Text>
+                            <Text style={[sharedStyles.lineTotal, { color: textColor }]}>{formatNumber(line.qte)}</Text>
                           </View>
                         ))}
                       </View>
                     </View>
+          )}
 
           {/* Summary Card - Prix */}
           <View

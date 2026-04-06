@@ -164,8 +164,7 @@ export default function ProformaSaisieScreen() {
     return products.filter(
       (p) =>
         p.designation.toLowerCase().includes(q) ||
-        p.reference.toLowerCase().includes(q) ||
-        (p.unit ?? '').toLowerCase().includes(q),
+        p.reference.toLowerCase().includes(q)
     );
   }, [products, productSearch]);
 
@@ -426,9 +425,7 @@ export default function ProformaSaisieScreen() {
                           <Text style={[styles.catalogLabel, { color: textColor }]} numberOfLines={1}>
                             {product.designation}
                           </Text>
-                          <Text style={[styles.catalogMeta, { color: mutedColor }]}>
-                            {product.reference}{product.unit ? ` · ${product.unit}` : ''}
-                          </Text>
+                          
                         </View>
                         <Text style={[styles.catalogPrice, { color: tintColor }]}>
                           {formatAmount(product.prixVenteTTC)}
