@@ -4,10 +4,10 @@ import { isModeDemoEnabled } from "@/tools/tools";
 import { AuthResponse, user } from "@/types/user.type";
 import { ImageSource } from "expo-image";
 import {
-    getJsonAuth,
-    postJson,
-    postJsonAuth,
-    uploadMultipartAuth,
+  getJsonAuth,
+  postJson,
+  postJsonAuth,
+  uploadMultipartAuth,
 } from "./api-client";
 
 export type ProfilePhotoFile = {
@@ -92,12 +92,33 @@ export async function updateConnectedUserProfilePhoto(
   const normalizedMimeType = photo.mimeType?.trim() || "image/jpeg";
 
   const formData = new FormData();
+  let uploadMode: "blob" | "uri" = "uri";
+  let blobSize: number | null = null;
 
-  formData.append("file", {
-    uri: photo.uri,
-    name: normalizedFileName,
-    type: normalizedMimeType,
-  } as any);
+  try {
+    const fileResponse = await fetch(photo.uri);
+    if (fileResponse.ok) {
+      const rawBlob = await fileResponse.blob();
+      const preparedBlob = rawBlob.type
+        ? rawBlob
+        : rawBlob.slice(0, rawBlob.size, normalizedMimeType);
+      blobSize = preparedBlob.size;
+      formData.append("file", preparedBlob, normalizedFileName);
+      uploadMode = "blob";
+    } else {
+      formData.append("file", {
+        uri: photo.uri,
+        name: normalizedFileName,
+        type: normalizedMimeType,
+      } as any);
+    }
+  } catch {
+    formData.append("file", {
+      uri: photo.uri,
+      name: normalizedFileName,
+      type: normalizedMimeType,
+    } as any);
+  }
 
   const response = await uploadMultipartAuth<UpdateProfilePhotoResponse>(
     apiConfig.endpoints.profilePhoto,

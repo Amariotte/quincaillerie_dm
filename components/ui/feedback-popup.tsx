@@ -118,7 +118,10 @@ function PopupCard({
               onPress={onPrimaryPress}
               style={[styles.actionButton, styles.singleActionButton]}
             >
-              <Text style={styles.actionButtonText}>{primaryLabel}</Text>
+              <View style={styles.actionButtonContent}>
+                <MaterialIcons name="close" size={16} color="#ffffff" />
+                <Text style={styles.actionButtonText}>{primaryLabel}</Text>
+              </View>
             </TouchableOpacity>
           )}
         </Pressable>
@@ -230,12 +233,24 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     minWidth: 100,
+    minHeight: 48,
     marginTop: 0,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: COLORS.primaryColor,
+    justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   singleActionButton: {
     flex: 0,
@@ -251,6 +266,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
   cancelButtonText: {
     color: '#6b7280',

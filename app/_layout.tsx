@@ -42,7 +42,6 @@ const authenticatedScreens = [
   "bonsAchats/index",
   "bonsAchats/[id]",
   "transactions/index",
-  "transactions/[id]",
   "promotions/index",
   "promotions/[id]",
   "operations/index",

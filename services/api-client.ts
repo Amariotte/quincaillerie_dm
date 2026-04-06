@@ -1,6 +1,5 @@
 import { getApiUrl } from "@/config/api";
 import { errorApi } from "@/types/errorAPI.type";
-import { Alert } from "react-native";
 
 let unauthorizedHandler: (() => void | Promise<void>) | null = null;
 let apiErrorPopupHandler:
@@ -285,6 +284,7 @@ async function requestMultipart<T>(
 ): Promise<T> {
   try {
     const headers = new Headers(init?.headers ?? {});
+    console.log("[requestMultipart] Headers envoyés :", Object.fromEntries((headers as any).entries()));
     const response = await fetch(getApiUrl(endpoint), {
       ...init,
       headers,

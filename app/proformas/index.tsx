@@ -49,6 +49,18 @@ export default function ProformasScreen() {
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
 const { userToken } = useAuthContext();
+
+  const fetcher = useCallback(
+    () => getfetchDevis(userToken ?? ""),
+    [userToken],
+  );
+
+  const hasUsableCachedData = useCallback(
+    (cachedData: listDevis | null) =>
+      Boolean(cachedData && Array.isArray(cachedData.data) && cachedData.data.length > 0),
+    [],
+  );
+
   const {
     data: proformas,
     isLoading,
@@ -56,17 +68,11 @@ const { userToken } = useAuthContext();
     isError,
     refresh: handleRefresh,
   } = useCachedResource<listDevis>({
-
     cacheKey: DEVIS_LIST_CACHE_KEY,
     initialData: initialProformas,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchDevis(userToken ?? ""),
-    hasUsableCachedData: (cachedData) =>
-      Boolean(
-        cachedData &&
-        Array.isArray(cachedData.data) &&
-        cachedData.data.length > 0,
-      ),
+    fetcher,
+    hasUsableCachedData,
   });
 
 
