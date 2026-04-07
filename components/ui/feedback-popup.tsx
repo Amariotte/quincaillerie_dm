@@ -1,6 +1,6 @@
-import COLORS from '@/styles/colors';
-import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import COLORS from "@/styles/colors";
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import {
   Modal,
   Pressable,
@@ -8,9 +8,9 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-export type PopupType = 'error' | 'success' | 'info';
+export type PopupType = "error" | "success" | "info";
 export type FeedbackPopupType = PopupType;
 
 type BasePopupProps = {
@@ -34,25 +34,28 @@ export type ConfirmationPopupProps = BasePopupProps & {
 
 export type FeedbackPopupProps = MessagePopupProps;
 
-const popupConfig: Record<PopupType, {
-  icon: keyof typeof MaterialIcons.glyphMap;
-  iconColor: string;
-  iconBackground: string;
-}> = {
+const popupConfig: Record<
+  PopupType,
+  {
+    icon: keyof typeof MaterialIcons.glyphMap;
+    iconColor: string;
+    iconBackground: string;
+  }
+> = {
   error: {
-    icon: 'error-outline',
+    icon: "error-outline",
     iconColor: COLORS.errorColor,
-    iconBackground: '#fee2e2',
+    iconBackground: "#fee2e2",
   },
   success: {
-    icon: 'check-circle-outline',
-    iconColor: '#16a34a',
-    iconBackground: '#dcfce7',
+    icon: "check-circle-outline",
+    iconColor: "#16a34a",
+    iconBackground: "#dcfce7",
   },
   info: {
-    icon: 'info-outline',
+    icon: "info-outline",
     iconColor: COLORS.primaryColor,
-    iconBackground: '#d1fae5',
+    iconBackground: "#d1fae5",
   },
 };
 
@@ -88,8 +91,17 @@ function PopupCard({
     >
       <Pressable style={styles.overlay} onPress={onBackdropPress}>
         <Pressable style={styles.card} onPress={() => {}}>
-          <View style={[styles.iconWrap, { backgroundColor: config.iconBackground }]}>
-            <MaterialIcons name={config.icon} size={34} color={config.iconColor} />
+          <View
+            style={[
+              styles.iconWrap,
+              { backgroundColor: config.iconBackground },
+            ]}
+          >
+            <MaterialIcons
+              name={config.icon}
+              size={34}
+              color={config.iconColor}
+            />
           </View>
 
           <Text style={styles.title}>{title}</Text>
@@ -102,7 +114,14 @@ function PopupCard({
                 onPress={onSecondaryPress}
                 style={[styles.actionButton, styles.cancelButton]}
               >
-                <Text style={[styles.actionButtonText, styles.cancelButtonText]}>{secondaryLabel}</Text>
+                <View style={styles.cancelButtonContent}>
+                  <MaterialIcons name="close" size={16} color="#374151" />
+                  <Text
+                    style={[styles.actionButtonText, styles.cancelButtonText]}
+                  >
+                    {secondaryLabel}
+                  </Text>
+                </View>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -136,7 +155,7 @@ export function MessagePopup({
   title,
   message,
   onClose,
-  buttonLabel = 'Fermer',
+  buttonLabel = "Fermer",
 }: MessagePopupProps) {
   return (
     <PopupCard
@@ -159,8 +178,8 @@ export function ConfirmationPopup({
   message,
   onConfirm,
   onCancel,
-  confirmLabel = 'Valider',
-  cancelLabel = 'Annuler',
+  confirmLabel = "Valider",
+  cancelLabel = "Annuler",
 }: ConfirmationPopupProps) {
   return (
     <PopupCard
@@ -184,20 +203,20 @@ export function FeedbackPopup(props: FeedbackPopupProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 24,
   },
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 360,
     borderRadius: 24,
     paddingHorizontal: 22,
     paddingVertical: 24,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    shadowColor: '#000000',
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    shadowColor: "#000000",
     shadowOpacity: 0.16,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
@@ -207,28 +226,28 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   title: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#11181C',
-    textAlign: 'center',
+    fontWeight: "800",
+    color: "#11181C",
+    textAlign: "center",
   },
   message: {
     marginTop: 10,
     fontSize: 14,
     lineHeight: 21,
-    color: '#4b5563',
-    textAlign: 'center',
+    color: "#4b5563",
+    textAlign: "center",
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 22,
-    width: '100%',
+    width: "100%",
   },
   actionButton: {
     flex: 1,
@@ -239,36 +258,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: COLORS.primaryColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   actionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   singleActionButton: {
     flex: 0,
-    width: '100%',
+    width: "100%",
     marginTop: 22,
   },
   cancelButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "#f8fafc",
     borderWidth: 1.5,
-    borderColor: '#d1d5db',
+    borderColor: "#cbd5e1",
+  },
+  cancelButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   actionButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: 0.2,
   },
   cancelButtonText: {
-    color: '#6b7280',
+    color: "#374151",
+    fontWeight: "700",
   },
 });
