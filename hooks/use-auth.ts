@@ -279,16 +279,16 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = useCallback(async () => {
     if (!state.userToken) {
       return;
     }
     await loadUserProfile(state.userToken);
-  };
+  }, [loadUserProfile, state.userToken]);
 
-  const refreshProfilePhoto = () => {
+  const refreshProfilePhoto = useCallback(() => {
     setState((prev) => ({ ...prev, profilePhotoVersion: Date.now() }));
-  };
+  }, []);
 
   const signInDemo = async () => {
     setState((prev) => ({ ...prev, isLoading: true }));

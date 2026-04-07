@@ -104,9 +104,12 @@ export function AppHeader({
         style={[styles.avatarButton, { borderColor: "#ffffff" }]}
       >
         <Image
+          key={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : "avatar"}
           source={avatarSource}
           style={styles.avatarImage}
           contentFit="cover"
+          cachePolicy="none"
+          recyclingKey={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : undefined}
           onError={() => setUseDefaultAvatar(true)}
         />
       </TouchableOpacity>
