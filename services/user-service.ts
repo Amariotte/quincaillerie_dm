@@ -27,7 +27,7 @@ export type ProfilePhotoBase64Payload = {
 };
 
 type UpdateProfilePhotoBase64Request = {
-  file: string;
+  fileBase64: string;
   fileName: string;
   mimeType: string;
   encoding: "base64";
@@ -175,7 +175,7 @@ export async function updateConnectedUserProfilePhotoBase64(
     UpdateProfilePhotoResponse,
     UpdateProfilePhotoBase64Request
   >(apiConfig.endpoints.profilePhoto, userToken, {
-    file: normalizedBase64,
+    fileBase64: normalizedBase64,
     fileName: normalizedFileName,
     mimeType: normalizedMimeType,
     encoding: "base64",

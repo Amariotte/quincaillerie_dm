@@ -194,7 +194,7 @@ export function useAuth(): UseAuthReturn {
             userToken: nextToken,
             refreshToken: nextRefreshToken,
             user: authenticatedUser,
-            profilePhotoVersion: 0,
+            profilePhotoVersion: Date.now(),
           });
         }
       } catch {
