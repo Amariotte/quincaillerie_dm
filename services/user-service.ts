@@ -20,6 +20,19 @@ type UpdateProfilePhotoResponse = {
   message?: string;
 };
 
+export type ProfilePhotoBase64Payload = {
+  base64: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
+type UpdateProfilePhotoBase64Request = {
+  file: string;
+  fileName: string;
+  mimeType: string;
+  encoding: "base64";
+};
+
 export async function fetchConnectedUser(userToken: string): Promise<user> {
   if (!userToken) {
     throw new Error("Token utilisateur manquant");
@@ -126,6 +139,47 @@ export async function updateConnectedUserProfilePhoto(
     formData,
     "POST",
   );
+
+  return response?.message?.trim() || "Photo mise à jour avec succès";
+}
+
+export async function updateConnectedUserProfilePhotoBase64(
+  userToken: string,
+  payload: ProfilePhotoBase64Payload,
+): Promise<string> {
+  if (!userToken) {
+    throw new Error("Token utilisateur manquant");
+  }
+
+  const rawBase64 = payload.base64?.trim();
+  if (!rawBase64) {
+    throw new Error("Image de profil base64 invalide");
+  }
+
+  if (isModeDemoEnabled()) {
+    return "Photo mise à jour avec succès";
+  }
+
+  const normalizedFileName =
+    payload.fileName?.trim() || `profile-${Date.now()}.jpg`;
+
+  const dataUriPattern = /^data:([^;]+);base64,/i;
+  const dataUriMatch = rawBase64.match(dataUriPattern);
+
+  const normalizedMimeType =
+    payload.mimeType?.trim() || dataUriMatch?.[1] || "image/jpeg";
+
+  const normalizedBase64 = rawBase64.replace(dataUriPattern, "");
+
+  const response = await postJsonAuth<
+    UpdateProfilePhotoResponse,
+    UpdateProfilePhotoBase64Request
+  >(apiConfig.endpoints.profilePhoto, userToken, {
+    file: normalizedBase64,
+    fileName: normalizedFileName,
+    mimeType: normalizedMimeType,
+    encoding: "base64",
+  });
 
   return response?.message?.trim() || "Photo mise à jour avec succès";
 }

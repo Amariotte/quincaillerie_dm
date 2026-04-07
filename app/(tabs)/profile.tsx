@@ -9,7 +9,7 @@ import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
   getConnectedUserProfilePhotoSource,
-  updateConnectedUserProfilePhoto,
+  updateConnectedUserProfilePhotoBase64,
 } from "@/services/user-service";
 import { sharedStyles } from "@/styles/shared";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -35,6 +35,8 @@ type ProfileField = {
 };
 
 const defaultAvatarSource = require("../../assets/images/avatar.png");
+const RECOMMENDED_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024;
+const RECOMMENDED_UPLOAD_SIZE_LABEL = "2 Mo";
 
 const formatTextValue = (value: unknown) => {
   if (value == null) {
@@ -97,6 +99,23 @@ export default function ProfileScreen() {
     message: string,
   ) => {
     setPopupState({ visible: true, type, title, message });
+  };
+
+  const showRecommendedSizeInfo = (selectedSize?: number | null) => {
+    if (
+      typeof selectedSize !== "number" ||
+      Number.isNaN(selectedSize) ||
+      selectedSize <= RECOMMENDED_UPLOAD_SIZE_BYTES
+    ) {
+      return;
+    }
+
+    const selectedSizeInMb = (selectedSize / (1024 * 1024)).toFixed(1);
+    openPopup(
+      "info",
+      "Taille recommandée",
+      `Pour un envoi plus rapide, utilisez une image <= ${RECOMMENDED_UPLOAD_SIZE_LABEL} (sélection: ${selectedSizeInMb} Mo).`,
+    );
   };
 
   const remoteAvatarSource = useMemo(() => {
@@ -217,6 +236,7 @@ export default function ProfileScreen() {
       aspect: [1, 1],
       quality: 0.8,
       selectionLimit: 1,
+      base64: true,
     });
 
     if (pickerResult.canceled || pickerResult.assets.length === 0) {
@@ -224,16 +244,24 @@ export default function ProfileScreen() {
     }
 
     const selectedAsset = pickerResult.assets[0];
+    showRecommendedSizeInfo(selectedAsset.fileSize);
     setLocalAvatarPreviewUri(selectedAsset.uri);
     setUseDefaultAvatar(false);
     setIsUploadingPhoto(true);
 
     try {
-      const successMessage = await updateConnectedUserProfilePhoto(userToken, {
-        uri: selectedAsset.uri,
-        fileName: selectedAsset.fileName,
-        mimeType: selectedAsset.mimeType,
-      });
+      if (!selectedAsset.base64) {
+        throw new Error("Conversion de l'image en base64 impossible");
+      }
+
+      const successMessage = await updateConnectedUserProfilePhotoBase64(
+        userToken,
+        {
+          base64: selectedAsset.base64,
+          fileName: selectedAsset.fileName,
+          mimeType: selectedAsset.mimeType,
+        },
+      );
       refreshProfilePhoto();
       openPopup(
         "success",
@@ -294,6 +322,9 @@ export default function ProfileScreen() {
               </Text>
               <Text style={[styles.heroEmail, { color: mutedColor }]}>
                 {user?.email ?? "Aucun email"}
+              </Text>
+              <Text style={[styles.uploadHint, { color: mutedColor }]}>
+                {`Taille photo recommandée: <= ${RECOMMENDED_UPLOAD_SIZE_LABEL}`}
               </Text>
             </View>
           </View>
@@ -556,6 +587,11 @@ const styles = StyleSheet.create({
   heroEmail: {
     marginTop: 4,
     fontSize: 14,
+  },
+  uploadHint: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "500",
   },
   headerSection: {
     marginBottom: 24,
