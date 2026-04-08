@@ -30,7 +30,11 @@ import { listReglements, reglement } from "@/types/reglements.type";
 import { SoldeResponse } from "@/types/solde.type";
 import { listSousComptes } from "@/types/sousCompte.type";
 import { getJsonAuth, postJsonAuth } from "./api-client";
-const LIMIT_RECENT_TRANSACTIONS = 20;
+
+const LIMIT_RECENT_TRANSACTIONS = process.env
+  .EXPO_PUBLIC_NBRE_RECENT_TRANSACTIONS
+  ? Number(process.env.EXPO_PUBLIC_NBRE_RECENT_TRANSACTIONS)
+  : 20;
 
 function parseSoldeValue(
   rawBalance: number | string | null | undefined,

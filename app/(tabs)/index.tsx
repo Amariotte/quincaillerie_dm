@@ -15,17 +15,27 @@ import {
   RECENTS_MOUVEMENTS_CACHE_KEY,
   setCacheData,
   STAT_DATA_CACHE_KEY,
-  STATISTIQUES_LIST_CACHE_KEY
+  STATISTIQUES_LIST_CACHE_KEY,
 } from "@/services/cache-service";
 import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared.js";
 import { formatAmount, formatDate } from "@/tools/tools";
-import { listMouvements, typeMouvementColorMap } from "@/types/mouvements.type";
+import {
+  listMouvements,
+  typeMouvementColorMap,
+  typeMouvementIconMap,
+} from "@/types/mouvements.type";
 import { dataChart, stat } from "@/types/other.type";
 import { SoldeResponse } from "@/types/solde.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Alert,
   FlatList,
@@ -552,7 +562,9 @@ export default function HomeScreen() {
             ]}
           >
             <MaterialIcons
-              name="sync-alt"
+              name={
+                (typeMouvementIconMap[mouvement.libType] || "sync-alt") as any
+              }
               size={20}
               color={typeMouvementColorMap[mouvement.libType] || tintColor}
             />
@@ -731,27 +743,27 @@ export default function HomeScreen() {
                   {statInfos?.venteEchue.nbre ?? 0}
                 </Text>
               </View>
-              
-               {(statInfos?.promotionActive ?? 0) > 0 && (
-              <View style={styles.metricBlock}>
-                <Text style={[styles.metricLabel, { color: mutedColor }]}>
-                  Promotions actives
-                </Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>
-                  {statInfos?.promotionActive ?? 0}
-                </Text>
-              </View>
-              )}
-                
-                {(statInfos?.sousCompte ?? 0) > 0 && (
+
+              {(statInfos?.promotionActive ?? 0) > 0 && (
                 <View style={styles.metricBlock}>
-                <Text style={[styles.metricLabel, { color: mutedColor }]}>
-                  Sous-comptes
-                </Text>
-                <Text style={[styles.metricValue, { color: textColor }]}>
-                  {statInfos?.sousCompte ?? 0}
-                </Text>
-              </View>
+                  <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                    Promotions actives
+                  </Text>
+                  <Text style={[styles.metricValue, { color: textColor }]}>
+                    {statInfos?.promotionActive ?? 0}
+                  </Text>
+                </View>
+              )}
+
+              {(statInfos?.sousCompte ?? 0) > 0 && (
+                <View style={styles.metricBlock}>
+                  <Text style={[styles.metricLabel, { color: mutedColor }]}>
+                    Sous-comptes
+                  </Text>
+                  <Text style={[styles.metricValue, { color: textColor }]}>
+                    {statInfos?.sousCompte ?? 0}
+                  </Text>
+                </View>
               )}
             </View>
           </View>
@@ -949,7 +961,8 @@ export default function HomeScreen() {
                 { color: textColor },
               ]}
             >
-              20 Dernières transactions
+              {process.env.EXPO_PUBLIC_NBRE_RECENT_TRANSACTIONS} Dernières
+              transactions
             </Text>
             <TouchableOpacity
               onPress={() => router.push("/transactions" as never)}
