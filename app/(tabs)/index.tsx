@@ -25,7 +25,7 @@ import { dataChart, stat } from "@/types/other.type";
 import { SoldeResponse } from "@/types/solde.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -200,7 +200,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor } =
     useAppTheme();
-  const { userToken } = useAuthContext();
+  const { userToken, refreshProfilePhoto } = useAuthContext();
+  const refreshedProfilePhotoTokenRef = useRef<string | null>(null);
 
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
@@ -322,6 +323,20 @@ export default function HomeScreen() {
     loadStatData();
     loadMonthlyChartData();
   }, [loadBalance, loadMonthlyChartData, loadRecentMouvements, loadStatData]);
+
+  useEffect(() => {
+    if (!userToken) {
+      refreshedProfilePhotoTokenRef.current = null;
+      return;
+    }
+
+    if (refreshedProfilePhotoTokenRef.current === userToken) {
+      return;
+    }
+
+    refreshedProfilePhotoTokenRef.current = userToken;
+    refreshProfilePhoto();
+  }, [refreshProfilePhoto, userToken]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
