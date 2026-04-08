@@ -349,52 +349,24 @@ export default function FactureDetailScreen() {
                 <Text
                   style={[sharedStyles.summaryLabel, { color: mutedColor }]}
                 >
-                  Total brut HT
+                  TOTAL HT
                 </Text>
                 <Text style={[sharedStyles.summaryValue, { color: textColor }]}>
                   {formatAmount(invoice.totalHT)}
                 </Text>
               </View>
+
               <View style={sharedStyles.summaryRow}>
                 <Text
                   style={[sharedStyles.summaryLabel, { color: mutedColor }]}
                 >
-                  Total brut TTC
-                </Text>
-                <Text style={[sharedStyles.summaryValue, { color: textColor }]}>
-                  {formatAmount(invoice.totalNetPayer)}
-                </Text>
-              </View>
-              <View style={sharedStyles.summaryRow}>
-                <Text
-                  style={[sharedStyles.summaryLabel, { color: mutedColor }]}
-                >
-                  Total remise HT
+                  REMISE
                 </Text>
                 <Text style={[sharedStyles.summaryValue, { color: textColor }]}>
                   {formatAmount(invoice.totalRemCialeHT)}
                 </Text>
               </View>
-              <View style={sharedStyles.summaryRow}>
-                <Text
-                  style={[sharedStyles.summaryLabel, { color: mutedColor }]}
-                >
-                  Total remise TTC
-                </Text>
-                <Text style={[sharedStyles.summaryValue, { color: textColor }]}>
-                  {formatAmount(invoice.totalRemCialeTTC)}
-                </Text>
-              </View>
             </>
-
-            <View style={sharedStyles.summaryRow}>
-              <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>
-                Sous-total
-              </Text>
-              <Text style={[sharedStyles.summaryValue, { color: textColor }]}>
-                {formatAmount(invoice.totalHT)}
-              </Text>
-            </View>
 
             <View style={sharedStyles.summaryRow}>
               <Text style={[sharedStyles.summaryLabel, { color: mutedColor }]}>
@@ -407,7 +379,7 @@ export default function FactureDetailScreen() {
             <View style={sharedStyles.separator} />
             <View style={sharedStyles.summaryRow}>
               <Text style={[sharedStyles.totalLabel, { color: textColor }]}>
-                Total à payer
+                NET A PAYER
               </Text>
               <Text style={[sharedStyles.totalValue, { color: tintColor }]}>
                 {formatAmount(invoice.totalNetPayer)}
