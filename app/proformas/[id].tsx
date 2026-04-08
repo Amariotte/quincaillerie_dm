@@ -329,22 +329,39 @@ export default function ProformaDetailScreen() {
                     >
                       {line.qteVendue} × {formatAmount(line.prixVenteTTC)}
                     </Text>
-                    {line.txRemise > 0 ? (
-                      <Text
-                        style={[sharedStyles.lineMeta, { color: mutedColor }]}
-                      >
-                        Tx remise: {line.txRemise}% • Remise prix:{" "}
-                        {formatAmount(line.remisePrix)}
-                      </Text>
-                    ) : null}
+
                     {line.qteGratuite > 0 ? (
                       <Text
                         style={[sharedStyles.lineMeta, { color: mutedColor }]}
                       >
-                        Qté gratuite: {line.qteGratuite} • TVA: {line.txTaxe}% (
-                        {formatAmount(line.montantTaxe)})
+                        Quantité gratuite : {line.qteGratuite}
                       </Text>
                     ) : null}
+
+                    {line.remisePrix > 0 ? (
+                      <Text
+                        style={[sharedStyles.lineMeta, { color: mutedColor }]}
+                      >
+                        Remise sur le prix : {formatAmount(line.remisePrix)}
+                      </Text>
+                    ) : null}
+
+                    {line.txRemise > 0 ? (
+                      <Text
+                        style={[sharedStyles.lineMeta, { color: mutedColor }]}
+                      >
+                        Taux de remise : {line.txRemise}%
+                      </Text>
+                    ) : null}
+
+                    {line.txTaxe > 0 ? (
+                      <Text
+                        style={[sharedStyles.lineMeta, { color: mutedColor }]}
+                      >
+                        TVA: {line.txTaxe}% ({formatAmount(line.montantTaxe)})
+                      </Text>
+                    ) : null}
+
                     {line.montantHT > 0 || line.montantTTC > 0 ? (
                       <Text
                         style={[sharedStyles.lineMeta, { color: mutedColor }]}

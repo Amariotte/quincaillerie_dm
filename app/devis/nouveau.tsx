@@ -1,15 +1,28 @@
-﻿import { AppHeader } from '@/components/app-header';
-import { ConfirmationPopup, FeedbackPopupType, MessagePopup } from '@/components/ui/feedback-popup';
-import { useAuthContext } from '@/hooks/auth-context';
-import { useAppTheme } from '@/hooks/use-app-theme';
-import { deleteDevisLigne, getfetchDevisById, getfetchProduits, postDevisLigne, postValidateDevis, updateDevisLigne } from '@/services/api-service';
-import { sharedStyles } from '@/styles/shared.js';
-import { formatAmount } from '@/tools/tools';
-import { devis, devisLigneEdit, statusDevisColorMap } from '@/types/devis.type';
-import { Produit } from '@/types/produits.type';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { AppHeader } from "@/components/app-header";
+import {
+  ConfirmationPopup,
+  FeedbackPopupType,
+  MessagePopup,
+} from "@/components/ui/feedback-popup";
+import { useAuthContext } from "@/hooks/auth-context";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import {
+  deleteDevisLigne,
+  getfetchDevisById,
+  getfetchProduits,
+  getfetchSousComptes,
+  postDevisLigne,
+  postValidateDevis,
+  updateDevisLigne,
+} from "@/services/api-service";
+import { sharedStyles } from "@/styles/shared.js";
+import { formatAmount } from "@/tools/tools";
+import { devis, devisLigneEdit, statusDevisColorMap } from "@/types/devis.type";
+import { Produit } from "@/types/produits.type";
+import { sousCompte } from "@/types/sousCompte.type";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,8 +32,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type LocalLine = {
   idProduit: string;
@@ -39,41 +52,62 @@ const mapDevisToLocalLines = (dev: devis): LocalLine[] =>
     qteDevis: l.qteVendue,
   }));
 
-
 export default function ProformaSaisieScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditMode = Boolean(id);
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
+  const {
+    backgroundColor,
+    textColor,
+    tintColor,
+    cardColor,
+    mutedColor,
+    borderColor,
+  } = useAppTheme();
   const { userToken } = useAuthContext();
   const router = useRouter();
 
   const [proforma, setProforma] = useState<devis | null>(null);
   const [lines, setLines] = useState<LocalLine[]>([]);
   const [products, setProducts] = useState<Produit[]>([]);
-  const [productSearch, setProductSearch] = useState('');
+  const [sousComptes, setSousComptes] = useState<sousCompte[]>([]);
+  const [sousCompteSearch, setSousCompteSearch] = useState("");
+  const [selectedSousCompteId, setSelectedSousCompteId] = useState<
+    string | null
+  >(null);
+  const [selectedSousCompteName, setSelectedSousCompteName] = useState("");
+  const [showSousCompteList, setShowSousCompteList] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
   const [messagePopupVisible, setMessagePopupVisible] = useState(false);
-  const [messagePopupType, setMessagePopupType] = useState<FeedbackPopupType>('info');
-  const [messagePopupTitle, setMessagePopupTitle] = useState('Information');
-  const [messagePopupMessage, setMessagePopupMessage] = useState('');
-  const [messagePopupButtonLabel, setMessagePopupButtonLabel] = useState('Fermer');
-  const [messagePopupCloseAction, setMessagePopupCloseAction] = useState<(() => void) | null>(null);
+  const [messagePopupType, setMessagePopupType] =
+    useState<FeedbackPopupType>("info");
+  const [messagePopupTitle, setMessagePopupTitle] = useState("Information");
+  const [messagePopupMessage, setMessagePopupMessage] = useState("");
+  const [messagePopupButtonLabel, setMessagePopupButtonLabel] =
+    useState("Fermer");
+  const [messagePopupCloseAction, setMessagePopupCloseAction] = useState<
+    (() => void) | null
+  >(null);
 
   const [confirmPopupVisible, setConfirmPopupVisible] = useState(false);
-  const [confirmPopupTitle, setConfirmPopupTitle] = useState('Confirmation');
-  const [confirmPopupMessage, setConfirmPopupMessage] = useState('');
-  const [confirmPopupConfirmLabel, setConfirmPopupConfirmLabel] = useState('Valider');
-  const [confirmPopupCancelLabel, setConfirmPopupCancelLabel] = useState('Annuler');
-  const [confirmPopupAction, setConfirmPopupAction] = useState<(() => void) | null>(null);
+  const [confirmPopupTitle, setConfirmPopupTitle] = useState("Confirmation");
+  const [confirmPopupMessage, setConfirmPopupMessage] = useState("");
+  const [confirmPopupConfirmLabel, setConfirmPopupConfirmLabel] =
+    useState("Valider");
+  const [confirmPopupCancelLabel, setConfirmPopupCancelLabel] =
+    useState("Annuler");
+  const [confirmPopupAction, setConfirmPopupAction] = useState<
+    (() => void) | null
+  >(null);
 
   const openMessagePopup = useCallback(
     (
       type: FeedbackPopupType,
       title: string,
       message: string,
-      buttonLabel = 'Fermer',
+      buttonLabel = "Fermer",
       onCloseAction?: () => void,
     ) => {
       setMessagePopupType(type);
@@ -100,8 +134,8 @@ export default function ProformaSaisieScreen() {
       title: string,
       message: string,
       onConfirmAction: () => void,
-      confirmLabel = 'Valider',
-      cancelLabel = 'Annuler',
+      confirmLabel = "Valider",
+      cancelLabel = "Annuler",
     ) => {
       setConfirmPopupTitle(title);
       setConfirmPopupMessage(message);
@@ -134,18 +168,26 @@ export default function ProformaSaisieScreen() {
 
     setProforma(dev);
     setLines(mapDevisToLocalLines(dev));
+    setSelectedSousCompteName(dev.nomSousCompte ?? "");
   }, []);
 
   // Chargement initial : catalogue produits + proforma existante si mode édition
   useEffect(() => {
     const load = async () => {
-      if (!userToken) { setIsLoading(false); return; }
+      if (!userToken) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const [prod, dev] = await Promise.all([
+        const [prod, dev, sousCompteResp] = await Promise.all([
           getfetchProduits(userToken),
-          isEditMode ? getfetchDevisById(userToken, id!) : Promise.resolve(null),
+          isEditMode
+            ? getfetchDevisById(userToken, id!)
+            : Promise.resolve(null),
+          getfetchSousComptes(userToken),
         ]);
         setProducts(prod.data ?? []);
+        setSousComptes(sousCompteResp.data ?? []);
         if (dev) {
           applyUpdatedDevis(dev);
         }
@@ -156,42 +198,106 @@ export default function ProformaSaisieScreen() {
     load();
   }, [applyUpdatedDevis, id, userToken, isEditMode]);
 
-  
-
   const filteredProducts = useMemo(() => {
     const q = productSearch.trim().toLowerCase();
     if (!q) return products;
     return products.filter(
       (p) =>
         p.designation.toLowerCase().includes(q) ||
-        p.reference.toLowerCase().includes(q)
+        p.reference.toLowerCase().includes(q),
     );
   }, [products, productSearch]);
 
+  const filteredSousComptes = useMemo(() => {
+    const q = sousCompteSearch.trim().toLowerCase();
+    if (!q) return sousComptes;
+    return sousComptes.filter(
+      (sc) =>
+        sc.nom.toLowerCase().includes(q) || sc.ncc.toLowerCase().includes(q),
+    );
+  }, [sousComptes, sousCompteSearch]);
+
+  const hasSousCompteOptions = sousComptes.length > 0;
+
+  const selectedSousCompteLabel = useMemo(() => {
+    if (selectedSousCompteName.trim()) {
+      return selectedSousCompteName;
+    }
+
+    if (!selectedSousCompteId) {
+      return "Compte principal";
+    }
+
+    const found = sousComptes.find((sc) => sc.id === selectedSousCompteId);
+    return found?.nom ?? "Compte principal";
+  }, [selectedSousCompteId, selectedSousCompteName, sousComptes]);
+
+  const handleSelectSousCompte = useCallback(
+    async (nextSousCompte: sousCompte | null) => {
+      setSelectedSousCompteId(nextSousCompte?.id ?? null);
+      setSelectedSousCompteName(nextSousCompte?.nom ?? "");
+      setShowSousCompteList(false);
+
+      const devisId = proforma?.id;
+      const firstLine = lines[0];
+
+      if (!devisId || !userToken || !firstLine?.idDevisLigne) {
+        return;
+      }
+
+      try {
+        const payload: devisLigneEdit = {
+          qte: firstLine.qteDevis,
+          produitId: firstLine.idProduit,
+          sousCompteId: nextSousCompte?.id,
+        };
+
+        const updatedDevis = await updateDevisLigne(
+          userToken,
+          devisId,
+          firstLine.idDevisLigne,
+          payload,
+        );
+        applyUpdatedDevis(updatedDevis);
+      } catch {
+        // error displayed globally by api-client
+      }
+    },
+    [applyUpdatedDevis, lines, proforma?.id, userToken],
+  );
+
   const localTotal = useMemo(
-    () => lines.reduce((sum, line) => sum + line.prixUnitaire * line.qteDevis, 0),
+    () =>
+      lines.reduce((sum, line) => sum + line.prixUnitaire * line.qteDevis, 0),
     [lines],
   );
   const displayTotal = proforma?.totalNetPayer ?? localTotal;
   const displayHT = proforma?.totalHT ?? localTotal;
   const displayTaxe = proforma?.totalTaxe ?? 0;
-  const totalUnits = useMemo(() => lines.reduce((sum, line) => sum + line.qteDevis, 0), [lines]);
-
+  const totalUnits = useMemo(
+    () => lines.reduce((sum, line) => sum + line.qteDevis, 0),
+    [lines],
+  );
 
   // Modification de quantité : mise à jour locale + appel API si proforma existante
   const handleQtyChange = useCallback(
     async (line: LocalLine, rawValue: string) => {
-      const qty = Math.max(0, parseInt(rawValue.replace(/[^0-9]/g, ''), 10) || 0);
+      const qty = Math.max(
+        0,
+        parseInt(rawValue.replace(/[^0-9]/g, ""), 10) || 0,
+      );
 
       setLines((prev) => {
         if (qty === 0) {
-          return prev.filter((currentLine) => currentLine.idDevisLigne !== line.idDevisLigne);
+          return prev.filter(
+            (currentLine) => currentLine.idDevisLigne !== line.idDevisLigne,
+          );
         }
 
         return prev.map((currentLine) =>
           currentLine.idDevisLigne === line.idDevisLigne
             ? { ...currentLine, qteDevis: qty }
-            : currentLine
+            : currentLine,
         );
       });
 
@@ -202,7 +308,11 @@ export default function ProformaSaisieScreen() {
       try {
         if (qty === 0) {
           if (line.idDevisLigne) {
-            const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
+            const updatedDevis = await deleteDevisLigne(
+              userToken,
+              proforma.id,
+              line.idDevisLigne,
+            );
             applyUpdatedDevis(updatedDevis);
           }
           return;
@@ -214,10 +324,19 @@ export default function ProformaSaisieScreen() {
         };
 
         if (line.idDevisLigne) {
-          const updatedDevis = await updateDevisLigne(userToken, proforma.id, line.idDevisLigne, payload);
+          const updatedDevis = await updateDevisLigne(
+            userToken,
+            proforma.id,
+            line.idDevisLigne,
+            payload,
+          );
           applyUpdatedDevis(updatedDevis);
         } else {
-          const updatedDevis = await postDevisLigne(userToken, payload, proforma.id);
+          const updatedDevis = await postDevisLigne(
+            userToken,
+            payload,
+            proforma.id,
+          );
           applyUpdatedDevis(updatedDevis);
         }
       } catch {
@@ -228,20 +347,31 @@ export default function ProformaSaisieScreen() {
   );
 
   // Suppression locale d'une ligne
-  const removeLine = useCallback(async (line: LocalLine) => {
-    setLines((prev) => prev.filter((currentLine) => currentLine.idDevisLigne !== line.idDevisLigne));
+  const removeLine = useCallback(
+    async (line: LocalLine) => {
+      setLines((prev) =>
+        prev.filter(
+          (currentLine) => currentLine.idDevisLigne !== line.idDevisLigne,
+        ),
+      );
 
-    if (!proforma?.id || !userToken || !line.idDevisLigne) {
-      return;
-    }
+      if (!proforma?.id || !userToken || !line.idDevisLigne) {
+        return;
+      }
 
-    try {
-      const updatedDevis = await deleteDevisLigne(userToken, proforma.id, line.idDevisLigne);
-      applyUpdatedDevis(updatedDevis);
-    } catch {
-      // error displayed globally by api-client
-    }
-  }, [applyUpdatedDevis, proforma?.id, userToken]);
+      try {
+        const updatedDevis = await deleteDevisLigne(
+          userToken,
+          proforma.id,
+          line.idDevisLigne,
+        );
+        applyUpdatedDevis(updatedDevis);
+      } catch {
+        // error displayed globally by api-client
+      }
+    },
+    [applyUpdatedDevis, proforma?.id, userToken],
+  );
 
   // Ajout d'un produit depuis le catalogue
   const addProduct = useCallback(
@@ -250,32 +380,48 @@ export default function ProformaSaisieScreen() {
         setShowCatalog(false);
         return;
       }
-      
+
       setShowCatalog(false);
-      setProductSearch('');
-      if ( userToken) {
-        const ligne: devisLigneEdit = { qte: 1, produitId: product.id };
+      setProductSearch("");
+      if (userToken) {
+        const ligne: devisLigneEdit = {
+          qte: 1,
+          produitId: product.id,
+          sousCompteId: selectedSousCompteId ?? undefined,
+        };
         try {
-          const updatedDevis = await postDevisLigne(userToken, ligne, proforma?.id);
+          const updatedDevis = await postDevisLigne(
+            userToken,
+            ligne,
+            proforma?.id,
+          );
           applyUpdatedDevis(updatedDevis);
         } catch {
           // error displayed globally by api-client
         }
       }
     },
-    [applyUpdatedDevis, lines, proforma?.id, userToken],
+    [applyUpdatedDevis, lines, proforma?.id, selectedSousCompteId, userToken],
   );
 
-  const handleValidate = async () => {
+  const handleValidate = useCallback(async () => {
     const token = userToken;
     const devisId = proforma?.id;
 
     if (lines.length === 0) {
-      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
+      openMessagePopup(
+        "info",
+        "Aucun article",
+        "Ajoutez au moins un produit avant de valider.",
+      );
       return;
     }
     if (!token || !devisId) {
-      openMessagePopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
+      openMessagePopup(
+        "error",
+        "Erreur",
+        "Impossible de valider le devis pour le moment.",
+      );
       return;
     }
 
@@ -284,10 +430,10 @@ export default function ProformaSaisieScreen() {
       await postValidateDevis(token, devisId);
 
       openMessagePopup(
-        'success',
-        'Devis validé',
-        'Le devis a été validé.',
-        'OK',
+        "success",
+        "Devis validé",
+        "Le devis a été validé.",
+        "OK",
         () => router.back(),
       );
     } catch {
@@ -295,29 +441,48 @@ export default function ProformaSaisieScreen() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [lines.length, openMessagePopup, proforma?.id, router, userToken]);
 
   const handleValidateRequest = useCallback(() => {
     if (lines.length === 0) {
-      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant de valider.");
+      openMessagePopup(
+        "info",
+        "Aucun article",
+        "Ajoutez au moins un produit avant de valider.",
+      );
       return;
     }
     if (!userToken || !proforma?.id) {
-      openMessagePopup('error', 'Erreur', "Impossible de valider le devis pour le moment.");
+      openMessagePopup(
+        "error",
+        "Erreur",
+        "Impossible de valider le devis pour le moment.",
+      );
       return;
     }
     openConfirmationPopup(
-      'Confirmer la validation',
-      'Le devis sera validé et ne pourra plus être modifié. Continuer ?',
+      "Confirmer la validation",
+      "Le devis sera validé et ne pourra plus être modifié. Continuer ?",
       handleValidate,
-      'Valider',
-      'Annuler',
+      "Valider",
+      "Annuler",
     );
-  }, [lines.length, userToken, proforma?.id, openMessagePopup, openConfirmationPopup, handleValidate]);
+  }, [
+    lines.length,
+    userToken,
+    proforma?.id,
+    openMessagePopup,
+    openConfirmationPopup,
+    handleValidate,
+  ]);
 
   const handleSave = () => {
     if (lines.length === 0) {
-      openMessagePopup('info', 'Aucun article', "Ajoutez au moins un produit avant d'enregistrer.");
+      openMessagePopup(
+        "info",
+        "Aucun article",
+        "Ajoutez au moins un produit avant d'enregistrer.",
+      );
       return;
     }
     setIsSaving(true);
@@ -325,10 +490,10 @@ export default function ProformaSaisieScreen() {
     setTimeout(() => {
       setIsSaving(false);
       openMessagePopup(
-        'success',
-        'Devis enregistré',
-        'Le devis a été enregistré. Retour en cours...',
-        'OK',
+        "success",
+        "Devis enregistré",
+        "Le devis a été enregistré. Retour en cours...",
+        "OK",
       );
 
       setTimeout(() => {
@@ -341,7 +506,10 @@ export default function ProformaSaisieScreen() {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
         <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
-          <AppHeader showBack title={isEditMode ? 'Modifier le devis' : 'Nouveau devis'} />
+          <AppHeader
+            showBack
+            title={isEditMode ? "Modifier le devis" : "Nouveau devis"}
+          />
         </View>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={tintColor} />
@@ -350,49 +518,199 @@ export default function ProformaSaisieScreen() {
     );
   }
 
-  const statusColor = proforma ? statusDevisColorMap[proforma.status] : tintColor;
+  const statusColor = proforma
+    ? statusDevisColorMap[proforma.status]
+    : tintColor;
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader
           showBack
-          title={isEditMode ? 'Modifier le devis' : 'Nouveau devis'}
-          subtitle={proforma?.codeDevis ?? 'Saisie des articles'}
+          title={isEditMode ? "Modifier le devis" : "Nouveau devis"}
+          subtitle={proforma?.codeDevis ?? "Saisie des articles"}
         />
       </View>
 
-      <ScrollView contentContainerStyle={sharedStyles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={sharedStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={sharedStyles.container}>
-
           {/* En-tête proforma en mode édition */}
           {proforma && (
             <View style={[styles.infoCard, { backgroundColor: cardColor }]}>
               <View style={styles.infoTopRow}>
-                <Text style={[styles.infoCode, { color: tintColor }]}>{proforma.codeDevis}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-                  <Text style={[styles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+                <Text style={[styles.infoCode, { color: tintColor }]}>
+                  {proforma.codeDevis}
+                </Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: `${statusColor}18` },
+                  ]}
+                >
+                  <Text style={[styles.statusText, { color: statusColor }]}>
+                    {proforma.status}
+                  </Text>
                 </View>
               </View>
-              {proforma.nomSousCompte ? (
-                <Text style={[styles.infoClient, { color: textColor }]}>{proforma.nomSousCompte}</Text>
-              ) : null}
               {proforma.nomAgence ? (
-                <Text style={[styles.infoMeta, { color: mutedColor }]}>{proforma.nomAgence}</Text>
+                <Text style={[styles.infoMeta, { color: mutedColor }]}>
+                  {proforma.nomAgence}
+                </Text>
               ) : null}
             </View>
           )}
 
           {/* Section articles */}
+          {hasSousCompteOptions && (
+            <View style={styles.sectionBlock}>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>
+                Sous-compte
+              </Text>
+              <TouchableOpacity
+                disabled={!hasSousCompteOptions}
+                onPress={() => setShowSousCompteList((v) => !v)}
+                style={[
+                  styles.sousComptePicker,
+                  {
+                    backgroundColor: cardColor,
+                    borderColor,
+                    opacity: hasSousCompteOptions ? 1 : 0.85,
+                  },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.sousCompteLabel, { color: mutedColor }]}>
+                    Sélectionner un sous-compte (optionnel)
+                  </Text>
+                  <Text
+                    style={[styles.sousCompteValue, { color: textColor }]}
+                    numberOfLines={1}
+                  >
+                    {selectedSousCompteLabel}
+                  </Text>
+                </View>
+                <MaterialIcons
+                  name={showSousCompteList ? "expand-less" : "expand-more"}
+                  size={22}
+                  color={mutedColor}
+                />
+              </TouchableOpacity>
+
+              {showSousCompteList && (
+                <View
+                  style={[styles.catalogBox, { backgroundColor: cardColor }]}
+                >
+                  <TextInput
+                    value={sousCompteSearch}
+                    onChangeText={setSousCompteSearch}
+                    style={[
+                      styles.searchInput,
+                      { color: textColor, borderColor },
+                    ]}
+                    placeholder="Rechercher un sous-compte..."
+                    placeholderTextColor={mutedColor}
+                  />
+                  <TouchableOpacity
+                    onPress={() => handleSelectSousCompte(null)}
+                    style={styles.catalogRow}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.catalogLabel, { color: textColor }]}
+                        numberOfLines={1}
+                      >
+                        Compte principal
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name={
+                        selectedSousCompteId === null
+                          ? "radio-button-checked"
+                          : "radio-button-unchecked"
+                      }
+                      size={22}
+                      color={
+                        selectedSousCompteId === null ? tintColor : mutedColor
+                      }
+                    />
+                  </TouchableOpacity>
+                  <FlatList
+                    data={filteredSousComptes}
+                    keyExtractor={(item) => item.id}
+                    style={{ maxHeight: 220 }}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                    ItemSeparatorComponent={() => (
+                      <View
+                        style={{
+                          height: 1,
+                          backgroundColor: `${borderColor}60`,
+                        }}
+                      />
+                    )}
+                    renderItem={({ item }) => {
+                      const isSelected = selectedSousCompteId === item.id;
+                      return (
+                        <TouchableOpacity
+                          onPress={() => handleSelectSousCompte(item)}
+                          style={styles.catalogRow}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={[
+                                styles.catalogLabel,
+                                { color: textColor },
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {item.nom}
+                            </Text>
+                          </View>
+                          <MaterialIcons
+                            name={
+                              isSelected
+                                ? "radio-button-checked"
+                                : "radio-button-unchecked"
+                            }
+                            size={22}
+                            color={isSelected ? tintColor : mutedColor}
+                          />
+                        </TouchableOpacity>
+                      );
+                    }}
+                    ListEmptyComponent={
+                      <Text
+                        style={[styles.catalogEmpty, { color: mutedColor }]}
+                      >
+                        Aucun sous-compte trouvé
+                      </Text>
+                    }
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
           <View style={styles.sectionBlock}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: textColor }]}>Articles</Text>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>
+                Articles
+              </Text>
               <TouchableOpacity
                 onPress={() => setShowCatalog((v) => !v)}
                 style={[styles.addLineBtn, { backgroundColor: tintColor }]}
               >
-                <MaterialIcons name={showCatalog ? 'close' : 'add'} size={18} color="#fff" />
-                <Text style={styles.addLineBtnText}>{showCatalog ? 'Fermer' : 'Ajouter un produit'}</Text>
+                <MaterialIcons
+                  name={showCatalog ? "close" : "add"}
+                  size={18}
+                  color="#fff"
+                />
+                <Text style={styles.addLineBtnText}>
+                  {showCatalog ? "Fermer" : "Ajouter un produit"}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -402,7 +720,10 @@ export default function ProformaSaisieScreen() {
                 <TextInput
                   value={productSearch}
                   onChangeText={setProductSearch}
-                  style={[styles.searchInput, { color: textColor, borderColor }]}
+                  style={[
+                    styles.searchInput,
+                    { color: textColor, borderColor },
+                  ]}
                   placeholder="Rechercher par désignation, référence…"
                   placeholderTextColor={mutedColor}
                 />
@@ -412,26 +733,41 @@ export default function ProformaSaisieScreen() {
                   style={{ maxHeight: 300 }}
                   showsVerticalScrollIndicator={false}
                   nestedScrollEnabled
-                  ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: `${borderColor}60` }} />}
+                  ItemSeparatorComponent={() => (
+                    <View
+                      style={{ height: 1, backgroundColor: `${borderColor}60` }}
+                    />
+                  )}
                   renderItem={({ item: product }) => {
-                    const alreadyAdded = lines.some((l) => l.idProduit === product.id);
+                    const alreadyAdded = lines.some(
+                      (l) => l.idProduit === product.id,
+                    );
                     return (
                       <TouchableOpacity
                         onPress={() => addProduct(product)}
                         disabled={alreadyAdded}
-                        style={[styles.catalogRow, alreadyAdded && { opacity: 0.4 }]}
+                        style={[
+                          styles.catalogRow,
+                          alreadyAdded && { opacity: 0.4 },
+                        ]}
                       >
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.catalogLabel, { color: textColor }]} numberOfLines={1}>
+                          <Text
+                            style={[styles.catalogLabel, { color: textColor }]}
+                            numberOfLines={1}
+                          >
                             {product.designation}
                           </Text>
-                          
                         </View>
-                        <Text style={[styles.catalogPrice, { color: tintColor }]}>
+                        <Text
+                          style={[styles.catalogPrice, { color: tintColor }]}
+                        >
                           {formatAmount(product.prixVenteTTC)}
                         </Text>
                         <MaterialIcons
-                          name={alreadyAdded ? 'check-circle' : 'add-circle-outline'}
+                          name={
+                            alreadyAdded ? "check-circle" : "add-circle-outline"
+                          }
                           size={22}
                           color={tintColor}
                           style={{ marginLeft: 10 }}
@@ -440,7 +776,9 @@ export default function ProformaSaisieScreen() {
                     );
                   }}
                   ListEmptyComponent={
-                    <Text style={[styles.catalogEmpty, { color: mutedColor }]}>Aucun produit trouvé</Text>
+                    <Text style={[styles.catalogEmpty, { color: mutedColor }]}>
+                      Aucun produit trouvé
+                    </Text>
                   }
                 />
               </View>
@@ -449,9 +787,14 @@ export default function ProformaSaisieScreen() {
             {/* Lignes du devis */}
             {lines.length === 0 ? (
               <View style={[styles.emptyLines, { backgroundColor: cardColor }]}>
-                <MaterialIcons name="playlist-add" size={36} color={mutedColor} />
+                <MaterialIcons
+                  name="playlist-add"
+                  size={36}
+                  color={mutedColor}
+                />
                 <Text style={[styles.emptyLinesText, { color: mutedColor }]}>
-                  Aucun article. Appuyez sur « Ajouter un produit » pour commencer.
+                  Aucun article. Appuyez sur « Ajouter un produit » pour
+                  commencer.
                 </Text>
               </View>
             ) : (
@@ -459,16 +802,26 @@ export default function ProformaSaisieScreen() {
                 {lines.map((line) => {
                   const lineTotal = line.prixUnitaire * line.qteDevis;
                   return (
-                    <View key={line.idProduit} style={[styles.lineCard, { backgroundColor: cardColor }]}>
+                    <View
+                      key={line.idProduit}
+                      style={[styles.lineCard, { backgroundColor: cardColor }]}
+                    >
                       {/* Info produit */}
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.lineDesignation, { color: textColor }]} numberOfLines={2}>
+                        <Text
+                          style={[styles.lineDesignation, { color: textColor }]}
+                          numberOfLines={2}
+                        >
                           {line.designation}
                         </Text>
-                        <Text style={[styles.linePrixUnit, { color: mutedColor }]}>
+                        <Text
+                          style={[styles.linePrixUnit, { color: mutedColor }]}
+                        >
                           {formatAmount(line.prixUnitaire)} / unité
                         </Text>
-                        <Text style={[styles.lineSubtotal, { color: tintColor }]}>
+                        <Text
+                          style={[styles.lineSubtotal, { color: tintColor }]}
+                        >
                           = {formatAmount(lineTotal)}
                         </Text>
                       </View>
@@ -476,13 +829,17 @@ export default function ProformaSaisieScreen() {
                       <View style={styles.lineRightCol}>
                         <View style={[styles.qtyRow, { borderColor }]}>
                           <TouchableOpacity
-                            onPress={() => handleQtyChange(line, String(line.qteDevis - 1))}
+                            onPress={() =>
+                              handleQtyChange(line, String(line.qteDevis - 1))
+                            }
                             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                           >
                             <MaterialIcons
-                              name={line.qteDevis <= 1 ? 'delete-outline' : 'remove'}
+                              name={
+                                line.qteDevis <= 1 ? "delete-outline" : "remove"
+                              }
                               size={20}
-                              color={line.qteDevis <= 1 ? '#ef4444' : textColor}
+                              color={line.qteDevis <= 1 ? "#ef4444" : textColor}
                             />
                           </TouchableOpacity>
                           <TextInput
@@ -490,17 +847,33 @@ export default function ProformaSaisieScreen() {
                             onChangeText={(v) => handleQtyChange(line, v)}
                             keyboardType="number-pad"
                             selectTextOnFocus
-                            style={[styles.qtyInput, { color: textColor, borderColor }]}
+                            style={[
+                              styles.qtyInput,
+                              { color: textColor, borderColor },
+                            ]}
                           />
                           <TouchableOpacity
-                            onPress={() => handleQtyChange(line, String(line.qteDevis + 1))}
+                            onPress={() =>
+                              handleQtyChange(line, String(line.qteDevis + 1))
+                            }
                             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                           >
-                            <MaterialIcons name="add" size={20} color={textColor} />
+                            <MaterialIcons
+                              name="add"
+                              size={20}
+                              color={textColor}
+                            />
                           </TouchableOpacity>
                         </View>
-                        <TouchableOpacity onPress={() => removeLine(line)} style={styles.removeBtn}>
-                          <MaterialIcons name="delete-outline" size={18} color="#ef4444" />
+                        <TouchableOpacity
+                          onPress={() => removeLine(line)}
+                          style={styles.removeBtn}
+                        >
+                          <MaterialIcons
+                            name="delete-outline"
+                            size={18}
+                            color="#ef4444"
+                          />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -515,49 +888,68 @@ export default function ProformaSaisieScreen() {
             <View style={[styles.summaryCard, { backgroundColor: cardColor }]}>
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: mutedColor }]}>
-                  {lines.length} article{lines.length !== 1 ? 's' : ''}
+                  {lines.length} article{lines.length !== 1 ? "s" : ""}
                 </Text>
                 <Text style={[styles.summaryLabel, { color: mutedColor }]}>
-                  {totalUnits} unité{totalUnits !== 1 ? 's' : ''}
+                  {totalUnits} unité{totalUnits !== 1 ? "s" : ""}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: mutedColor }]}>Total HT</Text>
-                <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(displayHT)}</Text>
+                <Text style={[styles.summaryLabel, { color: mutedColor }]}>
+                  Total HT
+                </Text>
+                <Text style={[styles.summaryValue, { color: textColor }]}>
+                  {formatAmount(displayHT)}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: mutedColor }]}>TVA</Text>
-                <Text style={[styles.summaryValue, { color: textColor }]}>{formatAmount(displayTaxe)}</Text>
+                <Text style={[styles.summaryLabel, { color: mutedColor }]}>
+                  TVA
+                </Text>
+                <Text style={[styles.summaryValue, { color: textColor }]}>
+                  {formatAmount(displayTaxe)}
+                </Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={[styles.totalLabel, { color: textColor }]}>Total</Text>
-                <Text style={[styles.totalValue, { color: tintColor }]}>{formatAmount(displayTotal)}</Text>
+                <Text style={[styles.totalLabel, { color: textColor }]}>
+                  Total
+                </Text>
+                <Text style={[styles.totalValue, { color: tintColor }]}>
+                  {formatAmount(displayTotal)}
+                </Text>
               </View>
             </View>
           )}
 
           {/* Boutons d'action */}
           <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.secondaryBtn, { borderColor }]} onPress={() => { handleSave() }}>
-              <Text style={[styles.secondaryBtnText, { color: textColor }]}>Enregistrer</Text>
+            <TouchableOpacity
+              style={[styles.secondaryBtn, { borderColor }]}
+              onPress={() => {
+                handleSave();
+              }}
+            >
+              <Text style={[styles.secondaryBtnText, { color: textColor }]}>
+                Enregistrer
+              </Text>
             </TouchableOpacity>
-           
+
             <TouchableOpacity
               onPress={handleValidateRequest}
               disabled={isSaving}
-              style={[styles.primaryBtn, { backgroundColor: tintColor, opacity: isSaving ? 0.7 : 1 }]}
+              style={[
+                styles.primaryBtn,
+                { backgroundColor: tintColor, opacity: isSaving ? 0.7 : 1 },
+              ]}
             >
               {isSaving ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.primaryBtnText}>
-                  {'Valider le devis'}
-                </Text>
+                <Text style={styles.primaryBtnText}>{"Valider le devis"}</Text>
               )}
             </TouchableOpacity>
           </View>
-
         </View>
       </ScrollView>
       <MessagePopup
@@ -585,28 +977,28 @@ export default function ProformaSaisieScreen() {
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   infoCard: {
     borderRadius: 18,
     padding: 16,
     gap: 6,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   infoTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   infoCode: {
     fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 0.6,
   },
   statusBadge: {
@@ -616,39 +1008,57 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   infoClient: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   infoMeta: {
     fontSize: 13,
+  },
+  sousComptePicker: {
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  sousCompteLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  sousCompteValue: {
+    fontSize: 14,
+    fontWeight: "700",
   },
   sectionBlock: {
     gap: 12,
   },
   sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   addLineBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   addLineBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   catalogBox: {
     borderRadius: 16,
@@ -663,15 +1073,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   catalogRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 4,
     gap: 8,
   },
   catalogLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   catalogMeta: {
     fontSize: 12,
@@ -679,22 +1089,22 @@ const styles = StyleSheet.create({
   },
   catalogPrice: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   catalogEmpty: {
-    textAlign: 'center',
+    textAlign: "center",
     padding: 16,
     fontSize: 13,
   },
   emptyLines: {
     borderRadius: 16,
     padding: 28,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 10,
   },
   emptyLinesText: {
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   linesBlock: {
@@ -703,13 +1113,13 @@ const styles = StyleSheet.create({
   lineCard: {
     borderRadius: 16,
     padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   lineDesignation: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   linePrixUnit: {
     fontSize: 12,
@@ -717,16 +1127,16 @@ const styles = StyleSheet.create({
   },
   lineSubtotal: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 4,
   },
   lineRightCol: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   qtyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     borderWidth: 1,
     borderRadius: 12,
@@ -735,9 +1145,9 @@ const styles = StyleSheet.create({
   },
   qtyInput: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     minWidth: 38,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: 2,
     borderBottomWidth: 1,
   },
@@ -750,32 +1160,32 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   summaryLabel: {
     fontSize: 14,
   },
   summaryValue: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
     marginVertical: 2,
   },
   totalLabel: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
   },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginTop: 4,
   },
@@ -784,24 +1194,22 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   secondaryBtnText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   primaryBtn: {
     flex: 2,
     borderRadius: 14,
     paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   primaryBtnText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 });
-
-

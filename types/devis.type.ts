@@ -67,5 +67,6 @@ export type listDevis = {
 export type devisLigneEdit = {
   qte: number;
   produitId?: string;
+  sousCompteId?: string;
 };
 
