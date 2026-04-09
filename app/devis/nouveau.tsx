@@ -312,6 +312,7 @@ export default function ProformaSaisieScreen() {
               userToken,
               proforma.id,
               line.idDevisLigne,
+              { sousCompteId: selectedSousCompteId ?? undefined },
             );
             applyUpdatedDevis(updatedDevis);
           }
@@ -321,6 +322,7 @@ export default function ProformaSaisieScreen() {
         const payload: devisLigneEdit = {
           qte: qty,
           produitId: line.idProduit,
+          sousCompteId: selectedSousCompteId ?? undefined,
         };
 
         if (line.idDevisLigne) {
@@ -364,6 +366,7 @@ export default function ProformaSaisieScreen() {
           userToken,
           proforma.id,
           line.idDevisLigne,
+           { sousCompteId: selectedSousCompteId ?? undefined },
         );
         applyUpdatedDevis(updatedDevis);
       } catch {
@@ -476,7 +479,7 @@ export default function ProformaSaisieScreen() {
     handleValidate,
   ]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (lines.length === 0) {
       openMessagePopup(
         "info",
@@ -485,22 +488,22 @@ export default function ProformaSaisieScreen() {
       );
       return;
     }
-    setIsSaving(true);
-    // Ici : appel API création/validation proforma
-    setTimeout(() => {
-      setIsSaving(false);
+    if (!proforma?.id) {
       openMessagePopup(
-        "success",
-        "Devis enregistré",
-        "Le devis a été enregistré. Retour en cours...",
-        "OK",
+        "error",
+        "Erreur",
+        "Le devis n'a pas pu être créé. Veuillez ajouter un produit.",
       );
-
-      setTimeout(() => {
-        router.back();
-      }, 1200);
-    }, 800);
-  };
+      return;
+    }
+    openMessagePopup(
+      "success",
+      "Devis enregistré",
+      `Le devis ${proforma.codeDevis} a été enregistré avec succès.`,
+      "OK",
+      () => router.back(),
+    );
+  }, [lines.length, openMessagePopup, proforma, router]);
 
   if (isLoading) {
     return (
@@ -926,9 +929,7 @@ export default function ProformaSaisieScreen() {
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.secondaryBtn, { borderColor }]}
-              onPress={() => {
-                handleSave();
-              }}
+              onPress={handleSave}
             >
               <Text style={[styles.secondaryBtnText, { color: textColor }]}>
                 Enregistrer

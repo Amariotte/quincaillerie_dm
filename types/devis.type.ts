@@ -70,3 +70,7 @@ export type devisLigneEdit = {
   sousCompteId?: string;
 };
 
+export type deleteDevisLigneEdit = {
+  sousCompteId?: string;
+};
+

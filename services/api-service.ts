@@ -19,7 +19,7 @@ import { isModeDemoEnabled } from "@/tools/tools";
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
 import { bonLivraison, listBonLivraisons } from "@/types/bon-livraisons.type";
 import { commission, listCommissions } from "@/types/commissions.type";
-import { devis, devisLigneEdit, listDevis } from "@/types/devis.type";
+import { deleteDevisLigneEdit, devis, devisLigneEdit, listDevis } from "@/types/devis.type";
 import { facture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
 import { listOperations } from "@/types/operations.type";
@@ -302,16 +302,15 @@ export async function deleteDevisLigne(
   token: string,
   devisId: string,
   ligneId: string,
+  ligne: deleteDevisLigneEdit,
 ): Promise<devis | null> {
   if (isModeDemoEnabled()) {
     const found = proformasFakeData.data.find((devis) => devis.id === devisId);
     return found ?? null;
   }
 
-  const d = await getJsonAuth<devis | null>(
-    `${apiConfig.endpoints.devis}/${devisId}/lignes/${ligneId}/delete`,
-    token,
-  );
+  const endpoint = `${apiConfig.endpoints.devis}/${devisId}/lignes/${ligneId}/delete`;
+  const d = await postJsonAuth<devis, deleteDevisLigneEdit>(endpoint, token, ligne);
 
   return d;
 }
@@ -489,6 +488,28 @@ export async function postValidateDevis(
 
   const d = await getJsonAuth<devis>(
     `${apiConfig.endpoints.devis}/${id}/validate`,
+    token,
+  );
+  return d;
+}
+
+
+export async function postSaveDevis(
+  token: string,
+  id: string,
+): Promise<devis | null> {
+  if (isModeDemoEnabled()) {
+    const initialLength = proformasFakeData.data.length;
+    proformasFakeData.data = proformasFakeData.data.filter(
+      (devis) => devis.id !== id,
+    );
+    return proformasFakeData.data.length < initialLength
+      ? (proformasFakeData.data.find((devis) => devis.id === id) ?? null)
+      : null;
+  }
+
+  const d = await getJsonAuth<devis>(
+    `${apiConfig.endpoints.devis}/${id}/save`,
     token,
   );
   return d;
