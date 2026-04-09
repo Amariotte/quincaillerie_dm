@@ -191,6 +191,14 @@ export default function ProformaSaisieScreen() {
         if (dev) {
           applyUpdatedDevis(dev);
         }
+        if (dev?.nomSousCompte && sousCompteResp.data) {
+          const matched = sousCompteResp.data.find(
+            (sc) => sc.nom === dev.nomSousCompte,
+          );
+          if (matched) {
+            setSelectedSousCompteId(matched.id);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
@@ -239,25 +247,29 @@ export default function ProformaSaisieScreen() {
       setShowSousCompteList(false);
 
       const devisId = proforma?.id;
-      const firstLine = lines[0];
+      const updatableLines = lines.filter((line) => line.idDevisLigne);
 
-      if (!devisId || !userToken || !firstLine?.idDevisLigne) {
+      if (!devisId || !userToken || updatableLines.length === 0) {
         return;
       }
 
       try {
-        const payload: devisLigneEdit = {
-          qte: firstLine.qteDevis,
-          produitId: firstLine.idProduit,
-          sousCompteId: nextSousCompte?.id,
-        };
+        let updatedDevis: devis | null = null;
+        for (const currentLine of updatableLines) {
+          const payload: devisLigneEdit = {
+            qte: currentLine.qteDevis,
+            produitId: currentLine.idProduit,
+            sousCompteId: nextSousCompte?.id,
+          };
 
-        const updatedDevis = await updateDevisLigne(
-          userToken,
-          devisId,
-          firstLine.idDevisLigne,
-          payload,
-        );
+          updatedDevis = await updateDevisLigne(
+            userToken,
+            devisId,
+            currentLine.idDevisLigne!,
+            payload,
+          );
+        }
+
         applyUpdatedDevis(updatedDevis);
       } catch {
         // error displayed globally by api-client
@@ -345,7 +357,7 @@ export default function ProformaSaisieScreen() {
         // error displayed globally by api-client
       }
     },
-    [applyUpdatedDevis, proforma?.id, userToken],
+    [applyUpdatedDevis, proforma?.id, selectedSousCompteId, userToken],
   );
 
   // Suppression locale d'une ligne
@@ -373,7 +385,7 @@ export default function ProformaSaisieScreen() {
         // error displayed globally by api-client
       }
     },
-    [applyUpdatedDevis, proforma?.id, userToken],
+    [applyUpdatedDevis, proforma?.id, selectedSousCompteId, userToken],
   );
 
   // Ajout d'un produit depuis le catalogue
@@ -393,6 +405,7 @@ export default function ProformaSaisieScreen() {
           sousCompteId: selectedSousCompteId ?? undefined,
         };
         try {
+          setIsSaving(true);
           const updatedDevis = await postDevisLigne(
             userToken,
             ligne,
@@ -401,6 +414,8 @@ export default function ProformaSaisieScreen() {
           applyUpdatedDevis(updatedDevis);
         } catch {
           // error displayed globally by api-client
+        } finally {
+          setIsSaving(false);
         }
       }
     },
@@ -928,7 +943,8 @@ export default function ProformaSaisieScreen() {
           {/* Boutons d'action */}
           <View style={styles.actionRow}>
             <TouchableOpacity
-              style={[styles.secondaryBtn, { borderColor }]}
+              disabled={isSaving}
+              style={[styles.secondaryBtn, { borderColor, opacity: isSaving ? 0.7 : 1 }]}
               onPress={handleSave}
             >
               <Text style={[styles.secondaryBtnText, { color: textColor }]}>
