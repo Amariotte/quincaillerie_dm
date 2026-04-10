@@ -74,6 +74,11 @@ export default function ProformasScreen() {
 
   const { userToken } = useAuthContext();
 
+  const fetchDevisList = useCallback(
+    () => getfetchDevis(userToken ?? ""),
+    [userToken],
+  );
+
   const hasUsableCachedData = useCallback(
     (cachedData: listDevis | null) =>
       Boolean(
@@ -95,7 +100,7 @@ export default function ProformasScreen() {
     cacheKey: DEVIS_LIST_CACHE_KEY,
     initialData: initialProformas,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchDevis(userToken ?? ""),
+    fetcher: fetchDevisList,
     hasUsableCachedData,
   });
 
@@ -205,8 +210,10 @@ export default function ProformasScreen() {
 
   const filteredInvoices = proformas.data.filter((proforma) => {
     const matchesQuery =
-      proforma.codeDevis.toLowerCase().includes(query.toLowerCase()) ||
-      proforma.nomSousCompte?.toLowerCase().includes(query.toLowerCase());
+      (proforma.codeDevis ?? "").toLowerCase().includes(query.toLowerCase()) ||
+      (proforma.nomSousCompte ?? "")
+        .toLowerCase()
+        .includes(query.toLowerCase());
     const issueComparable = toComparableDate(proforma.dateDevis);
     const matchesDate = matchesDateRange(
       issueComparable,

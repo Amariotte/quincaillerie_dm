@@ -271,7 +271,6 @@ export default function ReglementsScreen() {
         ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
-            refreshControl=
             {
               <RefreshControl
                 refreshing={isRefreshing}

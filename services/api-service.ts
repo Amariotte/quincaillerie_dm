@@ -309,17 +309,19 @@ export async function getfetchFactures(
   return d;
 }
 
-export async function getfetchDevis(
-  token: string,
-  params?: PaginationParams,
-): Promise<listDevis> {
-  const d = await fetchPaginatedList(
+export async function getfetchDevis(token: string): Promise<listDevis> {
+  if (isModeDemoEnabled()) {
+    return proformasFakeData;
+  }
+
+  console.log("Devis token:", token);
+  console.log("endpoints:", apiConfig.endpoints.devis);
+  const data = await getJsonAuth<listDevis>(
+    `${apiConfig.endpoints.devis}`,
     token,
-    apiConfig.endpoints.devis,
-    params,
-    proformasFakeData,
   );
-  return d;
+
+  return data;
 }
 
 export async function getfetchFactureById(
@@ -500,8 +502,8 @@ export async function getfetchOperations(
   }
 
   const data = await getJsonAuth<listOperations>(
-    token,
     `${apiConfig.endpoints.operations}`,
+    token,
   );
   return data;
 }
@@ -514,8 +516,8 @@ export async function getfetchReglements(
   }
 
   const data = await getJsonAuth<listReglements>(
-    token,
     `${apiConfig.endpoints.reglements}`,
+    token,
   );
   return data;
 }
@@ -570,26 +572,28 @@ export async function getfetchMouvements(
 
 export async function getfetchCommissions(
   token: string,
-  params?: PaginationParams,
 ): Promise<listCommissions> {
-  const data = await fetchPaginatedList(
-    token,
+  if (isModeDemoEnabled()) {
+    return commissionsFakeData;
+  }
+
+  const data = await getJsonAuth<listCommissions>(
     `${apiConfig.endpoints.commissions}`,
-    params,
-    commissionsFakeData,
+    token,
   );
   return data;
 }
 
 export async function getfetchBonLivraisons(
   token: string,
-  params?: PaginationParams,
 ): Promise<listBonLivraisons> {
-  const data = await fetchPaginatedList(
-    token,
+  if (isModeDemoEnabled()) {
+    return bonLivraisonsFakeData;
+  }
+
+  const data = await getJsonAuth<listBonLivraisons>(
     `${apiConfig.endpoints.bonLivraisons}`,
-    params,
-    bonLivraisonsFakeData,
+    token,
   );
   return data;
 }

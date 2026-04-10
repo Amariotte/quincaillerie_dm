@@ -2,7 +2,8 @@ import { useAuthContext } from "@/hooks/auth-context";
 import { getConnectedUserProfilePhotoSource } from "@/services/user-service";
 import COLORS from "@/styles/colors";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image, type ImageSource } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -15,6 +16,14 @@ type AppHeaderProps = {
 };
 
 const defaultAvatarSource = require("../assets/images/avatar.png");
+const sessionAvatarSourceByUser: Record<string, ImageSource> = {};
+const sessionAvatarVersionByUser: Record<string, number> = {};
+const PROFILE_PHOTO_VERSION_STORAGE_PREFIX =
+  "profile.photo.version.session.v1.";
+
+function getProfilePhotoVersionStorageKey(sessionKey: string): string {
+  return `${PROFILE_PHOTO_VERSION_STORAGE_PREFIX}${encodeURIComponent(sessionKey)}`;
+}
 
 export function AppHeader({
   title,
@@ -24,10 +33,23 @@ export function AppHeader({
 }: AppHeaderProps) {
   const router = useRouter();
   const { user, userToken, profilePhotoVersion, isLoading } = useAuthContext();
+  const avatarSessionKey = useMemo(
+    () => user?.code?.trim() || userToken || "anonymous",
+    [user?.code, userToken],
+  );
   const headerBackgroundColor = COLORS.primaryColor;
   const headerTextColor = "#ffffff";
   const headerSubtextColor = "#d1fae5";
   const [useDefaultAvatar, setUseDefaultAvatar] = useState(false);
+  const [committedAvatarSource, setCommittedAvatarSource] =
+    useState<ImageSource>(() => {
+      return sessionAvatarSourceByUser[avatarSessionKey] ?? defaultAvatarSource;
+    });
+  const [stagedAvatarSource, setStagedAvatarSource] =
+    useState<ImageSource | null>(null);
+  const [stagedAvatarVersion, setStagedAvatarVersion] = useState<number | null>(
+    null,
+  );
 
   const remoteAvatarSource = useMemo(() => {
     if (userToken) {
@@ -51,6 +73,76 @@ export function AppHeader({
   const avatarSource = useDefaultAvatar
     ? defaultAvatarSource
     : remoteAvatarSource;
+
+  useEffect(() => {
+    if (useDefaultAvatar) {
+      setCommittedAvatarSource(defaultAvatarSource);
+      setStagedAvatarSource(null);
+      setStagedAvatarVersion(null);
+      return;
+    }
+
+    setStagedAvatarSource(avatarSource);
+    setStagedAvatarVersion(
+      typeof profilePhotoVersion === "number" && profilePhotoVersion > 0
+        ? profilePhotoVersion
+        : null,
+    );
+  }, [avatarSource, profilePhotoVersion, useDefaultAvatar]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    setUseDefaultAvatar(false);
+    setCommittedAvatarSource(
+      sessionAvatarSourceByUser[avatarSessionKey] ?? defaultAvatarSource,
+    );
+    setStagedAvatarSource(null);
+    setStagedAvatarVersion(null);
+
+    const loadPersistedAvatarVersion = async () => {
+      if (!userToken) {
+        return;
+      }
+
+      let versionToUse = sessionAvatarVersionByUser[avatarSessionKey];
+
+      if (!(typeof versionToUse === "number" && versionToUse > 0)) {
+        const storedVersionRaw = await AsyncStorage.getItem(
+          getProfilePhotoVersionStorageKey(avatarSessionKey),
+        );
+        const storedVersion = Number(storedVersionRaw);
+        if (Number.isFinite(storedVersion) && storedVersion > 0) {
+          versionToUse = storedVersion;
+          sessionAvatarVersionByUser[avatarSessionKey] = storedVersion;
+        }
+      }
+
+      if (
+        !isMounted ||
+        !(typeof versionToUse === "number" && versionToUse > 0)
+      ) {
+        return;
+      }
+
+      try {
+        const persistedSource = getConnectedUserProfilePhotoSource(
+          userToken,
+          versionToUse,
+        );
+        sessionAvatarSourceByUser[avatarSessionKey] = persistedSource;
+        setCommittedAvatarSource(persistedSource);
+      } catch {
+        // ignore
+      }
+    };
+
+    void loadPersistedAvatarVersion();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [avatarSessionKey, userToken]);
 
   const defaultSubtitle = user
     ? `${user.nom} · ${user.email}`
@@ -104,14 +196,43 @@ export function AppHeader({
         style={[styles.avatarButton, { borderColor: "#ffffff" }]}
       >
         <Image
-          key={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : "avatar"}
-          source={avatarSource}
+          source={committedAvatarSource}
           style={styles.avatarImage}
           contentFit="cover"
-          cachePolicy="none"
-          recyclingKey={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : undefined}
-          onError={() => setUseDefaultAvatar(true)}
+          cachePolicy="memory-disk"
         />
+
+        {stagedAvatarSource ? (
+          <Image
+            source={stagedAvatarSource}
+            style={[styles.avatarImage, styles.avatarImageOverlay]}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={120}
+            onLoad={() => {
+              sessionAvatarSourceByUser[avatarSessionKey] = stagedAvatarSource;
+              setCommittedAvatarSource(stagedAvatarSource);
+              setStagedAvatarSource(null);
+
+              if (
+                userToken &&
+                typeof stagedAvatarVersion === "number" &&
+                stagedAvatarVersion > 0
+              ) {
+                sessionAvatarVersionByUser[avatarSessionKey] =
+                  stagedAvatarVersion;
+                void AsyncStorage.setItem(
+                  getProfilePhotoVersionStorageKey(avatarSessionKey),
+                  String(stagedAvatarVersion),
+                );
+              }
+            }}
+            onError={() => {
+              setStagedAvatarSource(null);
+              setStagedAvatarVersion(null);
+            }}
+          />
+        ) : null}
       </TouchableOpacity>
     </View>
   );
@@ -186,5 +307,8 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: "100%",
     height: "100%",
+  },
+  avatarImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

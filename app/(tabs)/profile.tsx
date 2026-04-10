@@ -299,12 +299,11 @@ export default function ProfileScreen() {
               style={styles.avatarHeroWrap}
             >
               <Image
-                key={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : "profile-avatar"}
                 source={avatarSource}
                 style={styles.avatarHeroImage}
                 contentFit="cover"
                 cachePolicy="none"
-                recyclingKey={typeof profilePhotoVersion === "number" ? String(profilePhotoVersion) : undefined}
+                transition={120}
                 onError={() => setUseDefaultAvatar(true)}
               />
               {isUploadingPhoto ? (
