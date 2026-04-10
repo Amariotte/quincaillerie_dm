@@ -222,13 +222,14 @@ export async function fetchSousCompteSolde(
 
 export async function getfetchPromotions(
   token: string,
-  params?: PaginationParams,
 ): Promise<listPromotions> {
-  const data = await fetchPaginatedList(
+  if (isModeDemoEnabled()) {
+    return promotionsFakeData;
+  }
+
+  const data = await getJsonAuth<listPromotions>(
     token,
     `${apiConfig.endpoints.promotions}`,
-    params,
-    promotionsFakeData,
   );
   return data;
 }
@@ -247,36 +248,39 @@ export async function getfetchProduits(
 }
 
 export async function getAllProduits(token: string): Promise<listProduits> {
-  return fetchPaginatedList(
+  if (isModeDemoEnabled()) {
+    return produitsFakeData;
+  }
+
+  const data = await getJsonAuth<listProduits>(
     token,
     `${apiConfig.endpoints.produits}`,
-    undefined,
-    produitsFakeData,
-  );
-}
-
-export async function getfetchSousComptes(
-  token: string,
-  params?: PaginationParams,
-): Promise<listSousComptes> {
-  const data = await fetchPaginatedList(
-    token,
-    `${apiConfig.endpoints.sousComptes}`,
-    params,
-    sousComptesFakeData,
   );
   return data;
 }
 
-export async function getfetchBonAchats(
+export async function getfetchSousComptes(
   token: string,
-  params?: PaginationParams,
-): Promise<listBonAchats> {
-  const data = await fetchPaginatedList(
+): Promise<listSousComptes> {
+  if (isModeDemoEnabled()) {
+    return sousComptesFakeData;
+  }
+
+  const data = await getJsonAuth<listSousComptes>(
+    token,
+    `${apiConfig.endpoints.sousComptes}`,
+  );
+  return data;
+}
+
+export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
+  if (isModeDemoEnabled()) {
+    return bonAchatsFakeData;
+  }
+
+  const data = await getJsonAuth<listBonAchats>(
     token,
     `${apiConfig.endpoints.bonAchats}`,
-    params,
-    bonAchatsFakeData,
   );
   return data;
 }
@@ -488,26 +492,28 @@ export async function deleteDevis(token: string, id: string): Promise<boolean> {
 
 export async function getfetchOperations(
   token: string,
-  params?: PaginationParams,
 ): Promise<listOperations> {
-  const d = await fetchPaginatedList(
+  if (isModeDemoEnabled()) {
+    return operationsFakeData;
+  }
+
+  const data = await getJsonAuth<listOperations>(
     token,
-    apiConfig.endpoints.operations,
-    params,
-    operationsFakeData,
+    `${apiConfig.endpoints.operations}`,
   );
-  return d;
+  return data;
 }
 
 export async function getfetchReglements(
   token: string,
-  params?: PaginationParams,
 ): Promise<listReglements> {
-  const data = await fetchPaginatedList(
+  if (isModeDemoEnabled()) {
+    return reglementsFakeData;
+  }
+
+  const data = await getJsonAuth<listReglements>(
     token,
     `${apiConfig.endpoints.reglements}`,
-    params,
-    reglementsFakeData,
   );
   return data;
 }

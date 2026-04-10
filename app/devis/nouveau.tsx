@@ -8,8 +8,8 @@ import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import {
   deleteDevisLigne,
-  getfetchDevisById,
   getAllProduits,
+  getfetchDevisById,
   getfetchSousComptes,
   postDevisLigne,
   postValidateDevis,
@@ -222,8 +222,8 @@ export default function ProformaSaisieScreen() {
     if (!q) return products;
     return products.filter(
       (p) =>
-        p.designation.toLowerCase().includes(q) ||
-        p.reference.toLowerCase().includes(q),
+        (p.designation ?? "").toLowerCase().includes(q) ||
+        (p.reference ?? "").toLowerCase().includes(q),
     );
   }, [products, productSearch]);
 
@@ -232,7 +232,8 @@ export default function ProformaSaisieScreen() {
     if (!q) return sousComptes;
     return sousComptes.filter(
       (sc) =>
-        sc.nom.toLowerCase().includes(q) || sc.ncc.toLowerCase().includes(q),
+        (sc.nom ?? "").toLowerCase().includes(q) ||
+        (sc.ncc ?? "").toLowerCase().includes(q),
     );
   }, [sousComptes, sousCompteSearch]);
 
