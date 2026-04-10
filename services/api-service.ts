@@ -228,8 +228,8 @@ export async function getfetchPromotions(
   }
 
   const data = await getJsonAuth<listPromotions>(
-    token,
     `${apiConfig.endpoints.promotions}`,
+    token,
   );
   return data;
 }
@@ -253,9 +253,10 @@ export async function getAllProduits(token: string): Promise<listProduits> {
   }
 
   const data = await getJsonAuth<listProduits>(
-    token,
     `${apiConfig.endpoints.produits}`,
+    token,
   );
+
   return data;
 }
 
@@ -267,9 +268,10 @@ export async function getfetchSousComptes(
   }
 
   const data = await getJsonAuth<listSousComptes>(
-    token,
     `${apiConfig.endpoints.sousComptes}`,
+    token,
   );
+
   return data;
 }
 
@@ -279,8 +281,8 @@ export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
   }
 
   const data = await getJsonAuth<listBonAchats>(
-    token,
     `${apiConfig.endpoints.bonAchats}`,
+    token,
   );
   return data;
 }

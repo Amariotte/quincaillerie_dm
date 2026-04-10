@@ -201,6 +201,9 @@ export default function ProformaSaisieScreen() {
             setSelectedSousCompteId(matched.id);
           }
         }
+      } catch {
+        // En cas d'erreur réseau, on garde un formulaire utilisable.
+        setSousComptes([]);
       } finally {
         setIsLoading(false); // formulaire visible dès maintenant
       }
@@ -214,7 +217,7 @@ export default function ProformaSaisieScreen() {
         setIsLoadingProducts(false);
       }
     };
-    load();
+    void load();
   }, [applyUpdatedDevis, id, userToken, isEditMode]);
 
   const filteredProducts = useMemo(() => {
