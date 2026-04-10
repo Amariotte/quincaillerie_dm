@@ -1,9 +1,10 @@
 import { AppHeader } from "@/components/app-header";
 import { EmptyResultsCard } from "@/components/empty-results-card";
+import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { ProductImage } from "@/components/product-image";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { useCachedResource } from "@/hooks/use-cached-resource";
+import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
 import { getfetchProduits } from "@/services/api-service";
 import {
   PRODUITS_LIST_CACHE_KEY
@@ -18,7 +19,6 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -53,14 +53,18 @@ const { userToken } = useAuthContext();
     data: produits,
     isLoading,
     isRefreshing,
+    isLoadingMore,
     isError,
     refresh: handleRefresh,
-  } = useCachedResource<listProduits>({
+    loadMore,
+    hasNextPage,
+  } = usePaginatedCachedResource<listProduits["data"][number], listProduits>({
 
     cacheKey: PRODUITS_LIST_CACHE_KEY,
     initialData: initialProduits,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchProduits(userToken ?? ""),
+    fetchPage: async (page, size) => getfetchProduits(userToken ?? "", { page, size }),
+    getItemKey: (item) => item.id,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -109,6 +113,9 @@ const { userToken } = useAuthContext();
     return a.localeCompare(b);
   });
 
+  const showInitialLoader = isLoading && produits.data.length === 0;
+  const showErrorState = isError && produits.data.length === 0;
+
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
@@ -119,9 +126,135 @@ const { userToken } = useAuthContext();
           subtitle="Prix et familles"
         />
       </View>
-      <ScrollView
-        contentContainerStyle={sharedStyles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <FlatList
+        data={showInitialLoader || showErrorState ? [] : filteredProducts}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item: product }) => (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              router.push({
+                pathname: `/produits/${product.id}`,
+                params: { produit: JSON.stringify(product) },
+              } as never)
+            }
+            style={[styles.productCard, { backgroundColor: cardColor }]}
+          >
+            <View style={styles.productTopRow}>
+              <ProductImage
+                productId={product.id}
+                userToken={userToken}
+                style={styles.productImage}
+                resizeMode="cover"
+              />
+              <View style={styles.productInfo}>
+                <Text style={[styles.productName, { color: textColor }]}>
+                  {product.designation}
+                </Text>
+                <View style={styles.productMetaRow}>
+                  <Text style={[styles.productSku, { color: mutedColor }]}>Réf: {product.reference}</Text>
+                  <Text style={[styles.priceInlineValue, { color: textColor }]}>
+                    {formatAmount(product.prixVenteTTC)}
+                  </Text>
+                </View>
+                <Text style={[styles.familyValue, { color: tintColor }]}>
+                  {product.nomfamille || FAMILLE_NON_DEFINIE}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        ListHeaderComponent={
+          <View style={{ gap: 16 }}>
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
+              <MaterialIcons name="search" size={20} color={mutedColor} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Rechercher un produit ou une famille"
+                placeholderTextColor={mutedColor}
+                style={[sharedStyles.searchInput, { color: textColor }]}
+              />
+            </View>
+
+            <FlatList
+              data={familles}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item}
+              contentContainerStyle={sharedStyles.filterRow}
+              renderItem={({ item: famille }) => {
+                const isActive = famille === activeFamille;
+                return (
+                  <TouchableOpacity
+                    onPress={() => setActiveFamille(famille)}
+                    style={[
+                      sharedStyles.filterChip,
+                      {
+                        backgroundColor: isActive ? tintColor : cardColor,
+                        borderColor: isActive ? tintColor : borderColor,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        sharedStyles.filterLabel,
+                        { color: isActive ? "#ffffff" : textColor },
+                      ]}
+                    >
+                      {famille}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+
+            {showInitialLoader ? (
+              <View style={styles.loaderBlock}>
+                <ActivityIndicator size="large" color={tintColor} />
+              </View>
+            ) : null}
+
+            {showErrorState ? (
+              <EmptyResultsCard
+                iconName="cloud-off"
+                title="Erreur de chargement"
+                subtitle="Impossible de récupérer les produits. Vérifiez votre connexion."
+                cardColor={cardColor}
+                titleColor={textColor}
+                subtitleColor={mutedColor}
+              />
+            ) : null}
+          </View>
+        }
+        ListHeaderComponentStyle={{ marginBottom: 16 }}
+        ListEmptyComponent={
+          !showInitialLoader && !showErrorState ? (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title="Aucun produit trouvé"
+              subtitle="Essayez une autre recherche ou catégorie."
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        ListFooterComponent={
+          filteredProducts.length > 0 ? (
+            <InfiniteListFooter isLoadingMore={isLoadingMore} tintColor={tintColor} mutedColor={mutedColor} />
+          ) : null
+        }
+        initialNumToRender={20}
+        maxToRenderPerBatch={20}
+        windowSize={10}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -129,132 +262,14 @@ const { userToken } = useAuthContext();
             tintColor={tintColor}
           />
         }
-      >
-        <View style={sharedStyles.container}>
-          <View
-            style={[
-              sharedStyles.searchBox,
-              { backgroundColor: cardColor, borderColor },
-            ]}
-          >
-            <MaterialIcons name="search" size={20} color={mutedColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Rechercher un produit ou une famille"
-              placeholderTextColor={mutedColor}
-              style={[sharedStyles.searchInput, { color: textColor }]}
-            />
-          </View>
-
-          <FlatList
-            data={familles}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item}
-            contentContainerStyle={sharedStyles.filterRow}
-            renderItem={({ item: famille }) => {
-              const isActive = famille === activeFamille;
-              return (
-                <TouchableOpacity
-                  onPress={() => setActiveFamille(famille)}
-                  style={[
-                    sharedStyles.filterChip,
-                    {
-                      backgroundColor: isActive ? tintColor : cardColor,
-                      borderColor: isActive ? tintColor : borderColor,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      sharedStyles.filterLabel,
-                      { color: isActive ? "#ffffff" : textColor },
-                    ]}
-                  >
-                    {famille}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-
-          <View style={sharedStyles.listBlock}>
-            {isLoading ? (
-              <View style={styles.loaderBlock}>
-                <ActivityIndicator size="large" color={tintColor} />
-              </View>
-            ) : filteredProducts.length === 0 ? (
-              <EmptyResultsCard
-                iconName="inventory-2"
-                title="Aucun produit trouvé"
-                subtitle="Essayez une autre recherche ou catégorie."
-                cardColor={cardColor}
-                titleColor={textColor}
-                subtitleColor={mutedColor}
-              />
-            ) : (
-              <FlatList
-                data={filteredProducts}
-                keyExtractor={(item) => String(item.id)}
-                scrollEnabled={false}
-                contentContainerStyle={sharedStyles.listBlock}
-                initialNumToRender={20}
-                maxToRenderPerBatch={20}
-                windowSize={10}
-                renderItem={({ item: product }) => (
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={() =>
-                      router.push({
-                        pathname: `/produits/${product.id}`,
-                        params: { produit: JSON.stringify(product) },
-                      } as never)
-                    }
-                    style={[styles.productCard, { backgroundColor: cardColor }]}
-                  >
-                    <View style={styles.productTopRow}>
-                      <ProductImage
-                        productId={product.id}
-                        userToken={userToken}
-                        style={styles.productImage}
-                        resizeMode="cover"
-                      />
-                      <View style={styles.productInfo}>
-                        <Text
-                          style={[styles.productName, { color: textColor }]}
-                        >
-                          {product.designation}
-                        </Text>
-                        <View style={styles.productMetaRow}>
-                          <Text
-                            style={[styles.productSku, { color: mutedColor }]}
-                          >
-                            Réf: {product.reference}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.priceInlineValue,
-                              { color: textColor },
-                            ]}
-                          >
-                            {formatAmount(product.prixVenteTTC)}
-                          </Text>
-                        </View>
-                        <Text
-                          style={[styles.familyValue, { color: tintColor }]}
-                        >
-                          {product.nomfamille || FAMILLE_NON_DEFINIE}
-                        </Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-        </View>
-      </ScrollView>
+        onEndReached={() => {
+          if (hasNextPage) {
+            void loadMore();
+          }
+        }}
+        onEndReachedThreshold={0.35}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }

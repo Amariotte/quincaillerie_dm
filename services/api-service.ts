@@ -1,19 +1,19 @@
 import apiConfig from "@/config/api";
 import {
-  bonAchatsFakeData,
-  bonLivraisonsFakeData,
-  commissionsFakeData,
-  dataChartsFakeData,
-  facturesFakeData,
-  mouvementsFakeData,
-  operationsFakeData,
-  produitsFakeData,
-  proformasFakeData,
-  promotionsFakeData,
-  reglementsFakeData,
-  soldeFake,
-  sousComptesFakeData,
-  statsFake,
+    bonAchatsFakeData,
+    bonLivraisonsFakeData,
+    commissionsFakeData,
+    dataChartsFakeData,
+    facturesFakeData,
+    mouvementsFakeData,
+    operationsFakeData,
+    produitsFakeData,
+    proformasFakeData,
+    promotionsFakeData,
+    reglementsFakeData,
+    soldeFake,
+    sousComptesFakeData,
+    statsFake,
 } from "@/data/datas.fake";
 import { isModeDemoEnabled } from "@/tools/tools";
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
@@ -23,7 +23,7 @@ import { deleteDevisLigneEdit, devis, devisLigneEdit, listDevis } from "@/types/
 import { facture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
 import { listOperations } from "@/types/operations.type";
-import { dataChart, stat } from "@/types/other.type";
+import { dataChart, meta, PaginatedResponse, PaginationParams, stat } from "@/types/other.type";
 import { listProduits } from "@/types/produits.type";
 import { listPromotions, promotion } from "@/types/promotions.type";
 import { listReglements, reglement } from "@/types/reglements.type";
@@ -35,6 +35,86 @@ const LIMIT_RECENT_TRANSACTIONS = process.env
   .EXPO_PUBLIC_NBRE_RECENT_TRANSACTIONS
   ? Number(process.env.EXPO_PUBLIC_NBRE_RECENT_TRANSACTIONS)
   : 20;
+const DEFAULT_PAGE_SIZE = 20;
+
+function normalizePaginationParams(
+  params?: PaginationParams,
+): Required<PaginationParams> {
+  const page = Number.isFinite(params?.page)
+    ? Math.max(1, Math.floor(params?.page ?? 1))
+    : 1;
+  const size = Number.isFinite(params?.size)
+    ? Math.max(1, Math.floor(params?.size ?? DEFAULT_PAGE_SIZE))
+    : DEFAULT_PAGE_SIZE;
+
+  return { page, size };
+}
+
+function buildPaginationMeta(total: number, params?: PaginationParams): meta {
+  const normalized = normalizePaginationParams(params);
+  const totalPages = Math.max(1, Math.ceil(total / normalized.size));
+  const page = Math.min(normalized.page, totalPages);
+
+  return {
+    page,
+    next: page < totalPages ? page + 1 : page,
+    totalPages,
+    total,
+    size: normalized.size,
+  };
+}
+
+function buildPaginatedEndpoint(
+  endpoint: string,
+  params?: PaginationParams,
+): string {
+  const normalized = normalizePaginationParams(params);
+  const separator = endpoint.includes("?") ? "&" : "?";
+
+  return `${endpoint}${separator}page=${normalized.page}&size=${normalized.size}`;
+}
+
+function paginateFakeResponse<
+  TItem,
+  TResponse extends PaginatedResponse<TItem>,
+>(source: TResponse, params?: PaginationParams): TResponse {
+  const paginationMeta = buildPaginationMeta(source.data.length, params);
+  const startIndex = (paginationMeta.page - 1) * paginationMeta.size;
+
+  return {
+    ...source,
+    meta: paginationMeta,
+    data: source.data.slice(startIndex, startIndex + paginationMeta.size),
+  } as TResponse;
+}
+
+async function fetchPaginatedList<
+  TItem,
+  TResponse extends PaginatedResponse<TItem>,
+>(
+  token: string,
+  endpoint: string,
+  params: PaginationParams | undefined,
+  fakeData: TResponse,
+): Promise<TResponse> {
+  if (isModeDemoEnabled()) {
+    return paginateFakeResponse(fakeData, params);
+  }
+
+  const response = await getJsonAuth<TResponse>(
+    buildPaginatedEndpoint(endpoint, params),
+    token,
+  );
+
+  if (response?.meta) {
+    return response;
+  }
+
+  return {
+    ...response,
+    meta: buildPaginationMeta(response?.data?.length ?? 0, params),
+  } as TResponse;
+}
 
 function parseSoldeValue(
   rawBalance: number | string | null | undefined,
@@ -82,52 +162,52 @@ export async function fetchSousCompteSolde(
 
 export async function getfetchPromotions(
   token: string,
+  params?: PaginationParams,
 ): Promise<listPromotions> {
-  if (isModeDemoEnabled()) {
-    return promotionsFakeData;
-  }
-
-  const data = await getJsonAuth<listPromotions>(
-    `${apiConfig.endpoints.promotions}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.promotions}`,
+    params,
+    promotionsFakeData,
   );
   return data;
 }
 
-export async function getfetchProduits(token: string): Promise<listProduits> {
-  if (isModeDemoEnabled()) {
-    return produitsFakeData;
-  }
-
-  const data = await getJsonAuth<listProduits>(
-    `${apiConfig.endpoints.produits}`,
+export async function getfetchProduits(
+  token: string,
+  params?: PaginationParams,
+): Promise<listProduits> {
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.produits}`,
+    params,
+    produitsFakeData,
   );
   return data;
 }
 
 export async function getfetchSousComptes(
   token: string,
+  params?: PaginationParams,
 ): Promise<listSousComptes> {
-  if (isModeDemoEnabled()) {
-    return sousComptesFakeData;
-  }
-
-  const data = await getJsonAuth<listSousComptes>(
-    `${apiConfig.endpoints.sousComptes}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.sousComptes}`,
+    params,
+    sousComptesFakeData,
   );
   return data;
 }
 
-export async function getfetchBonAchats(token: string): Promise<listBonAchats> {
-  if (isModeDemoEnabled()) {
-    return bonAchatsFakeData;
-  }
-
-  const data = await getJsonAuth<listBonAchats>(
-    `${apiConfig.endpoints.bonAchats}`,
+export async function getfetchBonAchats(
+  token: string,
+  params?: PaginationParams,
+): Promise<listBonAchats> {
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.bonAchats}`,
+    params,
+    bonAchatsFakeData,
   );
   return data;
 }
@@ -141,24 +221,29 @@ export async function getStats(token: string): Promise<stat> {
   return payload;
 }
 
-export async function getfetchFactures(token: string): Promise<listFactures> {
-  if (isModeDemoEnabled()) {
-    return facturesFakeData;
-  }
-
-  const d = await getJsonAuth<listFactures>(
-    apiConfig.endpoints.factures,
+export async function getfetchFactures(
+  token: string,
+  params?: PaginationParams,
+): Promise<listFactures> {
+  const d = await fetchPaginatedList(
     token,
+    apiConfig.endpoints.factures,
+    params,
+    facturesFakeData,
   );
   return d;
 }
 
-export async function getfetchDevis(token: string): Promise<listDevis> {
-  if (isModeDemoEnabled()) {
-    return proformasFakeData;
-  }
-
-  const d = await getJsonAuth<listDevis>(apiConfig.endpoints.devis, token);
+export async function getfetchDevis(
+  token: string,
+  params?: PaginationParams,
+): Promise<listDevis> {
+  const d = await fetchPaginatedList(
+    token,
+    apiConfig.endpoints.devis,
+    params,
+    proformasFakeData,
+  );
   return d;
 }
 
@@ -330,28 +415,26 @@ export async function deleteDevis(token: string, id: string): Promise<boolean> {
 
 export async function getfetchOperations(
   token: string,
+  params?: PaginationParams,
 ): Promise<listOperations> {
-  if (isModeDemoEnabled()) {
-    return operationsFakeData;
-  }
-
-  const d = await getJsonAuth<listOperations>(
-    apiConfig.endpoints.operations,
+  const d = await fetchPaginatedList(
     token,
+    apiConfig.endpoints.operations,
+    params,
+    operationsFakeData,
   );
   return d;
 }
 
 export async function getfetchReglements(
   token: string,
+  params?: PaginationParams,
 ): Promise<listReglements> {
-  if (isModeDemoEnabled()) {
-    return reglementsFakeData;
-  }
-
-  const data = await getJsonAuth<listReglements>(
-    `${apiConfig.endpoints.reglements}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.reglements}`,
+    params,
+    reglementsFakeData,
   );
   return data;
 }
@@ -393,42 +476,39 @@ export function getRecentMouvementsFromFakeData(): listMouvements {
 
 export async function getfetchMouvements(
   token: string,
+  params?: PaginationParams,
 ): Promise<listMouvements> {
-  if (isModeDemoEnabled()) {
-    return mouvementsFakeData;
-  }
-
-  const data = await getJsonAuth<listMouvements>(
-    `${apiConfig.endpoints.mouvements}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.mouvements}`,
+    params,
+    mouvementsFakeData,
   );
   return data;
 }
 
 export async function getfetchCommissions(
   token: string,
+  params?: PaginationParams,
 ): Promise<listCommissions> {
-  if (isModeDemoEnabled()) {
-    return commissionsFakeData;
-  }
-
-  const data = await getJsonAuth<listCommissions>(
-    `${apiConfig.endpoints.commissions}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.commissions}`,
+    params,
+    commissionsFakeData,
   );
   return data;
 }
 
 export async function getfetchBonLivraisons(
   token: string,
+  params?: PaginationParams,
 ): Promise<listBonLivraisons> {
-  if (isModeDemoEnabled()) {
-    return bonLivraisonsFakeData;
-  }
-
-  const data = await getJsonAuth<listBonLivraisons>(
-    `${apiConfig.endpoints.bonLivraisons}`,
+  const data = await fetchPaginatedList(
     token,
+    `${apiConfig.endpoints.bonLivraisons}`,
+    params,
+    bonLivraisonsFakeData,
   );
   return data;
 }

@@ -1,30 +1,32 @@
 import { AppHeader } from "@/components/app-header";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { useCachedResource } from "@/hooks/use-cached-resource";
+import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
 import { getfetchMouvements } from "@/services/api-service";
 import { TRANSACTIONS_LIST_CACHE_KEY } from "@/services/cache-service";
 import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared";
 import { formatAmount, formatDate } from "@/tools/tools";
 import {
-  listMouvements,
-  typeMouvementColorMap,
-  typeMouvementIconMap,
+    listMouvements,
+    typeMouvementColorMap,
+    typeMouvementIconMap,
 } from "@/types/mouvements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "./style";
@@ -91,13 +93,18 @@ export default function TransactionsScreen() {
     data: mouvements,
     isLoading,
     isRefreshing,
+    isLoadingMore,
     isError,
     refresh: handleRefresh,
-  } = useCachedResource<listMouvements>({
+    loadMore,
+    hasNextPage,
+  } = usePaginatedCachedResource<listMouvements["data"][number], listMouvements>({
     cacheKey: TRANSACTIONS_LIST_CACHE_KEY,
     initialData: initialMouvements,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchMouvements(userToken ?? ""),
+    fetchPage: async (page, size) =>
+      getfetchMouvements(userToken ?? "", { page, size }),
+    getItemKey: (item) => item.id,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -185,6 +192,8 @@ export default function TransactionsScreen() {
         ? typeMouvementColorMap["Réglement"]
         : COLORS.errorColor,
   };
+  const showInitialLoader = isLoading && mouvements.data.length === 0;
+  const showErrorState = isError && mouvements.data.length === 0;
 
   const handleTransactionPress = (tx: listMouvements["data"][number]) => {
     if (tx.libType === "Vente") {
@@ -218,9 +227,169 @@ export default function TransactionsScreen() {
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader showBack title="Transactions" subtitle="" />
       </View>
-      <ScrollView
-        contentContainerStyle={sharedStyles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <FlatList
+        data={showInitialLoader || showErrorState ? [] : filtered}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item: tx }) => {
+          const signedAmount = getSignedAmountDisplay(tx);
+          return (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => handleTransactionPress(tx)}
+              style={[styles.txCard, { backgroundColor: cardColor }]}
+            >
+              <View
+                style={[
+                  styles.txIcon,
+                  {
+                    backgroundColor: `${typeMouvementColorMap[tx.libType] || tintColor}15`,
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name={
+                    (typeMouvementIconMap[tx.libType] || "sync-alt") as any
+                  }
+                  size={20}
+                  color={typeMouvementColorMap[tx.libType] || tintColor}
+                />
+              </View>
+              <View style={styles.txContent}>
+                <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>
+                  {tx.libType} n° {tx.codeOp}
+                </Text>
+                <Text style={[styles.txDate, { color: mutedColor }]}> 
+                  {formatDate(tx.dateOp)}
+                </Text>
+              </View>
+              <View style={styles.txBottomRow}>
+                <Text style={[styles.txAmount, { color: signedAmount.color }]}> 
+                  {signedAmount.label}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        ListHeaderComponent={
+          <View style={{ gap: 16 }}>
+            <View style={sharedStyles.statsRow}>
+              {orderedMouvementTypes.slice(0, 2).map((type) => {
+                const totalDisplay = getTypeTotalDisplay(type);
+
+                return (
+                  <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
+                    <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
+                    <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>
+                      {totalDisplay.label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <View style={sharedStyles.statsRow}>
+              {orderedMouvementTypes.slice(2, 4).map((type) => {
+                const totalDisplay = getTypeTotalDisplay(type);
+
+                return (
+                  <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
+                    <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
+                    <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>
+                      {totalDisplay.label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Total général</Text>
+              <Text style={[sharedStyles.statValue, { color: totalGeneralDisplay.color }]}>
+                {totalGeneralDisplay.label}
+              </Text>
+            </View>
+
+            <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
+              <MaterialIcons name="search" size={20} color={mutedColor} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Rechercher une transaction"
+                placeholderTextColor={mutedColor}
+                style={[sharedStyles.searchInput, { color: textColor }]}
+              />
+            </View>
+
+            <DateRangePicker
+              startDateValue={startDateQuery}
+              endDateValue={endDateQuery}
+              onChangeStartDate={setStartDateQuery}
+              onChangeEndDate={setEndDateQuery}
+              cardColor={cardColor}
+              borderColor={borderColor}
+              textColor={textColor}
+              mutedColor={mutedColor}
+              tintColor={tintColor}
+            />
+
+            {typeFilters.length > 2 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+                {typeFilters.map((type) => {
+                  const isActive = type === activeType;
+
+                  return (
+                    <TouchableOpacity
+                      key={type}
+                      onPress={() => setActiveType(type)}
+                      style={[
+                        sharedStyles.filterChip,
+                        {
+                          backgroundColor: isActive ? tintColor : cardColor,
+                          borderColor: isActive ? tintColor : borderColor,
+                        },
+                      ]}
+                    >
+                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>
+                        {type}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+
+            {showInitialLoader ? (
+              <View style={styles.loaderBlock}>
+                <ActivityIndicator size="large" color={tintColor} />
+              </View>
+            ) : null}
+
+            {showErrorState ? (
+              <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}>
+                <MaterialIcons name="cloud-off" size={40} color={mutedColor} />
+                <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Impossible de récupérer les transactions.</Text>
+              </View>
+            ) : null}
+          </View>
+        }
+        ListHeaderComponentStyle={{ marginBottom: 16 }}
+        ListEmptyComponent={
+          !showInitialLoader && !showErrorState ? (
+            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
+              <MaterialIcons name="inbox" size={40} color={mutedColor} />
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucune transaction</Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
+            </View>
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        ListFooterComponent={
+          filtered.length > 0 ? (
+            <InfiniteListFooter isLoadingMore={isLoadingMore} tintColor={tintColor} mutedColor={mutedColor} />
+          ) : null
+        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -228,210 +397,14 @@ export default function TransactionsScreen() {
             tintColor={tintColor}
           />
         }
-      >
-        <View style={sharedStyles.container}>
-          <View style={sharedStyles.statsRow}>
-            {orderedMouvementTypes.slice(0, 2).map((type) => {
-              const totalDisplay = getTypeTotalDisplay(type);
-
-              return (
-                <View
-                  key={type}
-                  style={[
-                    sharedStyles.statCard,
-                    { backgroundColor: cardColor },
-                  ]}
-                >
-                  <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                    {type}
-                  </Text>
-                  <Text
-                    style={[
-                      sharedStyles.statCount,
-                      { color: totalDisplay.color },
-                    ]}
-                  >
-                    {totalDisplay.label}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <View style={sharedStyles.statsRow}>
-            {orderedMouvementTypes.slice(2, 4).map((type) => {
-              const totalDisplay = getTypeTotalDisplay(type);
-
-              return (
-                <View
-                  key={type}
-                  style={[
-                    sharedStyles.statCard,
-                    { backgroundColor: cardColor },
-                  ]}
-                >
-                  <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                    {type}
-                  </Text>
-                  <Text
-                    style={[
-                      sharedStyles.statCount,
-                      { color: totalDisplay.color },
-                    ]}
-                  >
-                    {totalDisplay.label}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-            <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-              Total général
-            </Text>
-            <Text
-              style={[
-                sharedStyles.statValue,
-                { color: totalGeneralDisplay.color },
-              ]}
-            >
-              {totalGeneralDisplay.label}
-            </Text>
-          </View>
-
-          <View
-            style={[
-              sharedStyles.searchBox,
-              { backgroundColor: cardColor, borderColor },
-            ]}
-          >
-            <MaterialIcons name="search" size={20} color={mutedColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Rechercher une transaction"
-              placeholderTextColor={mutedColor}
-              style={[sharedStyles.searchInput, { color: textColor }]}
-            />
-          </View>
-
-          <DateRangePicker
-            startDateValue={startDateQuery}
-            endDateValue={endDateQuery}
-            onChangeStartDate={setStartDateQuery}
-            onChangeEndDate={setEndDateQuery}
-            cardColor={cardColor}
-            borderColor={borderColor}
-            textColor={textColor}
-            mutedColor={mutedColor}
-            tintColor={tintColor}
-          />
-
-          {typeFilters.length > 2 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={sharedStyles.filterRow}
-            >
-              {typeFilters.map((type) => {
-                const isActive = type === activeType;
-
-                return (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => setActiveType(type)}
-                    style={[
-                      sharedStyles.filterChip,
-                      {
-                        backgroundColor: isActive ? tintColor : cardColor,
-                        borderColor: isActive ? tintColor : borderColor,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        sharedStyles.filterLabel,
-                        { color: isActive ? "#ffffff" : textColor },
-                      ]}
-                    >
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          {isLoading && mouvements.data.length === 0 ? (
-            <View style={styles.loaderBlock}>
-              <ActivityIndicator size="large" color={tintColor} />
-            </View>
-          ) : filtered.length === 0 ? (
-            <View
-              style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}
-            >
-              <MaterialIcons name="inbox" size={40} color={mutedColor} />
-              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>
-                Aucune transaction
-              </Text>
-              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>
-                Aucun résultat pour cette recherche.
-              </Text>
-            </View>
-          ) : (
-            <View style={sharedStyles.listBlock}>
-              {filtered.map((tx) => {
-                const signedAmount = getSignedAmountDisplay(tx);
-                return (
-                  <TouchableOpacity
-                    key={String(tx.id)}
-                    activeOpacity={0.85}
-                    onPress={() => handleTransactionPress(tx)}
-                    style={[styles.txCard, { backgroundColor: cardColor }]}
-                  >
-                    <View
-                      style={[
-                        styles.txIcon,
-                        {
-                          backgroundColor: `${typeMouvementColorMap[tx.libType] || tintColor}15`,
-                        },
-                      ]}
-                    >
-                      <MaterialIcons
-                        name={
-                          (typeMouvementIconMap[tx.libType] ||
-                            "sync-alt") as any
-                        }
-                        size={20}
-                        color={typeMouvementColorMap[tx.libType] || tintColor}
-                      />
-                    </View>
-                    <View style={styles.txContent}>
-                      <Text
-                        style={[styles.txLabel, { color: textColor }]}
-                        numberOfLines={1}
-                      >
-                        {tx.libType} n° {tx.codeOp}
-                      </Text>
-                      <Text style={[styles.txDate, { color: mutedColor }]}>
-                        {formatDate(tx.dateOp)}
-                      </Text>
-                    </View>
-                    <View style={styles.txBottomRow}>
-                      <Text
-                        style={[styles.txAmount, { color: signedAmount.color }]}
-                      >
-                        {signedAmount.label}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      </ScrollView>
+        onEndReached={() => {
+          if (hasNextPage) {
+            void loadMore();
+          }
+        }}
+        onEndReachedThreshold={0.35}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }

@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/app-header';
 import { EmptyResultsCard } from '@/components/empty-results-card';
 import { useAuthContext } from '@/hooks/auth-context';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { usePaginatedCachedResource } from '@/hooks/use-paginated-cached-resource';
 import { getfetchBonAchatById, getfetchBonAchats } from '@/services/api-service';
 import { BONS_ACHATS_LIST_CACHE_KEY } from '@/services/cache-service';
 import { sharedStyles } from '@/styles/shared.js';
@@ -11,7 +12,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCachedResource } from '@/hooks/use-cached-resource';
 import {
   ActivityIndicator,
   FlatList,
@@ -39,7 +39,6 @@ function isExpiredBon(bon: bonAchat): boolean {
 export default function BonsAchatsScreen() {
   const router = useRouter();
   const { backgroundColor, textColor, tintColor, cardColor, mutedColor, borderColor } = useAppTheme();
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedBonId, setSelectedBonId] = useState<string | null>(null);
   const [selectedBonDetail, setSelectedBonDetail] = useState<bonAchat | null>(null);
@@ -58,14 +57,19 @@ const { userToken } = useAuthContext();
     data: bonAchats,
     isLoading,
     isRefreshing,
+    isLoadingMore,
     isError,
+    isOfflineMode,
     refresh: handleRefresh,
-  } = useCachedResource<listBonAchats>({
+    loadMore,
+    hasNextPage,
+  } = usePaginatedCachedResource<listBonAchats['data'][number], listBonAchats>({
 
     cacheKey: BONS_ACHATS_LIST_CACHE_KEY,
     initialData: initialBonAchats,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchBonAchats(userToken ?? ""),
+    fetchPage: async (page, size) => getfetchBonAchats(userToken ?? "", { page, size }),
+    getItemKey: (item) => item.id,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -291,6 +295,19 @@ const { userToken } = useAuthContext();
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.horizontalListContent}
+                onEndReached={() => {
+                  if (hasNextPage) {
+                    void loadMore();
+                  }
+                }}
+                onEndReachedThreshold={0.6}
+                ListFooterComponent={
+                  isLoadingMore ? (
+                    <View style={{ alignItems: 'center', justifyContent: 'center', width: 72 }}>
+                      <ActivityIndicator size="small" color={tintColor} />
+                    </View>
+                  ) : null
+                }
                 renderItem={({ item: bon }) => {
                   const isExpired = isExpiredBon(bon);
                   const statusLabel = isExpired ? 'Expiré' : bon.etatBa === 1 ? 'Actif' : 'Inactif';
@@ -375,9 +392,6 @@ const { userToken } = useAuthContext();
                 const bonAchatLines = selectedBonData.details ?? [];
                 const totalAllocatedAmount = bonAchatLines.reduce((sum, line) => sum + (line.montantRegDoc ?? 0), 0);
                 const remainingAmount = Math.max(selectedBonData.montantBa - totalAllocatedAmount, 0);
-                const canBeUsedByOtherClients = selectedBonData.autreClientUse ? 'Oui' : 'Non';
-                const restrictedToAgency = selectedBonData.uniqueAgence ? 'Oui' : 'Non';
-                const uniqueUseLabel = selectedBonData.uniqueUse ? 'Oui' : 'Non';
 
                 return (
                   <>
