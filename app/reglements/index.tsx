@@ -1,38 +1,37 @@
 import { AppHeader } from "@/components/app-header";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { getfetchReglements } from "@/services/api-service";
 import { REGLEMENTS_LIST_CACHE_KEY } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared.js";
 import {
-    buildSousCompteFilters,
-    formatAmount,
-    formatDate,
-    MAIN_ACCOUNT_FILTER,
-    matchesDateRange,
-    matchesSousCompteFilter,
-    toComparableDate,
+  buildSousCompteFilters,
+  formatAmount,
+  formatDate,
+  MAIN_ACCOUNT_FILTER,
+  matchesDateRange,
+  matchesSousCompteFilter,
+  toComparableDate,
 } from "@/tools/tools";
 import {
-    listReglements,
-    statusEncaisse,
-    statusEncaisseColorMap,
+  listReglements,
+  statusEncaisse,
+  statusEncaisseColorMap,
 } from "@/types/reglements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -46,7 +45,7 @@ export default function ReglementsScreen() {
     mutedColor,
     borderColor,
   } = useAppTheme();
-  
+
   const initialReglements = useMemo<listReglements>(
     () => ({
       meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
@@ -60,17 +59,13 @@ export default function ReglementsScreen() {
     data: reglements,
     isLoading,
     isRefreshing,
-    isLoadingMore,
     isError,
     refresh: handleRefresh,
-    loadMore,
-    hasNextPage,
-  } = usePaginatedCachedResource<listReglements['data'][number], listReglements>({
+  } = useCachedResource<listReglements>({
     cacheKey: REGLEMENTS_LIST_CACHE_KEY,
     initialData: initialReglements,
     enabled: Boolean(userToken),
-    fetchPage: async (page, size) => getfetchReglements(userToken ?? "", { page, size }),
-    getItemKey: (item) => item.id,
+    fetcher: async () => getfetchReglements(userToken ?? ""),
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -186,20 +181,31 @@ export default function ReglementsScreen() {
             ] || tintColor;
 
           return (
-            <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}>
+            <View
+              style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
+            >
               <View style={sharedStyles.invoiceTopRow}>
                 <View style={sharedStyles.invoiceRefBlock}>
                   <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>
                     {reglement.codeReg}
                   </Text>
-                  <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>
+                  <Text
+                    style={[sharedStyles.invoiceClient, { color: mutedColor }]}
+                  >
                     {reglement.nomSousCompte?.trim()
                       ? reglement.nomSousCompte
                       : MAIN_ACCOUNT_FILTER}
                   </Text>
                 </View>
-                <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-                  <Text style={[sharedStyles.statusText, { color: statusColor }]}>
+                <View
+                  style={[
+                    sharedStyles.statusBadge,
+                    { backgroundColor: `${statusColor}18` },
+                  ]}
+                >
+                  <Text
+                    style={[sharedStyles.statusText, { color: statusColor }]}
+                  >
                     {statusLabel}
                   </Text>
                 </View>
@@ -207,13 +213,21 @@ export default function ReglementsScreen() {
 
               <View style={sharedStyles.invoiceMetaRow}>
                 <View>
-                  <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Date
+                  </Text>
                   <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                     {reglement.dateReg ? formatDate(reglement.dateReg) : "—"}
                   </Text>
                 </View>
                 <View>
-                  <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Référence</Text>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Référence
+                  </Text>
                   <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                     {reglement.refReg || "-"}
                   </Text>
@@ -221,7 +235,9 @@ export default function ReglementsScreen() {
               </View>
 
               <View style={sharedStyles.metaModeRow}>
-                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Mode de paiement</Text>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  Mode de paiement
+                </Text>
                 <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                   {reglement.nomModePaiement || "—"}
                 </Text>
@@ -233,18 +249,232 @@ export default function ReglementsScreen() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => router.push(`/reglements/${reglement.id}` as never)}
-                  style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                  onPress={() =>
+                    router.push(`/reglements/${reglement.id}` as never)
+                  }
+                  style={[
+                    sharedStyles.actionButton,
+                    { backgroundColor: `${tintColor}18` },
+                  ]}
                 >
-                  <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
+                  <Text style={[sharedStyles.actionText, { color: tintColor }]}>
+                    Voir détail
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           );
         }}
-        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
+            refreshControl=
+            {
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor={tintColor}
+              />
+            }
+            <View style={sharedStyles.statsRow}>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Tous les règlements
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: textColor }]}>
+                  {totalCount} règlement{totalCount > 1 ? "s" : ""}
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: textColor }]}>
+                  {formatAmount(totalAmount)}
+                </Text>
+              </View>
+
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Règlements non encaissés
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: "#dc2626" }]}>
+                  {unsettledCount} règlement{unsettledCount > 1 ? "s" : ""}
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: "#dc2626" }]}>
+                  {formatAmount(unsettledAmount)}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
+              <MaterialIcons name="search" size={20} color={mutedColor} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Rechercher un règlement ou un sous-compte"
+                placeholderTextColor={mutedColor}
+                style={[sharedStyles.searchInput, { color: textColor }]}
+              />
+            </View>
+            <DateRangePicker
+              startDateValue={startDateQuery}
+              endDateValue={endDateQuery}
+              onChangeStartDate={setStartDateQuery}
+              onChangeEndDate={setEndDateQuery}
+              cardColor={cardColor}
+              borderColor={borderColor}
+              textColor={textColor}
+              mutedColor={mutedColor}
+              tintColor={tintColor}
+            />
+            {sousCompteFilters.length > 2 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
+                {sousCompteFilters.map((client) => {
+                  const isActive = client === activeClient;
+
+                  return (
+                    <TouchableOpacity
+                      key={client}
+                      onPress={() => setActiveClient(client)}
+                      style={[
+                        sharedStyles.filterChip,
+                        {
+                          backgroundColor: isActive ? tintColor : cardColor,
+                          borderColor: isActive ? tintColor : borderColor,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {client}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {statusFilters.length > 2 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
+                {statusFilters.map((status) => {
+                  const isActive = status === activeStatus;
+
+                  return (
+                    <TouchableOpacity
+                      key={status}
+                      onPress={() => setActiveStatus(status)}
+                      style={[
+                        sharedStyles.filterChip,
+                        {
+                          backgroundColor: isActive ? tintColor : cardColor,
+                          borderColor: isActive ? tintColor : borderColor,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {status}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {paymentModeFilters.length > 2 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
+                {paymentModeFilters.map((mode) => {
+                  const isActive = mode === activePaymentMode;
+
+                  return (
+                    <TouchableOpacity
+                      key={mode}
+                      onPress={() => setActivePaymentMode(mode)}
+                      style={[
+                        sharedStyles.filterChip,
+                        {
+                          backgroundColor: isActive ? tintColor : cardColor,
+                          borderColor: isActive ? tintColor : borderColor,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {mode}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {showInitialLoader ? (
+              <ActivityIndicator
+                size="large"
+                color={tintColor}
+                style={{ marginTop: 32 }}
+              />
+            ) : null}
+            {showErrorState ? (
+              <View
+                style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}
+              >
+                <MaterialIcons name="cloud-off" size={28} color={mutedColor} />
+                <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>
+                  Erreur de chargement
+                </Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>
+                  Impossible de récupérer les règlements.
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        }
+        ListHeaderComponentStyle={{ marginBottom: 16 }}
+        ListEmptyComponent={
+          !showInitialLoader && !showErrorState ? (
+            <View
+              style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}
+            >
+              <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>
+                Aucun règlement trouvé
+              </Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>
+                Ajustez votre recherche ou le filtre de statut.
+              </Text>
+            </View>
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -252,204 +482,6 @@ export default function ReglementsScreen() {
             tintColor={tintColor}
           />
         }
-          <View style={sharedStyles.statsRow}>
-            <View
-              style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
-            >
-              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                Tous les règlements
-              </Text>
-              <Text style={[sharedStyles.statCount, { color: textColor }]}>
-                {totalCount} règlement{totalCount > 1 ? "s" : ""}
-              </Text>
-              <Text style={[sharedStyles.statValue, { color: textColor }]}>
-                {formatAmount(totalAmount)}
-              </Text>
-            </View>
-
-            <View
-              style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
-            >
-              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                Règlements non encaissés
-              </Text>
-              <Text style={[sharedStyles.statCount, { color: "#dc2626" }]}>
-                {unsettledCount} règlement{unsettledCount > 1 ? "s" : ""}
-              </Text>
-              <Text style={[sharedStyles.statValue, { color: "#dc2626" }]}>
-                {formatAmount(unsettledAmount)}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              sharedStyles.searchBox,
-              { backgroundColor: cardColor, borderColor },
-            ]}
-          >
-            <MaterialIcons name="search" size={20} color={mutedColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Rechercher un règlement ou un sous-compte"
-              placeholderTextColor={mutedColor}
-              style={[sharedStyles.searchInput, { color: textColor }]}
-            />
-          </View>
-
-          <DateRangePicker
-            startDateValue={startDateQuery}
-            endDateValue={endDateQuery}
-            onChangeStartDate={setStartDateQuery}
-            onChangeEndDate={setEndDateQuery}
-            cardColor={cardColor}
-            borderColor={borderColor}
-            textColor={textColor}
-            mutedColor={mutedColor}
-            tintColor={tintColor}
-          />
-
-          {sousCompteFilters.length > 2 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={sharedStyles.filterRow}
-            >
-              {sousCompteFilters.map((client) => {
-                const isActive = client === activeClient;
-
-                return (
-                  <TouchableOpacity
-                    key={client}
-                    onPress={() => setActiveClient(client)}
-                    style={[
-                      sharedStyles.filterChip,
-                      {
-                        backgroundColor: isActive ? tintColor : cardColor,
-                        borderColor: isActive ? tintColor : borderColor,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        sharedStyles.filterLabel,
-                        { color: isActive ? "#ffffff" : textColor },
-                      ]}
-                    >
-                      {client}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          {statusFilters.length > 2 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={sharedStyles.filterRow}
-            >
-              {statusFilters.map((status) => {
-                const isActive = status === activeStatus;
-
-                return (
-                  <TouchableOpacity
-                    key={status}
-                    onPress={() => setActiveStatus(status)}
-                    style={[
-                      sharedStyles.filterChip,
-                      {
-                        backgroundColor: isActive ? tintColor : cardColor,
-                        borderColor: isActive ? tintColor : borderColor,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        sharedStyles.filterLabel,
-                        { color: isActive ? "#ffffff" : textColor },
-                      ]}
-                    >
-                      {status}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-
-          {paymentModeFilters.length > 2 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={sharedStyles.filterRow}
-            >
-              {paymentModeFilters.map((mode) => {
-                const isActive = mode === activePaymentMode;
-
-                return (
-                  <TouchableOpacity
-                    key={mode}
-                    onPress={() => setActivePaymentMode(mode)}
-                    style={[
-                      sharedStyles.filterChip,
-                      {
-                        backgroundColor: isActive ? tintColor : cardColor,
-                        borderColor: isActive ? tintColor : borderColor,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        sharedStyles.filterLabel,
-                        { color: isActive ? "#ffffff" : textColor },
-                      ]}
-                    >
-                      {mode}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-          {showInitialLoader ? (
-            <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
-          ) : null}
-
-          {showErrorState ? (
-            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
-              <MaterialIcons name="cloud-off" size={28} color={mutedColor} />
-              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
-              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Impossible de récupérer les règlements.</Text>
-            </View>
-          ) : null}
-          </View>
-        }
-        ListHeaderComponentStyle={{ marginBottom: 16 }}
-        ListEmptyComponent={
-          !showInitialLoader && !showErrorState ? (
-            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
-              <MaterialIcons name="receipt-long" size={28} color={mutedColor} />
-              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucun règlement trouvé</Text>
-              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Ajustez votre recherche ou le filtre de statut.</Text>
-            </View>
-          ) : null
-        }
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListFooterComponent={
-          filteredReglements.length > 0 ? (
-            <InfiniteListFooter isLoadingMore={isLoadingMore} tintColor={tintColor} mutedColor={mutedColor} />
-          ) : null
-        }
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={tintColor} />}
-        onEndReached={() => {
-          if (hasNextPage) {
-            void loadMore();
-          }
-        }}
-        onEndReachedThreshold={0.35}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

@@ -1,32 +1,31 @@
 import { AppHeader } from "@/components/app-header";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { getfetchMouvements } from "@/services/api-service";
 import { TRANSACTIONS_LIST_CACHE_KEY } from "@/services/cache-service";
 import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared";
 import { formatAmount, formatDate } from "@/tools/tools";
 import {
-    listMouvements,
-    typeMouvementColorMap,
-    typeMouvementIconMap,
+  listMouvements,
+  typeMouvementColorMap,
+  typeMouvementIconMap,
 } from "@/types/mouvements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "./style";
@@ -93,18 +92,13 @@ export default function TransactionsScreen() {
     data: mouvements,
     isLoading,
     isRefreshing,
-    isLoadingMore,
     isError,
     refresh: handleRefresh,
-    loadMore,
-    hasNextPage,
-  } = usePaginatedCachedResource<listMouvements["data"][number], listMouvements>({
+  } = useCachedResource<listMouvements>({
     cacheKey: TRANSACTIONS_LIST_CACHE_KEY,
     initialData: initialMouvements,
     enabled: Boolean(userToken),
-    fetchPage: async (page, size) =>
-      getfetchMouvements(userToken ?? "", { page, size }),
-    getItemKey: (item) => item.id,
+    fetcher: async () => getfetchMouvements(userToken ?? ""),
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -247,30 +241,34 @@ export default function TransactionsScreen() {
                 ]}
               >
                 <MaterialIcons
-                  name={
-                    (typeMouvementIconMap[tx.libType] || "sync-alt") as any
-                  }
+                  name={(typeMouvementIconMap[tx.libType] || "sync-alt") as any}
                   size={20}
                   color={typeMouvementColorMap[tx.libType] || tintColor}
                 />
               </View>
               <View style={styles.txContent}>
-                <Text style={[styles.txLabel, { color: textColor }]} numberOfLines={1}>
+                <Text
+                  style={[styles.txLabel, { color: textColor }]}
+                  numberOfLines={1}
+                >
                   {tx.libType} n° {tx.codeOp}
                 </Text>
-                <Text style={[styles.txDate, { color: mutedColor }]}> 
+                <Text style={[styles.txDate, { color: mutedColor }]}>
                   {formatDate(tx.dateOp)}
                 </Text>
               </View>
               <View style={styles.txBottomRow}>
-                <Text style={[styles.txAmount, { color: signedAmount.color }]}> 
+                <Text style={[styles.txAmount, { color: signedAmount.color }]}>
                   {signedAmount.label}
                 </Text>
               </View>
             </TouchableOpacity>
           );
         }}
-        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
             <View style={sharedStyles.statsRow}>
@@ -278,9 +276,24 @@ export default function TransactionsScreen() {
                 const totalDisplay = getTypeTotalDisplay(type);
 
                 return (
-                  <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-                    <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
-                    <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>
+                  <View
+                    key={type}
+                    style={[
+                      sharedStyles.statCard,
+                      { backgroundColor: cardColor },
+                    ]}
+                  >
+                    <Text
+                      style={[sharedStyles.statLabel, { color: mutedColor }]}
+                    >
+                      {type}
+                    </Text>
+                    <Text
+                      style={[
+                        sharedStyles.statCount,
+                        { color: totalDisplay.color },
+                      ]}
+                    >
                       {totalDisplay.label}
                     </Text>
                   </View>
@@ -293,9 +306,24 @@ export default function TransactionsScreen() {
                 const totalDisplay = getTypeTotalDisplay(type);
 
                 return (
-                  <View key={type} style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-                    <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>{type}</Text>
-                    <Text style={[sharedStyles.statCount, { color: totalDisplay.color }]}>
+                  <View
+                    key={type}
+                    style={[
+                      sharedStyles.statCard,
+                      { backgroundColor: cardColor },
+                    ]}
+                  >
+                    <Text
+                      style={[sharedStyles.statLabel, { color: mutedColor }]}
+                    >
+                      {type}
+                    </Text>
+                    <Text
+                      style={[
+                        sharedStyles.statCount,
+                        { color: totalDisplay.color },
+                      ]}
+                    >
                       {totalDisplay.label}
                     </Text>
                   </View>
@@ -303,14 +331,28 @@ export default function TransactionsScreen() {
               })}
             </View>
 
-            <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Total général</Text>
-              <Text style={[sharedStyles.statValue, { color: totalGeneralDisplay.color }]}>
+            <View
+              style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+            >
+              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                Total général
+              </Text>
+              <Text
+                style={[
+                  sharedStyles.statValue,
+                  { color: totalGeneralDisplay.color },
+                ]}
+              >
                 {totalGeneralDisplay.label}
               </Text>
             </View>
 
-            <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
               <MaterialIcons name="search" size={20} color={mutedColor} />
               <TextInput
                 value={query}
@@ -334,7 +376,11 @@ export default function TransactionsScreen() {
             />
 
             {typeFilters.length > 2 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
                 {typeFilters.map((type) => {
                   const isActive = type === activeType;
 
@@ -350,7 +396,12 @@ export default function TransactionsScreen() {
                         },
                       ]}
                     >
-                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
                         {type}
                       </Text>
                     </TouchableOpacity>
@@ -366,10 +417,16 @@ export default function TransactionsScreen() {
             ) : null}
 
             {showErrorState ? (
-              <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}>
+              <View
+                style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}
+              >
                 <MaterialIcons name="cloud-off" size={40} color={mutedColor} />
-                <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Erreur de chargement</Text>
-                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Impossible de récupérer les transactions.</Text>
+                <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>
+                  Erreur de chargement
+                </Text>
+                <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>
+                  Impossible de récupérer les transactions.
+                </Text>
               </View>
             ) : null}
           </View>
@@ -377,19 +434,20 @@ export default function TransactionsScreen() {
         ListHeaderComponentStyle={{ marginBottom: 16 }}
         ListEmptyComponent={
           !showInitialLoader && !showErrorState ? (
-            <View style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}> 
+            <View
+              style={[sharedStyles.emptyCard, { backgroundColor: cardColor }]}
+            >
               <MaterialIcons name="inbox" size={40} color={mutedColor} />
-              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>Aucune transaction</Text>
-              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>Aucun résultat pour cette recherche.</Text>
+              <Text style={[sharedStyles.emptyTitle, { color: textColor }]}>
+                Aucune transaction
+              </Text>
+              <Text style={[sharedStyles.emptyText, { color: mutedColor }]}>
+                Aucun résultat pour cette recherche.
+              </Text>
             </View>
           ) : null
         }
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListFooterComponent={
-          filtered.length > 0 ? (
-            <InfiniteListFooter isLoadingMore={isLoadingMore} tintColor={tintColor} mutedColor={mutedColor} />
-          ) : null
-        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -397,12 +455,6 @@ export default function TransactionsScreen() {
             tintColor={tintColor}
           />
         }
-        onEndReached={() => {
-          if (hasNextPage) {
-            void loadMore();
-          }
-        }}
-        onEndReachedThreshold={0.35}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

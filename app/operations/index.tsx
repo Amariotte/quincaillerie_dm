@@ -1,10 +1,9 @@
 import { AppHeader } from "@/components/app-header";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { EmptyResultsCard } from "@/components/empty-results-card";
-import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { getfetchOperations } from "@/services/api-service";
 import { OPERATIONS_LIST_CACHE_KEY } from "@/services/cache-service";
 import { sharedStyles } from "@/styles/shared";
@@ -65,23 +64,18 @@ export default function OperationsScreen() {
     data: operations,
     isLoading,
     isRefreshing,
-    isLoadingMore,
     isError,
     refresh: handleRefresh,
-    loadMore,
-    hasNextPage,
-  } = usePaginatedCachedResource<listOperations["data"][number], listOperations>({
+  } = useCachedResource<listOperations>({
     cacheKey: OPERATIONS_LIST_CACHE_KEY,
     initialData: initialOperations,
     enabled: Boolean(userToken),
-    fetchPage: async (page, size) =>
-      getfetchOperations(userToken ?? "", { page, size }),
-    getItemKey: (item) => item.id,
+    fetcher: async () => getfetchOperations(userToken ?? ""),
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
-          Array.isArray(cachedData.data) &&
-          cachedData.data.length > 0,
+        Array.isArray(cachedData.data) &&
+        cachedData.data.length > 0,
       ),
   });
 
@@ -145,7 +139,7 @@ export default function OperationsScreen() {
   const showErrorState = isError && operations.data.length === 0;
 
   return (
-    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}> 
+    <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
       <View style={{ paddingHorizontal: 18, paddingTop: 12 }}>
         <AppHeader
           showBack
@@ -161,20 +155,31 @@ export default function OperationsScreen() {
             typeMouvementColorMap[operation.libType ?? "Décaissement"];
 
           return (
-            <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}> 
+            <View
+              style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
+            >
               <View style={sharedStyles.invoiceTopRow}>
                 <View style={sharedStyles.invoiceRefBlock}>
                   <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>
                     {operation.codeOp}
                   </Text>
-                  <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>
+                  <Text
+                    style={[sharedStyles.invoiceClient, { color: mutedColor }]}
+                  >
                     {operation.nomSousCompte?.trim()
                       ? operation.nomSousCompte
                       : MAIN_ACCOUNT_FILTER}
                   </Text>
                 </View>
-                <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}> 
-                  <Text style={[sharedStyles.statusText, { color: statusColor }]}>
+                <View
+                  style={[
+                    sharedStyles.statusBadge,
+                    { backgroundColor: `${statusColor}18` },
+                  ]}
+                >
+                  <Text
+                    style={[sharedStyles.statusText, { color: statusColor }]}
+                  >
                     {operation.libType ?? "—"}
                   </Text>
                 </View>
@@ -182,13 +187,21 @@ export default function OperationsScreen() {
 
               <View style={sharedStyles.invoiceMetaRow}>
                 <View>
-                  <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Date</Text>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Date
+                  </Text>
                   <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                     {formatDate(operation.dateOp)}
                   </Text>
                 </View>
                 <View>
-                  <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Agence</Text>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Agence
+                  </Text>
                   <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                     {operation.nomAgence || "—"}
                   </Text>
@@ -196,7 +209,9 @@ export default function OperationsScreen() {
               </View>
 
               <View style={sharedStyles.metaModeRow}>
-                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Bénéficiaire / dépôt</Text>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  Bénéficiaire / dépôt
+                </Text>
                 <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                   {operation.depoOrBene || "—"}
                 </Text>
@@ -207,37 +222,76 @@ export default function OperationsScreen() {
                   {formatAmount(operation.montantOp)}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => router.push(`/operations/${operation.id}` as never)}
-                  style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                  onPress={() =>
+                    router.push(`/operations/${operation.id}` as never)
+                  }
+                  style={[
+                    sharedStyles.actionButton,
+                    { backgroundColor: `${tintColor}18` },
+                  ]}
                 >
-                  <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
+                  <Text style={[sharedStyles.actionText, { color: tintColor }]}>
+                    Voir détail
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           );
         }}
-        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
             <View style={sharedStyles.statsRow}>
-              <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
-                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les opérations</Text>
-                <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} opération{totalCount > 1 ? "s" : ""}</Text>
-                <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Toutes les opérations
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: textColor }]}>
+                  {totalCount} opération{totalCount > 1 ? "s" : ""}
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: textColor }]}>
+                  {formatAmount(totalAmount)}
+                </Text>
               </View>
-              <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
-                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Encaissements</Text>
-                <Text style={[sharedStyles.statCount, { color: tintColor }]}>{unsettledCount} opération{unsettledCount > 1 ? "s" : ""}</Text>
-                <Text style={[sharedStyles.statValue, { color: tintColor }]}>{formatAmount(unsettledAmount)}</Text>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Encaissements
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: tintColor }]}>
+                  {unsettledCount} opération{unsettledCount > 1 ? "s" : ""}
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: tintColor }]}>
+                  {formatAmount(unsettledAmount)}
+                </Text>
               </View>
-              <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}> 
-                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Décaissements</Text>
-                <Text style={[sharedStyles.statCount, { color: "#dc2626" }]}>{overdueCount} opération{overdueCount > 1 ? "s" : ""}</Text>
-                <Text style={[sharedStyles.statValue, { color: "#dc2626" }]}>{formatAmount(overdueAmount)}</Text>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Décaissements
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: "#dc2626" }]}>
+                  {overdueCount} opération{overdueCount > 1 ? "s" : ""}
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: "#dc2626" }]}>
+                  {formatAmount(overdueAmount)}
+                </Text>
               </View>
             </View>
 
-            <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
               <MaterialIcons name="search" size={20} color={mutedColor} />
               <TextInput
                 value={query}
@@ -261,7 +315,11 @@ export default function OperationsScreen() {
             />
 
             {sousCompteFilters.length > 2 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
                 {sousCompteFilters.map((sousCompte) => {
                   const isActive = sousCompte === activeClient;
 
@@ -277,7 +335,14 @@ export default function OperationsScreen() {
                         },
                       ]}
                     >
-                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>{sousCompte}</Text>
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {sousCompte}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -285,7 +350,11 @@ export default function OperationsScreen() {
             ) : null}
 
             {statusFilters.length > 2 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
                 {statusFilters.map((status) => {
                   const isActive = status === activeStatus;
 
@@ -301,7 +370,14 @@ export default function OperationsScreen() {
                         },
                       ]}
                     >
-                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>{status}</Text>
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {status}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -309,7 +385,11 @@ export default function OperationsScreen() {
             ) : null}
 
             {showInitialLoader ? (
-              <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+              <ActivityIndicator
+                size="large"
+                color={tintColor}
+                style={{ marginTop: 32 }}
+              />
             ) : null}
 
             {showErrorState ? (
@@ -338,15 +418,6 @@ export default function OperationsScreen() {
           ) : null
         }
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListFooterComponent={
-          filteredOperations.length > 0 ? (
-            <InfiniteListFooter
-              isLoadingMore={isLoadingMore}
-              tintColor={tintColor}
-              mutedColor={mutedColor}
-            />
-          ) : null
-        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -354,12 +425,6 @@ export default function OperationsScreen() {
             tintColor={tintColor}
           />
         }
-        onEndReached={() => {
-          if (hasNextPage) {
-            void loadMore();
-          }
-        }}
-        onEndReachedThreshold={0.35}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

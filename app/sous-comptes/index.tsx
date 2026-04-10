@@ -1,9 +1,8 @@
 import { AppHeader } from "@/components/app-header";
 import { EmptyResultsCard } from "@/components/empty-results-card";
-import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
+import { useCachedResource } from "@/hooks/use-cached-resource";
 import { sharedStyles } from "@/styles/shared.js";
 
 import { getfetchSousComptes } from "@/services/api-service";
@@ -12,13 +11,13 @@ import { listSousComptes } from "@/types/sousCompte.type.js";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,18 +43,13 @@ export default function SousComptesScreen() {
     data: sousComptes,
     isLoading,
     isRefreshing,
-    isLoadingMore,
     isError,
     refresh: handleRefresh,
-    loadMore,
-    hasNextPage,
-  } = usePaginatedCachedResource<listSousComptes["data"][number], listSousComptes>({
+  } = useCachedResource<listSousComptes>({
     cacheKey: SOUS_COMPTES_LIST_CACHE_KEY,
     initialData: initialSousComptes,
     enabled: Boolean(userToken),
-    fetchPage: async (page, size) =>
-      getfetchSousComptes(userToken ?? "", { page, size }),
-    getItemKey: (item) => item.id,
+    fetcher: async () => getfetchSousComptes(userToken ?? ""),
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -95,7 +89,7 @@ export default function SousComptesScreen() {
             >
               <View style={sharedStyles.invoiceTopRow}>
                 <View style={sharedStyles.invoiceRefBlock}>
-                  <Text style={[sharedStyles.invoiceRef, { color: textColor }]}> 
+                  <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>
                     {sousCompte.nom}
                   </Text>
                   <Text
@@ -107,14 +101,18 @@ export default function SousComptesScreen() {
               </View>
 
               <View style={sharedStyles.invoiceMetaRow}>
-                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Téléphone</Text>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  Téléphone
+                </Text>
                 <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                   {sousCompte.mobile || "Aucun numéro"}
                 </Text>
               </View>
 
               <View style={sharedStyles.invoiceMetaRow}>
-                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Email</Text>
+                <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
+                  Email
+                </Text>
                 <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                   {sousCompte.email || "Aucun email"}
                 </Text>
@@ -122,12 +120,19 @@ export default function SousComptesScreen() {
             </TouchableOpacity>
           );
         }}
-        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
             <View style={sharedStyles.statsRow}>
-              <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Toutes les sous comptes</Text>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Toutes les sous comptes
+                </Text>
                 <Text style={[sharedStyles.statCount, { color: textColor }]}>
                   {filteredSousComptes.length} sous compte
                   {filteredSousComptes.length > 1 ? "s" : ""}
@@ -152,7 +157,11 @@ export default function SousComptesScreen() {
             </View>
 
             {showInitialLoader ? (
-              <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+              <ActivityIndicator
+                size="large"
+                color={tintColor}
+                style={{ marginTop: 32 }}
+              />
             ) : null}
 
             {showErrorState ? (
@@ -181,15 +190,6 @@ export default function SousComptesScreen() {
           ) : null
         }
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListFooterComponent={
-          filteredSousComptes.length > 0 ? (
-            <InfiniteListFooter
-              isLoadingMore={isLoadingMore}
-              tintColor={tintColor}
-              mutedColor={mutedColor}
-            />
-          ) : null
-        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -197,12 +197,6 @@ export default function SousComptesScreen() {
             tintColor={tintColor}
           />
         }
-        onEndReached={() => {
-          if (hasNextPage) {
-            void loadMore();
-          }
-        }}
-        onEndReachedThreshold={0.35}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>

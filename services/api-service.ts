@@ -1,29 +1,40 @@
 import apiConfig from "@/config/api";
 import {
-    bonAchatsFakeData,
-    bonLivraisonsFakeData,
-    commissionsFakeData,
-    dataChartsFakeData,
-    facturesFakeData,
-    mouvementsFakeData,
-    operationsFakeData,
-    produitsFakeData,
-    proformasFakeData,
-    promotionsFakeData,
-    reglementsFakeData,
-    soldeFake,
-    sousComptesFakeData,
-    statsFake,
+  bonAchatsFakeData,
+  bonLivraisonsFakeData,
+  commissionsFakeData,
+  dataChartsFakeData,
+  facturesFakeData,
+  mouvementsFakeData,
+  operationsFakeData,
+  produitsFakeData,
+  proformasFakeData,
+  promotionsFakeData,
+  reglementsFakeData,
+  soldeFake,
+  sousComptesFakeData,
+  statsFake,
 } from "@/data/datas.fake";
 import { isModeDemoEnabled } from "@/tools/tools";
 import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
 import { bonLivraison, listBonLivraisons } from "@/types/bon-livraisons.type";
 import { commission, listCommissions } from "@/types/commissions.type";
-import { deleteDevisLigneEdit, devis, devisLigneEdit, listDevis } from "@/types/devis.type";
+import {
+  deleteDevisLigneEdit,
+  devis,
+  devisLigneEdit,
+  listDevis,
+} from "@/types/devis.type";
 import { facture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
 import { listOperations } from "@/types/operations.type";
-import { dataChart, meta, PaginatedResponse, PaginationParams, stat } from "@/types/other.type";
+import {
+  dataChart,
+  meta,
+  PaginatedResponse,
+  PaginationParams,
+  stat,
+} from "@/types/other.type";
 import { listProduits } from "@/types/produits.type";
 import { listPromotions, promotion } from "@/types/promotions.type";
 import { listReglements, reglement } from "@/types/reglements.type";
@@ -97,6 +108,55 @@ async function fetchPaginatedList<
   params: PaginationParams | undefined,
   fakeData: TResponse,
 ): Promise<TResponse> {
+  if (!params) {
+    if (isModeDemoEnabled()) {
+      return fakeData;
+    }
+
+    const firstPage = await getJsonAuth<TResponse>(
+      buildPaginatedEndpoint(endpoint, { page: 1, size: DEFAULT_PAGE_SIZE }),
+      token,
+    );
+
+    if (!firstPage?.meta) {
+      return {
+        ...firstPage,
+        meta: buildPaginationMeta(firstPage?.data?.length ?? 0, params),
+      } as TResponse;
+    }
+
+    const totalPages = Math.max(1, firstPage.meta.totalPages || 1);
+
+    if (totalPages === 1) {
+      return firstPage;
+    }
+
+    let mergedItems = Array.isArray(firstPage.data) ? [...firstPage.data] : [];
+
+    for (let page = 2; page <= totalPages; page += 1) {
+      const nextPage = await getJsonAuth<TResponse>(
+        buildPaginatedEndpoint(endpoint, {
+          page,
+          size: firstPage.meta.size || DEFAULT_PAGE_SIZE,
+        }),
+        token,
+      );
+
+      if (Array.isArray(nextPage?.data) && nextPage.data.length > 0) {
+        mergedItems = [...mergedItems, ...nextPage.data];
+      }
+    }
+
+    return {
+      ...firstPage,
+      data: mergedItems,
+      meta: buildPaginationMeta(mergedItems.length, {
+        page: 1,
+        size: mergedItems.length || 1,
+      }),
+    } as TResponse;
+  }
+
   if (isModeDemoEnabled()) {
     return paginateFakeResponse(fakeData, params);
   }
@@ -395,7 +455,11 @@ export async function deleteDevisLigne(
   }
 
   const endpoint = `${apiConfig.endpoints.devis}/${devisId}/lignes/${ligneId}/delete`;
-  const d = await postJsonAuth<devis, deleteDevisLigneEdit>(endpoint, token, ligne);
+  const d = await postJsonAuth<devis, deleteDevisLigneEdit>(
+    endpoint,
+    token,
+    ligne,
+  );
 
   return d;
 }
@@ -572,7 +636,6 @@ export async function postValidateDevis(
   );
   return d;
 }
-
 
 export async function postSaveDevis(
   token: string,

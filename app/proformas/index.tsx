@@ -1,45 +1,41 @@
 import { AppHeader } from "@/components/app-header";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { EmptyResultsCard } from "@/components/empty-results-card";
-import { InfiniteListFooter } from "@/components/infinite-list-footer";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
-import { usePaginatedCachedResource } from "@/hooks/use-paginated-cached-resource";
+import { useCachedResource } from "@/hooks/use-cached-resource";
+import { DEVIS_LIST_CACHE_KEY, setCacheData } from "@/services/cache-service";
 import {
-    DEVIS_LIST_CACHE_KEY,
-    setCacheData,
-} from "@/services/cache-service";
-import {
-    buildSousCompteFilters,
-    formatAmount,
-    formatDate,
-    MAIN_ACCOUNT_FILTER,
-    matchesDateRange,
-    matchesSousCompteFilter,
-    toComparableDate,
+  buildSousCompteFilters,
+  formatAmount,
+  formatDate,
+  MAIN_ACCOUNT_FILTER,
+  matchesDateRange,
+  matchesSousCompteFilter,
+  toComparableDate,
 } from "@/tools/tools";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { deleteDevis, getfetchDevis } from "@/services/api-service";
 import { sharedStyles } from "@/styles/shared";
 import {
-    devisStatus,
-    listDevis,
-    statusDevisColorMap,
+  devisStatus,
+  listDevis,
+  statusDevisColorMap,
 } from "@/types/devis.type";
 const statusFilters: ("Toutes" | devisStatus)[] = [
   "Toutes",
@@ -93,17 +89,13 @@ export default function ProformasScreen() {
     setData: setProformas,
     isLoading,
     isRefreshing,
-    isLoadingMore,
     isError,
     refresh: handleRefresh,
-    loadMore,
-    hasNextPage,
-  } = usePaginatedCachedResource<listDevis["data"][number], listDevis>({
+  } = useCachedResource<listDevis>({
     cacheKey: DEVIS_LIST_CACHE_KEY,
     initialData: initialProformas,
     enabled: Boolean(userToken),
-    fetchPage: async (page, size) => getfetchDevis(userToken ?? "", { page, size }),
-    getItemKey: (item) => item.id,
+    fetcher: async () => getfetchDevis(userToken ?? ""),
     hasUsableCachedData,
   });
 
@@ -148,7 +140,9 @@ export default function ProformasScreen() {
                 let nextSnapshot: listDevis | null = null;
 
                 setProformas((current) => {
-                  const updatedData = current.data.filter((item) => item.id !== devisId);
+                  const updatedData = current.data.filter(
+                    (item) => item.id !== devisId,
+                  );
                   const currentMeta = current.meta ?? {
                     page: 1,
                     next: 1,
@@ -156,8 +150,14 @@ export default function ProformasScreen() {
                     total: current.data.length,
                     size: current.data.length || 1,
                   };
-                  const total = Math.max((currentMeta.total ?? current.data.length) - 1, updatedData.length);
-                  const size = Math.max(currentMeta.size || updatedData.length || 1, 1);
+                  const total = Math.max(
+                    (currentMeta.total ?? current.data.length) - 1,
+                    updatedData.length,
+                  );
+                  const size = Math.max(
+                    currentMeta.size || updatedData.length || 1,
+                    1,
+                  );
                   const totalPages = Math.max(1, Math.ceil(total / size));
                   const page = Math.min(currentMeta.page, totalPages);
                   const next = page < totalPages ? page + 1 : page;
@@ -249,28 +249,53 @@ export default function ProformasScreen() {
           const isDeleting = deletingIds.includes(proforma.id);
 
           return (
-            <View style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}>
+            <View
+              style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
+            >
               <View style={sharedStyles.invoiceTopRow}>
                 <View style={sharedStyles.invoiceRefBlock}>
-                  <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>{proforma.codeDevis}</Text>
-                  <Text style={[sharedStyles.invoiceClient, { color: mutedColor }]}>
-                    {proforma.nomSousCompte?.trim() ? proforma.nomSousCompte : MAIN_ACCOUNT_FILTER}
+                  <Text style={[sharedStyles.invoiceRef, { color: textColor }]}>
+                    {proforma.codeDevis}
+                  </Text>
+                  <Text
+                    style={[sharedStyles.invoiceClient, { color: mutedColor }]}
+                  >
+                    {proforma.nomSousCompte?.trim()
+                      ? proforma.nomSousCompte
+                      : MAIN_ACCOUNT_FILTER}
                   </Text>
                 </View>
-                <View style={[sharedStyles.statusBadge, { backgroundColor: `${statusColor}18` }]}>
-                  <Text style={[sharedStyles.statusText, { color: statusColor }]}>{proforma.status}</Text>
+                <View
+                  style={[
+                    sharedStyles.statusBadge,
+                    { backgroundColor: `${statusColor}18` },
+                  ]}
+                >
+                  <Text
+                    style={[sharedStyles.statusText, { color: statusColor }]}
+                  >
+                    {proforma.status}
+                  </Text>
                 </View>
               </View>
 
               <View style={sharedStyles.invoiceMetaRow}>
                 <View>
-                  <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>Émise le</Text>
-                  <Text style={[sharedStyles.metaValue, { color: textColor }]}>{formatDate(proforma.dateDevis)}</Text>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Émise le
+                  </Text>
+                  <Text style={[sharedStyles.metaValue, { color: textColor }]}>
+                    {formatDate(proforma.dateDevis)}
+                  </Text>
                 </View>
               </View>
 
               <View style={sharedStyles.invoiceBottomRow}>
-                <Text style={[sharedStyles.amountText, { color: textColor }]}>{formatAmount(proforma.totalNetPayer)}</Text>
+                <Text style={[sharedStyles.amountText, { color: textColor }]}>
+                  {formatAmount(proforma.totalNetPayer)}
+                </Text>
                 <View style={{ flexDirection: "row", gap: 8 }}>
                   {isDraft ? (
                     <TouchableOpacity
@@ -291,7 +316,9 @@ export default function ProformasScreen() {
 
                   {isDraft ? (
                     <TouchableOpacity
-                      onPress={() => handleDeleteDevis(proforma.id, proforma.codeDevis)}
+                      onPress={() =>
+                        handleDeleteDevis(proforma.id, proforma.codeDevis)
+                      }
                       disabled={isDeleting}
                       accessibilityLabel="Supprimer le devis"
                       style={[
@@ -305,23 +332,39 @@ export default function ProformasScreen() {
                       {isDeleting ? (
                         <ActivityIndicator size="small" color="#b91c1c" />
                       ) : (
-                        <MaterialIcons name="delete-outline" size={18} color="#b91c1c" />
+                        <MaterialIcons
+                          name="delete-outline"
+                          size={18}
+                          color="#b91c1c"
+                        />
                       )}
                     </TouchableOpacity>
                   ) : null}
 
                   <TouchableOpacity
-                    onPress={() => router.push(`/proformas/${proforma.id}` as never)}
-                    style={[sharedStyles.actionButton, { backgroundColor: `${tintColor}18` }]}
+                    onPress={() =>
+                      router.push(`/proformas/${proforma.id}` as never)
+                    }
+                    style={[
+                      sharedStyles.actionButton,
+                      { backgroundColor: `${tintColor}18` },
+                    ]}
                   >
-                    <Text style={[sharedStyles.actionText, { color: tintColor }]}>Voir détail</Text>
+                    <Text
+                      style={[sharedStyles.actionText, { color: tintColor }]}
+                    >
+                      Voir détail
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
           );
         }}
-        contentContainerStyle={[sharedStyles.scrollContent, { paddingHorizontal: 18, paddingTop: 12 }]}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
         ListHeaderComponent={
           <View style={{ gap: 16 }}>
             <TouchableOpacity
@@ -342,14 +385,27 @@ export default function ProformasScreen() {
             </TouchableOpacity>
 
             <View style={sharedStyles.statsRow}>
-              <View style={[sharedStyles.statCard, { backgroundColor: cardColor }]}>
-                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>Tous les devis</Text>
-                <Text style={[sharedStyles.statCount, { color: textColor }]}>{totalCount} devis</Text>
-                <Text style={[sharedStyles.statValue, { color: textColor }]}>{formatAmount(totalAmount)}</Text>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
+                  Tous les devis
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: textColor }]}>
+                  {totalCount} devis
+                </Text>
+                <Text style={[sharedStyles.statValue, { color: textColor }]}>
+                  {formatAmount(totalAmount)}
+                </Text>
               </View>
             </View>
 
-            <View style={[sharedStyles.searchBox, { backgroundColor: cardColor, borderColor }]}>
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
               <MaterialIcons name="search" size={20} color={mutedColor} />
               <TextInput
                 value={query}
@@ -373,7 +429,11 @@ export default function ProformasScreen() {
             />
 
             {sousCompteFilters.length > 2 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
                 {sousCompteFilters.map((sousCompte) => {
                   const isActive = sousCompte === activeClient;
 
@@ -389,7 +449,14 @@ export default function ProformasScreen() {
                         },
                       ]}
                     >
-                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>{sousCompte}</Text>
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {sousCompte}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -397,7 +464,11 @@ export default function ProformasScreen() {
             ) : null}
 
             {statusFilters.length > 2 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={sharedStyles.filterRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={sharedStyles.filterRow}
+              >
                 {statusFilters.map((status) => {
                   const isActive = status === activeStatus;
 
@@ -413,7 +484,14 @@ export default function ProformasScreen() {
                         },
                       ]}
                     >
-                      <Text style={[sharedStyles.filterLabel, { color: isActive ? "#ffffff" : textColor }]}>{status}</Text>
+                      <Text
+                        style={[
+                          sharedStyles.filterLabel,
+                          { color: isActive ? "#ffffff" : textColor },
+                        ]}
+                      >
+                        {status}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -421,7 +499,11 @@ export default function ProformasScreen() {
             ) : null}
 
             {showInitialLoader ? (
-              <ActivityIndicator size="large" color={tintColor} style={{ marginTop: 32 }} />
+              <ActivityIndicator
+                size="large"
+                color={tintColor}
+                style={{ marginTop: 32 }}
+              />
             ) : null}
 
             {showErrorState ? (
@@ -450,11 +532,6 @@ export default function ProformasScreen() {
           ) : null
         }
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListFooterComponent={
-          filteredInvoices.length > 0 ? (
-            <InfiniteListFooter isLoadingMore={isLoadingMore} tintColor={tintColor} mutedColor={mutedColor} />
-          ) : null
-        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -462,12 +539,6 @@ export default function ProformasScreen() {
             tintColor={tintColor}
           />
         }
-        onEndReached={() => {
-          if (hasNextPage) {
-            void loadMore();
-          }
-        }}
-        onEndReachedThreshold={0.35}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
