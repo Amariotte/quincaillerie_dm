@@ -9,7 +9,7 @@ import { useAppTheme } from "@/hooks/use-app-theme";
 import {
   deleteDevisLigne,
   getfetchDevisById,
-  getfetchProduits,
+  getAllProduits,
   getfetchSousComptes,
   postDevisLigne,
   postValidateDevis,
@@ -26,6 +26,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -78,6 +79,7 @@ export default function ProformaSaisieScreen() {
   const [showSousCompteList, setShowSousCompteList] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
   const [messagePopupVisible, setMessagePopupVisible] = useState(false);
@@ -171,22 +173,22 @@ export default function ProformaSaisieScreen() {
     setSelectedSousCompteName(dev.nomSousCompte ?? "");
   }, []);
 
-  // Chargement initial : catalogue produits + proforma existante si mode édition
+  // Chargement initial : proforma + sous-comptes (bloquant) puis produits (arrière-plan)
   useEffect(() => {
     const load = async () => {
       if (!userToken) {
         setIsLoading(false);
+        setIsLoadingProducts(false);
         return;
       }
+      // 1. Charger la proforma et les sous-comptes — bloque l'affichage
       try {
-        const [prod, dev, sousCompteResp] = await Promise.all([
-          getfetchProduits(userToken),
+        const [dev, sousCompteResp] = await Promise.all([
           isEditMode
             ? getfetchDevisById(userToken, id!)
             : Promise.resolve(null),
           getfetchSousComptes(userToken),
         ]);
-        setProducts(prod.data ?? []);
         setSousComptes(sousCompteResp.data ?? []);
         if (dev) {
           applyUpdatedDevis(dev);
@@ -200,7 +202,16 @@ export default function ProformaSaisieScreen() {
           }
         }
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // formulaire visible dès maintenant
+      }
+      // 2. Charger tous les produits en arrière-plan (non-bloquant)
+      try {
+        const prod = await getAllProduits(userToken);
+        setProducts(prod.data ?? []);
+      } catch {
+        // échec silencieux — catalogue vide
+      } finally {
+        setIsLoadingProducts(false);
       }
     };
     load();
@@ -378,7 +389,7 @@ export default function ProformaSaisieScreen() {
           userToken,
           proforma.id,
           line.idDevisLigne,
-           { sousCompteId: selectedSousCompteId ?? undefined },
+          { sousCompteId: selectedSousCompteId ?? undefined },
         );
         applyUpdatedDevis(updatedDevis);
       } catch {
@@ -589,7 +600,7 @@ export default function ProformaSaisieScreen() {
               </Text>
               <TouchableOpacity
                 disabled={!hasSousCompteOptions}
-                onPress={() => setShowSousCompteList((v) => !v)}
+                onPress={() => setShowSousCompteList(true)}
                 style={[
                   styles.sousComptePicker,
                   {
@@ -611,104 +622,11 @@ export default function ProformaSaisieScreen() {
                   </Text>
                 </View>
                 <MaterialIcons
-                  name={showSousCompteList ? "expand-less" : "expand-more"}
-                  size={22}
+                  name="arrow-drop-down"
+                  size={28}
                   color={mutedColor}
                 />
               </TouchableOpacity>
-
-              {showSousCompteList && (
-                <View
-                  style={[styles.catalogBox, { backgroundColor: cardColor }]}
-                >
-                  <TextInput
-                    value={sousCompteSearch}
-                    onChangeText={setSousCompteSearch}
-                    style={[
-                      styles.searchInput,
-                      { color: textColor, borderColor },
-                    ]}
-                    placeholder="Rechercher un sous-compte..."
-                    placeholderTextColor={mutedColor}
-                  />
-                  <TouchableOpacity
-                    onPress={() => handleSelectSousCompte(null)}
-                    style={styles.catalogRow}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.catalogLabel, { color: textColor }]}
-                        numberOfLines={1}
-                      >
-                        Compte principal
-                      </Text>
-                    </View>
-                    <MaterialIcons
-                      name={
-                        selectedSousCompteId === null
-                          ? "radio-button-checked"
-                          : "radio-button-unchecked"
-                      }
-                      size={22}
-                      color={
-                        selectedSousCompteId === null ? tintColor : mutedColor
-                      }
-                    />
-                  </TouchableOpacity>
-                  <FlatList
-                    data={filteredSousComptes}
-                    keyExtractor={(item) => item.id}
-                    style={{ maxHeight: 220 }}
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled
-                    ItemSeparatorComponent={() => (
-                      <View
-                        style={{
-                          height: 1,
-                          backgroundColor: `${borderColor}60`,
-                        }}
-                      />
-                    )}
-                    renderItem={({ item }) => {
-                      const isSelected = selectedSousCompteId === item.id;
-                      return (
-                        <TouchableOpacity
-                          onPress={() => handleSelectSousCompte(item)}
-                          style={styles.catalogRow}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text
-                              style={[
-                                styles.catalogLabel,
-                                { color: textColor },
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {item.nom}
-                            </Text>
-                          </View>
-                          <MaterialIcons
-                            name={
-                              isSelected
-                                ? "radio-button-checked"
-                                : "radio-button-unchecked"
-                            }
-                            size={22}
-                            color={isSelected ? tintColor : mutedColor}
-                          />
-                        </TouchableOpacity>
-                      );
-                    }}
-                    ListEmptyComponent={
-                      <Text
-                        style={[styles.catalogEmpty, { color: mutedColor }]}
-                      >
-                        Aucun sous-compte trouvé
-                      </Text>
-                    }
-                  />
-                </View>
-              )}
             </View>
           )}
 
@@ -718,89 +636,13 @@ export default function ProformaSaisieScreen() {
                 Articles
               </Text>
               <TouchableOpacity
-                onPress={() => setShowCatalog((v) => !v)}
+                onPress={() => setShowCatalog(true)}
                 style={[styles.addLineBtn, { backgroundColor: tintColor }]}
               >
-                <MaterialIcons
-                  name={showCatalog ? "close" : "add"}
-                  size={18}
-                  color="#fff"
-                />
-                <Text style={styles.addLineBtnText}>
-                  {showCatalog ? "Fermer" : "Ajouter un produit"}
-                </Text>
+                <MaterialIcons name="add" size={18} color="#fff" />
+                <Text style={styles.addLineBtnText}>Ajouter un produit</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Catalogue produits (collapsible) */}
-            {showCatalog && (
-              <View style={[styles.catalogBox, { backgroundColor: cardColor }]}>
-                <TextInput
-                  value={productSearch}
-                  onChangeText={setProductSearch}
-                  style={[
-                    styles.searchInput,
-                    { color: textColor, borderColor },
-                  ]}
-                  placeholder="Rechercher par désignation, référence…"
-                  placeholderTextColor={mutedColor}
-                />
-                <FlatList
-                  data={filteredProducts}
-                  keyExtractor={(item) => item.id}
-                  style={{ maxHeight: 300 }}
-                  showsVerticalScrollIndicator={false}
-                  nestedScrollEnabled
-                  ItemSeparatorComponent={() => (
-                    <View
-                      style={{ height: 1, backgroundColor: `${borderColor}60` }}
-                    />
-                  )}
-                  renderItem={({ item: product }) => {
-                    const alreadyAdded = lines.some(
-                      (l) => l.idProduit === product.id,
-                    );
-                    return (
-                      <TouchableOpacity
-                        onPress={() => addProduct(product)}
-                        disabled={alreadyAdded}
-                        style={[
-                          styles.catalogRow,
-                          alreadyAdded && { opacity: 0.4 },
-                        ]}
-                      >
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={[styles.catalogLabel, { color: textColor }]}
-                            numberOfLines={1}
-                          >
-                            {product.designation}
-                          </Text>
-                        </View>
-                        <Text
-                          style={[styles.catalogPrice, { color: tintColor }]}
-                        >
-                          {formatAmount(product.prixVenteTTC)}
-                        </Text>
-                        <MaterialIcons
-                          name={
-                            alreadyAdded ? "check-circle" : "add-circle-outline"
-                          }
-                          size={22}
-                          color={tintColor}
-                          style={{ marginLeft: 10 }}
-                        />
-                      </TouchableOpacity>
-                    );
-                  }}
-                  ListEmptyComponent={
-                    <Text style={[styles.catalogEmpty, { color: mutedColor }]}>
-                      Aucun produit trouvé
-                    </Text>
-                  }
-                />
-              </View>
-            )}
 
             {/* Lignes du devis */}
             {lines.length === 0 ? (
@@ -944,7 +786,10 @@ export default function ProformaSaisieScreen() {
           <View style={styles.actionRow}>
             <TouchableOpacity
               disabled={isSaving}
-              style={[styles.secondaryBtn, { borderColor, opacity: isSaving ? 0.7 : 1 }]}
+              style={[
+                styles.secondaryBtn,
+                { borderColor, opacity: isSaving ? 0.7 : 1 },
+              ]}
               onPress={handleSave}
             >
               <Text style={[styles.secondaryBtnText, { color: textColor }]}>
@@ -969,6 +814,234 @@ export default function ProformaSaisieScreen() {
           </View>
         </View>
       </ScrollView>
+      {/* Modal sélection sous-compte */}
+      <Modal
+        visible={showSousCompteList}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSousCompteList(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              backgroundColor: "rgba(0,0,0,0.45)",
+            }}
+            activeOpacity={1}
+            onPress={() => setShowSousCompteList(false)}
+          />
+          <View style={[styles.modalSheet, { backgroundColor }]}>
+            <View
+              style={[styles.modalHandle, { backgroundColor: borderColor }]}
+            />
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: textColor }]}>
+                Choisir un sous-compte
+              </Text>
+              <TouchableOpacity onPress={() => setShowSousCompteList(false)}>
+                <MaterialIcons name="close" size={22} color={mutedColor} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              value={sousCompteSearch}
+              onChangeText={setSousCompteSearch}
+              style={[styles.searchInput, { color: textColor, borderColor }]}
+              placeholder="Rechercher un sous-compte..."
+              placeholderTextColor={mutedColor}
+            />
+            <TouchableOpacity
+              onPress={() => handleSelectSousCompte(null)}
+              style={styles.catalogRow}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[styles.catalogLabel, { color: textColor }]}
+                  numberOfLines={1}
+                >
+                  Compte principal
+                </Text>
+              </View>
+              <MaterialIcons
+                name={
+                  selectedSousCompteId === null
+                    ? "radio-button-checked"
+                    : "radio-button-unchecked"
+                }
+                size={22}
+                color={selectedSousCompteId === null ? tintColor : mutedColor}
+              />
+            </TouchableOpacity>
+            <View style={{ height: 1, backgroundColor: `${borderColor}60` }} />
+            <FlatList
+              data={filteredSousComptes}
+              keyExtractor={(item) => item.id}
+              style={{ maxHeight: 380 }}
+              showsVerticalScrollIndicator={false}
+              ItemSeparatorComponent={() => (
+                <View
+                  style={{ height: 1, backgroundColor: `${borderColor}60` }}
+                />
+              )}
+              renderItem={({ item }) => {
+                const isSelected = selectedSousCompteId === item.id;
+                return (
+                  <TouchableOpacity
+                    onPress={() => handleSelectSousCompte(item)}
+                    style={styles.catalogRow}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.catalogLabel, { color: textColor }]}
+                        numberOfLines={1}
+                      >
+                        {item.nom}
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name={
+                        isSelected
+                          ? "radio-button-checked"
+                          : "radio-button-unchecked"
+                      }
+                      size={22}
+                      color={isSelected ? tintColor : mutedColor}
+                    />
+                  </TouchableOpacity>
+                );
+              }}
+              ListEmptyComponent={
+                <Text style={[styles.catalogEmpty, { color: mutedColor }]}>
+                  Aucun sous-compte trouvé
+                </Text>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal catalogue produits */}
+      <Modal
+        visible={showCatalog}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCatalog(false);
+          setProductSearch("");
+        }}
+      >
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              backgroundColor: "rgba(0,0,0,0.45)",
+            }}
+            activeOpacity={1}
+            onPress={() => {
+              setShowCatalog(false);
+              setProductSearch("");
+            }}
+          />
+          <View style={[styles.modalSheet, { backgroundColor }]}>
+            <View
+              style={[styles.modalHandle, { backgroundColor: borderColor }]}
+            />
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: textColor }]}>
+                Catalogue produits
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCatalog(false);
+                  setProductSearch("");
+                }}
+              >
+                <MaterialIcons name="close" size={22} color={mutedColor} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              value={productSearch}
+              onChangeText={setProductSearch}
+              style={[styles.searchInput, { color: textColor, borderColor }]}
+              placeholder="Rechercher par désignation, référence…"
+              placeholderTextColor={mutedColor}
+            />
+            {isLoadingProducts ? (
+              <View style={{ paddingVertical: 32, alignItems: "center" }}>
+                <ActivityIndicator size="large" color={tintColor} />
+                <Text
+                  style={[
+                    styles.catalogEmpty,
+                    { color: mutedColor, marginTop: 10 },
+                  ]}
+                >
+                  Chargement du catalogue…
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={(item) => item.id}
+                style={{ maxHeight: 440 }}
+                showsVerticalScrollIndicator={false}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{ height: 1, backgroundColor: `${borderColor}60` }}
+                  />
+                )}
+                renderItem={({ item: product }) => {
+                  const alreadyAdded = lines.some(
+                    (l) => l.idProduit === product.id,
+                  );
+                  return (
+                    <TouchableOpacity
+                      onPress={() => addProduct(product)}
+                      disabled={alreadyAdded}
+                      style={[
+                        styles.catalogRow,
+                        alreadyAdded && { opacity: 0.4 },
+                      ]}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[styles.catalogLabel, { color: textColor }]}
+                          numberOfLines={1}
+                        >
+                          {product.designation}
+                        </Text>
+                      </View>
+                      <Text style={[styles.catalogPrice, { color: tintColor }]}>
+                        {formatAmount(product.prixVenteTTC)}
+                      </Text>
+                      <MaterialIcons
+                        name={
+                          alreadyAdded ? "check-circle" : "add-circle-outline"
+                        }
+                        size={22}
+                        color={tintColor}
+                        style={{ marginLeft: 10 }}
+                      />
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <Text style={[styles.catalogEmpty, { color: mutedColor }]}>
+                    Aucun produit trouvé
+                  </Text>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+
       <MessagePopup
         visible={messagePopupVisible}
         type={messagePopupType}
@@ -1227,6 +1300,36 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: "#ffffff",
     fontSize: 14,
+    fontWeight: "800",
+  },
+  modalBackdrop: {
+    flex: 1,
+  },
+  modalSheet: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 36,
+    gap: 12,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 4,
+    alignSelf: "center",
+    marginBottom: 4,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitle: {
+    fontSize: 18,
     fontWeight: "800",
   },
 });

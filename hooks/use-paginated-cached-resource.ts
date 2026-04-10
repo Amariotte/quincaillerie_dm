@@ -26,7 +26,7 @@ type PaginatedResult<TItem, TResponse extends PaginatedResponse<TItem>> = {
   loadMore: () => Promise<void>;
 };
 
-const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 100;
 
 function normalizeMeta(
   metaValue: meta | undefined,
@@ -34,7 +34,8 @@ function normalizeMeta(
   page: number,
   size: number,
 ): meta {
-  const total = typeof metaValue?.total === "number" ? metaValue.total : totalItems;
+  const total =
+    typeof metaValue?.total === "number" ? metaValue.total : totalItems;
   const safeSize =
     typeof metaValue?.size === "number" && metaValue.size > 0
       ? metaValue.size
@@ -78,7 +79,9 @@ function getNextPage(metaValue: meta | undefined): number | null {
 export function usePaginatedCachedResource<
   TItem,
   TResponse extends PaginatedResponse<TItem>,
->(options: PaginatedOptions<TItem, TResponse>): PaginatedResult<TItem, TResponse> {
+>(
+  options: PaginatedOptions<TItem, TResponse>,
+): PaginatedResult<TItem, TResponse> {
   const {
     cacheKey,
     initialData,
@@ -114,7 +117,9 @@ export function usePaginatedCachedResource<
 
   const mergePageData = useCallback(
     (currentData: TResponse, incomingData: TResponse, page: number) => {
-      const incomingItems = Array.isArray(incomingData.data) ? incomingData.data : [];
+      const incomingItems = Array.isArray(incomingData.data)
+        ? incomingData.data
+        : [];
       if (page <= 1) {
         return normalizePageData(incomingData, 1, incomingItems);
       }
@@ -176,7 +181,16 @@ export function usePaginatedCachedResource<
     } finally {
       setIsLoading(false);
     }
-  }, [cacheKey, enabled, fetchPage, hasUsableCachedData, initialData, normalizePageData, pageSize, replaceData]);
+  }, [
+    cacheKey,
+    enabled,
+    fetchPage,
+    hasUsableCachedData,
+    initialData,
+    normalizePageData,
+    pageSize,
+    replaceData,
+  ]);
 
   const refresh = useCallback(async () => {
     if (!enabled) {
@@ -221,7 +235,15 @@ export function usePaginatedCachedResource<
     } finally {
       setIsLoadingMore(false);
     }
-  }, [enabled, fetchPage, isLoading, isLoadingMore, mergePageData, pageSize, replaceData]);
+  }, [
+    enabled,
+    fetchPage,
+    isLoading,
+    isLoadingMore,
+    mergePageData,
+    pageSize,
+    replaceData,
+  ]);
 
   useEffect(() => {
     void reload();

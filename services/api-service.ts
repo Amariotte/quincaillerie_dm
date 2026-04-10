@@ -246,6 +246,15 @@ export async function getfetchProduits(
   return data;
 }
 
+export async function getAllProduits(token: string): Promise<listProduits> {
+  return fetchPaginatedList(
+    token,
+    `${apiConfig.endpoints.produits}`,
+    undefined,
+    produitsFakeData,
+  );
+}
+
 export async function getfetchSousComptes(
   token: string,
   params?: PaginationParams,

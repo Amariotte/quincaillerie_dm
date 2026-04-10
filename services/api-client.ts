@@ -264,7 +264,6 @@ async function requestJson<T>(
       throw error;
     }
 
-  
     const networkMessage =
       "Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.";
     if (!options?.suppressErrorPopup) {
@@ -284,7 +283,10 @@ async function requestMultipart<T>(
 ): Promise<T> {
   try {
     const headers = new Headers(init?.headers ?? {});
-    console.log("[requestMultipart] Headers envoyés :", Object.fromEntries((headers as any).entries()));
+    console.log(
+      "[requestMultipart] Headers envoyés :",
+      Object.fromEntries((headers as any).entries()),
+    );
     const response = await fetch(getApiUrl(endpoint), {
       ...init,
       headers,
@@ -394,10 +396,14 @@ export async function postJson<TResponse, TBody = unknown>(
   body?: TBody,
   options?: RequestBehaviorOptions,
 ): Promise<TResponse> {
-  return requestJson<TResponse>(endpoint, {
-    method: "POST",
-    body: body === undefined ? undefined : JSON.stringify(body),
-  }, options);
+  return requestJson<TResponse>(
+    endpoint,
+    {
+      method: "POST",
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+    options,
+  );
 }
 
 export async function postJsonAuth<TResponse, TBody = unknown>(
