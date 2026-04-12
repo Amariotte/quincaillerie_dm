@@ -27,7 +27,7 @@ import {
 } from "@/types/devis.type";
 import { facture, listFactures } from "@/types/factures.type";
 import { listMouvements } from "@/types/mouvements.type";
-import { listOperations } from "@/types/operations.type";
+import { listOperations, operation } from "@/types/operations.type";
 import {
   dataChart,
   meta,
@@ -314,8 +314,6 @@ export async function getfetchDevis(token: string): Promise<listDevis> {
     return proformasFakeData;
   }
 
-  console.log("Devis token:", token);
-  console.log("endpoints:", apiConfig.endpoints.devis);
   const data = await getJsonAuth<listDevis>(
     `${apiConfig.endpoints.devis}`,
     token,
@@ -337,6 +335,25 @@ export async function getfetchFactureById(
 
   const d = await getJsonAuth<facture>(
     `${apiConfig.endpoints.factures}/${id}`,
+    token,
+  );
+
+  return d;
+}
+
+export async function getfetchOperationById(
+  token: string,
+  id: string,
+): Promise<operation | null> {
+  if (isModeDemoEnabled()) {
+    return operationsFakeData.data.filter((operation) => operation.id === id)
+      .length > 0
+      ? operationsFakeData.data.filter((operation) => operation.id === id)[0]
+      : null;
+  }
+
+  const d = await getJsonAuth<operation>(
+    `${apiConfig.endpoints.operations}/${id}`,
     token,
   );
 

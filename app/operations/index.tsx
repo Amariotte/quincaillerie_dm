@@ -23,7 +23,7 @@ import {
 } from "@/types/operations.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -60,6 +60,10 @@ export default function OperationsScreen() {
     }),
     [],
   );
+  const fetchOperations = useCallback(
+    () => getfetchOperations(userToken ?? ""),
+    [userToken],
+  );
   const {
     data: operations,
     isLoading,
@@ -70,7 +74,7 @@ export default function OperationsScreen() {
     cacheKey: OPERATIONS_LIST_CACHE_KEY,
     initialData: initialOperations,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchOperations(userToken ?? ""),
+    fetcher: fetchOperations,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
@@ -222,8 +226,9 @@ export default function OperationsScreen() {
                   {formatAmount(operation.montantOp)}
                 </Text>
                 <TouchableOpacity
+
                   onPress={() =>
-                    router.push(`/operations/${operation.id}` as never)
+                      router.push(`/operations/${operation.id}` as never)
                   }
                   style={[
                     sharedStyles.actionButton,

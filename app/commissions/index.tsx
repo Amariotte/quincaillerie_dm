@@ -19,7 +19,7 @@ import {
 import { listCommissions } from "@/types/commissions.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -56,6 +56,10 @@ export default function CommissionsScreen() {
   );
 
   const { userToken } = useAuthContext();
+  const fetchCommissions = useCallback(
+    () => getfetchCommissions(userToken ?? ""),
+    [userToken],
+  );
   const {
     data: commissions,
     isLoading,
@@ -66,7 +70,7 @@ export default function CommissionsScreen() {
     cacheKey: COMMISSIONS_LIST_CACHE_KEY,
     initialData: initialCommissions,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchCommissions(userToken ?? ""),
+    fetcher: fetchCommissions,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&

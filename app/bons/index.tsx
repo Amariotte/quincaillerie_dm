@@ -12,7 +12,7 @@ import { listBonLivraisons } from "@/types/bon-livraisons.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -44,6 +44,10 @@ export default function BonsScreen() {
   );
 
   const { userToken } = useAuthContext();
+  const fetchBonLivraisons = useCallback(
+    () => getfetchBonLivraisons(userToken ?? ""),
+    [userToken],
+  );
   const {
     data: bonLivraisons,
     isLoading,
@@ -54,7 +58,7 @@ export default function BonsScreen() {
     cacheKey: BONS_LIVRAISONS_LIST_CACHE_KEY,
     initialData: initialBonLivraisons,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchBonLivraisons(userToken ?? ""),
+    fetcher: fetchBonLivraisons,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&

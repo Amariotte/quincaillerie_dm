@@ -14,7 +14,7 @@ import {
 } from "@/types/promotions.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -53,6 +53,10 @@ export default function PromotionsScreen() {
   );
 
   const { userToken } = useAuthContext();
+  const fetchPromotions = useCallback(
+    () => getfetchPromotions(userToken ?? ""),
+    [userToken],
+  );
   const {
     data: promotions,
     isLoading,
@@ -63,7 +67,7 @@ export default function PromotionsScreen() {
     cacheKey: PROMOTIONS_LIST_CACHE_KEY,
     initialData: initialPromotions,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchPromotions(userToken ?? ""),
+    fetcher: fetchPromotions,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&

@@ -9,23 +9,23 @@ import COLORS from "@/styles/colors";
 import { sharedStyles } from "@/styles/shared";
 import { formatAmount, formatDate } from "@/tools/tools";
 import {
-  listMouvements,
-  typeMouvementColorMap,
-  typeMouvementIconMap,
+    listMouvements,
+    typeMouvementColorMap,
+    typeMouvementIconMap,
 } from "@/types/mouvements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "./style";
@@ -206,7 +206,7 @@ export default function TransactionsScreen() {
     }
 
     if (tx.libType === "Décaissement") {
-      router.push("/operations" as never);
+      router.push(`/operations/${tx.id}` as never);
       return;
     }
 

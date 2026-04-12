@@ -2,39 +2,81 @@ import { AppHeader } from "@/components/app-header";
 import { EmptyResultsCard } from "@/components/empty-results-card";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { getfetchOperationById } from "@/services/api-service";
 import { sharedStyles } from "@/styles/shared.js";
 import { formatAmount, formatDate, MAIN_ACCOUNT_FILTER } from "@/tools/tools";
 import { operation, typeMouvementColorMap } from "@/types/operations.type";
 import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OperationDetailScreen() {
-  const { id, operation: operationParam } = useLocalSearchParams<{
-    id: string;
-    operation?: string;
-  }>();
-  const { backgroundColor, textColor, tintColor, cardColor, mutedColor } =
-    useAppTheme();
+ 
   const { userToken } = useAuthContext();
-  const [operationData, setOperationData] = useState<operation | null>(() => {
-    // If operation is passed as parameter, parse it and use it
-    if (operationParam) {
-      try {
-        return JSON.parse(operationParam) as operation;
-      } catch {
-        return null;
-      }
+  const { backgroundColor, textColor, cardColor, mutedColor } = useAppTheme();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  
+ 
+  const [operationFromApi, setOperationFromApi] = useState<operation | null>(
+    null,
+  );
+  const [isLoadingFallback, setIsLoadingFallback] = useState(false);
+
+  useEffect(() => {
+    if (!id || !userToken) {
+      return;
     }
-    return null;
-  });
 
-  const operation_item = operationParam
-    ? (JSON.parse(operationParam) as operation)
-    : operationData;
+    let isCancelled = false;
 
-  if (!operation_item) {
+    const loadOperationDetail = async () => {
+      try {
+        setIsLoadingFallback(true);
+        const result = await getfetchOperationById(userToken, id);
+
+        if (!isCancelled) {
+          setOperationFromApi(result);
+        }
+      } catch {
+        if (!isCancelled) {
+          setOperationFromApi(null);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingFallback(false);
+        }
+      }
+    };
+
+    void loadOperationDetail();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [id, userToken]);
+
+
+  if (!operationFromApi && isLoadingFallback) {
+    return (
+      <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
+        <View style={sharedStyles.fixedHeader}>
+        <AppHeader showBack title="Détail opération" subtitle="Chargement en cours" />
+        </View>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color={textColor} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!operationFromApi) {
     return (
       <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
         <View style={sharedStyles.fixedHeader}>
@@ -60,7 +102,7 @@ export default function OperationDetailScreen() {
     );
   }
 
-  const operationType = operation_item.libType ?? "Décaissement";
+  const operationType = operationFromApi.libType ?? "Décaissement";
   const typeColor = typeMouvementColorMap[operationType];
 
   return (
@@ -69,7 +111,7 @@ export default function OperationDetailScreen() {
         <AppHeader
           showBack
           title="Détail de l'opération"
-          subtitle={operation_item.codeOp}
+          subtitle={operationFromApi.codeOp}
         />
       </View>
       <ScrollView
@@ -83,8 +125,8 @@ export default function OperationDetailScreen() {
           >
             <View style={sharedStyles.headerTopRow}>
               <Text style={[sharedStyles.clientName, { color: textColor }]}>
-                {operation_item.nomSousCompte?.trim()
-                  ? operation_item.nomSousCompte
+                {operationFromApi.nomSousCompte?.trim()
+                  ? operationFromApi.nomSousCompte
                   : MAIN_ACCOUNT_FILTER}
               </Text>
             </View>
@@ -98,23 +140,23 @@ export default function OperationDetailScreen() {
                 {operationType}
               </Text>
             </View>
-            ,
+
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                Date : {formatDate(operation_item.dateOp)}
+                Date : {formatDate(operationFromApi.dateOp)}
               </Text>
             </View>
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                Agence : {operation_item.nomAgence ?? "—"}
+                Agence : {operationFromApi.nomAgence ?? "—"}
               </Text>
             </View>
             <View style={sharedStyles.metaRow}>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                Mode paiement : {operation_item.nomModePaiement ?? "—"}
+                Mode paiement : {operationFromApi.nomModePaiement ?? "—"}
               </Text>
               <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                Référence : {operation_item.refOp ?? "—"}
+                Référence : {operationFromApi.refOp ?? "—"}
               </Text>
             </View>
           </View>
@@ -128,11 +170,11 @@ export default function OperationDetailScreen() {
               Rubrique
             </Text>
             <Text style={[sharedStyles.descriptionText, { color: textColor }]}>
-              {operation_item.libRubrique}
+              {operationFromApi.libRubrique}
             </Text>
           </View>
 
-          {operation_item.descOp && (
+          {operationFromApi.descOp && (
             <View
               style={[sharedStyles.linesCard, { backgroundColor: cardColor }]}
             >
@@ -142,7 +184,7 @@ export default function OperationDetailScreen() {
               <Text
                 style={[sharedStyles.descriptionText, { color: textColor }]}
               >
-                {operation_item.descOp}
+                {operationFromApi.descOp}
               </Text>
             </View>
           )}
@@ -161,7 +203,7 @@ export default function OperationDetailScreen() {
                     Solliciteur
                   </Text>
                   <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>
-                    {operation_item.solliciteurOp ?? "—"}
+                    {operationFromApi.solliciteurOp ?? "—"}
                   </Text>
                 </View>
               </View>
@@ -173,7 +215,7 @@ export default function OperationDetailScreen() {
                       : "Bénéficiaire"}
                   </Text>
                   <Text style={[sharedStyles.lineMeta, { color: mutedColor }]}>
-                    {operation_item.depoOrBene ?? "—"}
+                    {operationFromApi.depoOrBene ?? "—"}
                   </Text>
                 </View>
               </View>
@@ -189,7 +231,7 @@ export default function OperationDetailScreen() {
                 Montant de l&apos;opération
               </Text>
               <Text style={[sharedStyles.totalValue, { color: typeColor }]}>
-                {formatAmount(operation_item.montantOp)}
+                {formatAmount(operationFromApi.montantOp)}
               </Text>
             </View>
           </View>

@@ -22,7 +22,7 @@ import {
 } from "@/types/reglements.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -55,6 +55,10 @@ export default function ReglementsScreen() {
   );
 
   const { userToken } = useAuthContext();
+  const fetchReglements = useCallback(
+    () => getfetchReglements(userToken ?? ""),
+    [userToken],
+  );
   const {
     data: reglements,
     isLoading,
@@ -65,7 +69,7 @@ export default function ReglementsScreen() {
     cacheKey: REGLEMENTS_LIST_CACHE_KEY,
     initialData: initialReglements,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchReglements(userToken ?? ""),
+    fetcher: fetchReglements,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&

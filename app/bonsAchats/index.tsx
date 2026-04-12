@@ -3,33 +3,42 @@ import { EmptyResultsCard } from "@/components/empty-results-card";
 import { useAuthContext } from "@/hooks/auth-context";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useCachedResource } from "@/hooks/use-cached-resource";
-import {
-  getfetchBonAchatById,
-  getfetchBonAchats,
-} from "@/services/api-service";
+import { getfetchBonAchats } from "@/services/api-service";
 import { BONS_ACHATS_LIST_CACHE_KEY } from "@/services/cache-service";
-import { sharedStyles } from "@/styles/shared.js";
+import { sharedStyles } from "@/styles/shared";
 import { formatAmount, formatDate } from "@/tools/tools";
-import { bonAchat, listBonAchats } from "@/types/bon-achats.type.js";
+import { bonAchat, listBonAchats } from "@/types/bon-achats.type";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import styles from "./style";
 
 type BonStatusFilter = "all" | "active" | "expired";
+
+function normalizeBonAchatData(bon: bonAchat): bonAchat {
+  return {
+    ...bon,
+    id: String(bon?.id ?? ""),
+    numeroBa: typeof bon?.numeroBa === "string" ? bon.numeroBa : "",
+    etatBa: Number(bon?.etatBa ?? 0),
+    montantBa: Number(bon?.montantBa ?? 0),
+    uniqueUse: Boolean(bon?.uniqueUse),
+    autreClientUse: Boolean(bon?.autreClientUse),
+    uniqueAgence: Boolean(bon?.uniqueAgence),
+    nomAgence: typeof bon?.nomAgence === "string" ? bon.nomAgence : "",
+    details: Array.isArray(bon?.details) ? bon.details : [],
+  };
+}
 
 function isExpiredBon(bon: bonAchat): boolean {
   if (!bon.dateExpBa) {
@@ -37,6 +46,18 @@ function isExpiredBon(bon: bonAchat): boolean {
   }
 
   return new Date(bon.dateExpBa).getTime() < Date.now();
+}
+
+function getBonStatus(bon: bonAchat) {
+  if (isExpiredBon(bon)) {
+    return { label: "Expiré", color: "#dc2626" };
+  }
+
+  if (bon.etatBa === 1) {
+    return { label: "Actif", color: "#16a34a" };
+  }
+
+  return { label: "Inactif", color: "#d97706" };
 }
 
 export default function BonsAchatsScreen() {
@@ -50,12 +71,8 @@ export default function BonsAchatsScreen() {
     borderColor,
   } = useAppTheme();
   const [query, setQuery] = useState("");
-  const [selectedBonId, setSelectedBonId] = useState<string | null>(null);
-  const [selectedBonDetail, setSelectedBonDetail] = useState<bonAchat | null>(
-    null,
-  );
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<BonStatusFilter>("all");
+
   const initialBonAchats = useMemo<listBonAchats>(
     () => ({
       meta: { page: 1, next: 1, totalPages: 1, total: 0, size: 0 },
@@ -63,7 +80,12 @@ export default function BonsAchatsScreen() {
     }),
     [],
   );
+
   const { userToken } = useAuthContext();
+  const fetchBonAchats = useCallback(
+    () => getfetchBonAchats(userToken ?? ""),
+    [userToken],
+  );
 
   const {
     data: bonAchats,
@@ -76,22 +98,31 @@ export default function BonsAchatsScreen() {
     cacheKey: BONS_ACHATS_LIST_CACHE_KEY,
     initialData: initialBonAchats,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchBonAchats(userToken ?? ""),
+    fetcher: fetchBonAchats,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
-        Array.isArray(cachedData.data) &&
-        cachedData.data.length > 0,
+          Array.isArray(cachedData.data) &&
+          cachedData.data.length > 0,
       ),
   });
 
+  const bonAchatsData = useMemo(
+    () =>
+      Array.isArray(bonAchats.data)
+        ? bonAchats.data.map(normalizeBonAchatData)
+        : [],
+    [bonAchats.data],
+  );
+
   const filteredBons = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return bonAchats.data.filter((bon) => {
+
+    return bonAchatsData.filter((bon) => {
       const matchesQuery =
         normalizedQuery.length === 0 ||
         bon.numeroBa.toLowerCase().includes(normalizedQuery) ||
-        (bon.nomAgence ?? "").toLowerCase().includes(normalizedQuery);
+        bon.nomAgence.toLowerCase().includes(normalizedQuery);
 
       const expired = isExpiredBon(bon);
       const isActive = !expired && bon.etatBa === 1;
@@ -102,12 +133,12 @@ export default function BonsAchatsScreen() {
 
       return matchesQuery && matchesStatus;
     });
-  }, [bonAchats.data, query, statusFilter]);
+  }, [bonAchatsData, query, statusFilter]);
 
   const statusCounts = useMemo(() => {
-    const initial = { all: bonAchats.data.length, active: 0, expired: 0 };
+    const initial = { all: bonAchatsData.length, active: 0, expired: 0 };
 
-    for (const bon of bonAchats.data) {
+    for (const bon of bonAchatsData) {
       if (isExpiredBon(bon)) {
         initial.expired += 1;
       } else if (bon.etatBa === 1) {
@@ -116,89 +147,17 @@ export default function BonsAchatsScreen() {
     }
 
     return initial;
-  }, [bonAchats.data]);
+  }, [bonAchatsData]);
 
   const totalCount = filteredBons.length;
-  const totalAmount = filteredBons.reduce((sum, bon) => sum + bon.montantBa, 0);
-  const selectedBon = useMemo(
-    () =>
-      filteredBons.find((bon) => String(bon.id) === selectedBonId) ??
-      filteredBons[0] ??
-      null,
-    [filteredBons, selectedBonId],
+  const totalAmount = filteredBons.reduce(
+    (sum, bon) => sum + Number(bon.montantBa || 0),
+    0,
   );
-
-  useEffect(() => {
-    if (filteredBons.length === 0) {
-      setSelectedBonId(null);
-      return;
-    }
-
-    const hasSelectedBon = filteredBons.some(
-      (bon) => String(bon.id) === selectedBonId,
-    );
-    if (!hasSelectedBon) {
-      setSelectedBonId(String(filteredBons[0].id));
-    }
-  }, [filteredBons, selectedBonId]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadSelectedBonDetail = async () => {
-      if (!selectedBonId) {
-        if (isMounted) {
-          setSelectedBonDetail(null);
-          setIsDetailLoading(false);
-        }
-        return;
-      }
-
-      const previewBon = selectedBon;
-
-      if (isMounted) {
-        setSelectedBonDetail(previewBon);
-        setIsDetailLoading(true);
-      }
-
-      if (!userToken) {
-        if (isMounted) {
-          setIsDetailLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const matchingBon = await getfetchBonAchatById(
-          userToken,
-          selectedBonId,
-        );
-
-        if (matchingBon && isMounted) {
-          setSelectedBonDetail(matchingBon);
-        }
-      } catch {
-        if (isMounted) {
-          setSelectedBonDetail(previewBon);
-        }
-      } finally {
-        if (isMounted) {
-          setIsDetailLoading(false);
-        }
-      }
-    };
-
-    loadSelectedBonDetail();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedBon, selectedBonId, userToken]);
-
-  const selectedBonData =
-    selectedBonDetail && String(selectedBonDetail.id) === selectedBonId
-      ? selectedBonDetail
-      : selectedBon;
+  const hasBonAchats = bonAchatsData.length > 0;
+  const hasActiveFilters = query.trim().length > 0 || statusFilter !== "all";
+  const showInitialLoader = isLoading && bonAchatsData.length === 0;
+  const showErrorState = isError && bonAchatsData.length === 0;
 
   return (
     <SafeAreaView style={[sharedStyles.safeArea, { backgroundColor }]}>
@@ -209,9 +168,284 @@ export default function BonsAchatsScreen() {
           subtitle="Suivi des bons d'achat"
         />
       </View>
-      <ScrollView
-        contentContainerStyle={sharedStyles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <FlatList
+        data={showInitialLoader || showErrorState ? [] : filteredBons}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item: bon }) => {
+          const status = getBonStatus(bon);
+
+          return (
+            <View
+              style={[sharedStyles.invoiceCard, { backgroundColor: cardColor }]}
+            >
+              <View style={sharedStyles.invoiceTopRow}>
+                <View style={sharedStyles.invoiceRefBlock}>
+                  <Text style={[sharedStyles.invoiceRef, { color: textColor }]}> 
+                    {bon.numeroBa || "Bon sans numero"}
+                  </Text>
+                  <Text
+                    style={[sharedStyles.invoiceClient, { color: mutedColor }]}
+                  >
+                    {bon.nomAgence?.trim()
+                      ? bon.nomAgence
+                      : "Agence non renseignée"}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    sharedStyles.statusBadge,
+                    { backgroundColor: `${status.color}18` },
+                  ]}
+                >
+                  <Text
+                    style={[sharedStyles.statusText, { color: status.color }]}
+                  >
+                    {status.label}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={sharedStyles.invoiceMetaRow}>
+                <View>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Créé le
+                  </Text>
+                  <Text style={[sharedStyles.metaValue, { color: textColor }]}> 
+                    {bon.dateBa ? formatDate(bon.dateBa) : "—"}
+                  </Text>
+                </View>
+                <View>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Validité
+                  </Text>
+                  <Text style={[sharedStyles.metaValue, { color: textColor }]}> 
+                    {bon.dateExpBa ? formatDate(bon.dateExpBa) : "—"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={sharedStyles.invoiceMetaRow}>
+                <View>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Utilisation
+                  </Text>
+                  <Text style={[sharedStyles.metaValue, { color: textColor }]}> 
+                    {bon.uniqueUse ? "Usage unique" : "Multi-usage"}
+                  </Text>
+                </View>
+                <View>
+                  <Text
+                    style={[sharedStyles.metaCaption, { color: mutedColor }]}
+                  >
+                    Partage
+                  </Text>
+                  <Text style={[sharedStyles.metaValue, { color: textColor }]}> 
+                    {bon.autreClientUse ? "Partageable" : "Personnel"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={sharedStyles.invoiceBottomRow}>
+                <Text style={[sharedStyles.amountText, { color: textColor }]}> 
+                  {formatAmount(bon.montantBa)}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => router.push(`/bonsAchats/${bon.id}` as never)}
+                  style={[
+                    sharedStyles.actionButton,
+                    { backgroundColor: `${tintColor}18` },
+                  ]}
+                >
+                  <Text style={[sharedStyles.actionText, { color: tintColor }]}> 
+                    Voir détail
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }}
+        contentContainerStyle={[
+          sharedStyles.scrollContent,
+          { paddingHorizontal: 18, paddingTop: 12 },
+        ]}
+        ListHeaderComponent={
+          <View style={{ gap: 16 }}>
+            {isOfflineMode && !isLoading ? (
+              <View
+                style={[
+                  sharedStyles.emptyCard,
+                  {
+                    backgroundColor: `${tintColor}14`,
+                    borderColor: `${tintColor}35`,
+                    borderWidth: 1,
+                  },
+                ]}
+              >
+                <MaterialIcons name="wifi-off" size={18} color={tintColor} />
+                <Text style={[sharedStyles.emptyText, { color: tintColor }]}> 
+                  Mode hors ligne: affichage des données disponibles.
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={sharedStyles.statsRow}>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}> 
+                  Tous les bons
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: textColor }]}> 
+                  {totalCount} bon{totalCount > 1 ? "s" : ""}
+                </Text>
+              </View>
+              <View
+                style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
+              >
+                <Text style={[sharedStyles.statLabel, { color: mutedColor }]}> 
+                  Montant total
+                </Text>
+                <Text style={[sharedStyles.statCount, { color: textColor }]}> 
+                  {formatAmount(totalAmount)}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                sharedStyles.searchBox,
+                { backgroundColor: cardColor, borderColor },
+              ]}
+            >
+              <MaterialIcons name="search" size={20} color={mutedColor} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Rechercher un bon ou une agence"
+                placeholderTextColor={mutedColor}
+                style={[sharedStyles.searchInput, { color: textColor }]}
+              />
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={sharedStyles.filterRow}
+            >
+              <TouchableOpacity
+                onPress={() => setStatusFilter("all")}
+                style={[
+                  sharedStyles.filterChip,
+                  {
+                    backgroundColor:
+                      statusFilter === "all" ? tintColor : cardColor,
+                    borderColor:
+                      statusFilter === "all" ? tintColor : borderColor,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    sharedStyles.filterLabel,
+                    { color: statusFilter === "all" ? "#ffffff" : textColor },
+                  ]}
+                >
+                  Tous ({statusCounts.all})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setStatusFilter("active")}
+                style={[
+                  sharedStyles.filterChip,
+                  {
+                    backgroundColor:
+                      statusFilter === "active" ? tintColor : cardColor,
+                    borderColor:
+                      statusFilter === "active" ? tintColor : borderColor,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    sharedStyles.filterLabel,
+                    {
+                      color: statusFilter === "active" ? "#ffffff" : textColor,
+                    },
+                  ]}
+                >
+                  Actifs ({statusCounts.active})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setStatusFilter("expired")}
+                style={[
+                  sharedStyles.filterChip,
+                  {
+                    backgroundColor:
+                      statusFilter === "expired" ? tintColor : cardColor,
+                    borderColor:
+                      statusFilter === "expired" ? tintColor : borderColor,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    sharedStyles.filterLabel,
+                    {
+                      color:
+                        statusFilter === "expired" ? "#ffffff" : textColor,
+                    },
+                  ]}
+                >
+                  Expirés ({statusCounts.expired})
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+
+            {showInitialLoader ? (
+              <ActivityIndicator
+                size="large"
+                color={tintColor}
+                style={{ marginTop: 32 }}
+              />
+            ) : null}
+
+            {showErrorState ? (
+              <EmptyResultsCard
+                iconName="cloud-off"
+                title="Erreur de chargement"
+                subtitle="Impossible de récupérer les bons d'achat. Vérifiez votre connexion."
+                cardColor={cardColor}
+                titleColor={textColor}
+                subtitleColor={mutedColor}
+              />
+            ) : null}
+          </View>
+        }
+        ListHeaderComponentStyle={{ marginBottom: 16 }}
+        ListEmptyComponent={
+          !showInitialLoader && !showErrorState ? (
+            <EmptyResultsCard
+              iconName="inventory-2"
+              title={hasBonAchats ? "Aucun bon trouvé" : "Aucun bon d'achat"}
+              subtitle={
+                hasBonAchats || hasActiveFilters
+                  ? "Essayez une autre recherche ou filtre."
+                  : "Aucun bon d'achat n'est disponible pour le moment."
+              }
+              cardColor={cardColor}
+              titleColor={textColor}
+              subtitleColor={mutedColor}
+            />
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -219,712 +453,8 @@ export default function BonsAchatsScreen() {
             tintColor={tintColor}
           />
         }
-      >
-        <View style={sharedStyles.container}>
-          {isOfflineMode && !isLoading ? (
-            <View
-              style={[
-                styles.offlineBanner,
-                {
-                  backgroundColor: `${tintColor}14`,
-                  borderColor: `${tintColor}35`,
-                },
-              ]}
-            >
-              <MaterialIcons name="wifi-off" size={16} color={tintColor} />
-              <Text style={[styles.offlineBannerText, { color: tintColor }]}>
-                Mode hors ligne: affichage des données disponibles.
-              </Text>
-            </View>
-          ) : null}
-
-          <View style={sharedStyles.statsRow}>
-            <View
-              style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
-            >
-              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                Tous les bons
-              </Text>
-              <Text style={[sharedStyles.statCount, { color: textColor }]}>
-                {totalCount} bon{totalCount > 1 ? "s" : ""}
-              </Text>
-            </View>
-            <View
-              style={[sharedStyles.statCard, { backgroundColor: cardColor }]}
-            >
-              <Text style={[sharedStyles.statLabel, { color: mutedColor }]}>
-                Montant total
-              </Text>
-              <Text style={[sharedStyles.statCount, { color: textColor }]}>
-                {formatAmount(totalAmount)}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              sharedStyles.searchBox,
-              { backgroundColor: cardColor, borderColor },
-            ]}
-          >
-            <MaterialIcons name="search" size={20} color={mutedColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Rechercher un bon"
-              placeholderTextColor={mutedColor}
-              style={[sharedStyles.searchInput, { color: textColor }]}
-            />
-            {query.length > 0 ? (
-              <TouchableOpacity
-                onPress={() => setQuery("")}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <MaterialIcons name="close" size={18} color={mutedColor} />
-              </TouchableOpacity>
-            ) : null}
-          </View>
-
-          <View style={styles.filterRow}>
-            <TouchableOpacity
-              onPress={() => setStatusFilter("all")}
-              style={[
-                styles.filterChip,
-                statusFilter === "all" && {
-                  backgroundColor: `${tintColor}15`,
-                  borderColor: `${tintColor}55`,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  { color: statusFilter === "all" ? tintColor : mutedColor },
-                ]}
-              >
-                Tous ({statusCounts.all})
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setStatusFilter("active")}
-              style={[
-                styles.filterChip,
-                statusFilter === "active" && {
-                  backgroundColor: "#dcfce7",
-                  borderColor: "#16a34a66",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  { color: statusFilter === "active" ? "#15803d" : mutedColor },
-                ]}
-              >
-                Actifs ({statusCounts.active})
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setStatusFilter("expired")}
-              style={[
-                styles.filterChip,
-                statusFilter === "expired" && {
-                  backgroundColor: "#fee2e2",
-                  borderColor: "#dc262666",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  {
-                    color: statusFilter === "expired" ? "#b91c1c" : mutedColor,
-                  },
-                ]}
-              >
-                Expirés ({statusCounts.expired})
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {isLoading && (
-            <ActivityIndicator
-              size="large"
-              color={tintColor}
-              style={{ marginTop: 32 }}
-            />
-          )}
-
-          {isError && !isLoading && (
-            <EmptyResultsCard
-              iconName="cloud-off"
-              title="Erreur de chargement"
-              subtitle="Impossible de récupérer les bons d'achat. Vérifiez votre connexion."
-              cardColor={cardColor}
-              titleColor={textColor}
-              subtitleColor={mutedColor}
-            />
-          )}
-
-          {!isLoading && !isError && filteredBons.length === 0 && (
-            <EmptyResultsCard
-              iconName="inventory-2"
-              title="Aucun bon trouvé"
-              subtitle="Essayez une autre recherche ou filtre."
-              cardColor={cardColor}
-              titleColor={textColor}
-              subtitleColor={mutedColor}
-            />
-          )}
-
-          {!isLoading && !isError && filteredBons.length > 0 && (
-            <>
-              <View style={styles.horizontalListHeader}>
-                <Text
-                  style={[styles.horizontalListTitle, { color: textColor }]}
-                >
-                  Liste des bons
-                </Text>
-                <Text
-                  style={[styles.horizontalListHint, { color: mutedColor }]}
-                >
-                  {filteredBons.length} résultat
-                  {filteredBons.length > 1 ? "s" : ""}
-                </Text>
-              </View>
-
-              <FlatList
-                data={filteredBons}
-                keyExtractor={(item) => String(item.id)}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalListContent}
-                renderItem={({ item: bon }) => {
-                  const isExpired = isExpiredBon(bon);
-                  const statusLabel = isExpired
-                    ? "Expiré"
-                    : bon.etatBa === 1
-                      ? "Actif"
-                      : "Inactif";
-                  const statusColor = isExpired
-                    ? "#dc2626"
-                    : bon.etatBa === 1
-                      ? "#16a34a"
-                      : "#d97706";
-                  const isSelected = String(bon.id) === String(selectedBon?.id);
-
-                  return (
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      onPress={() => setSelectedBonId(String(bon.id))}
-                      style={[
-                        styles.ticketCard,
-                        styles.horizontalTicketCard,
-                        isSelected && styles.horizontalTicketCardActive,
-                      ]}
-                    >
-                      {!isSelected && <View style={styles.ticketShadow} />}
-                      <View style={styles.ticketBody}>
-                        <View style={styles.ticketLeftPanel}>
-                          <View style={styles.ticketHeaderRow}>
-                            <View style={styles.ticketRefBlock}>
-                              <Text style={styles.ticketRef}>
-                                {bon.numeroBa}
-                              </Text>
-                            </View>
-                            <View
-                              style={[
-                                styles.ticketStatusBadge,
-                                { backgroundColor: `${statusColor}22` },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.ticketStatusText,
-                                  { color: statusColor },
-                                ]}
-                              >
-                                {statusLabel}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.ticketIconRow}>
-                            <View style={styles.ticketMainIconWrap}>
-                              <MaterialIcons
-                                name="redeem"
-                                size={54}
-                                color="#ffffff"
-                              />
-                            </View>
-                            <View style={styles.ticketMetaStack}>
-                              <View style={styles.ticketMetaItem}>
-                                <Text style={styles.ticketMetaLabel}>
-                                  Agence
-                                </Text>
-                                <Text
-                                  style={styles.ticketMetaValue}
-                                  numberOfLines={1}
-                                >
-                                  {bon.nomAgence || "—"}
-                                </Text>
-                              </View>
-                              <View style={styles.ticketMetaItem}>
-                                <Text style={styles.ticketMetaLabel}>
-                                  Créé le
-                                </Text>
-                                <Text style={styles.ticketMetaValue}>
-                                  {bon.dateBa ? formatDate(bon.dateBa) : "—"}
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-
-                          <View style={styles.ticketFooterRow}>
-                            <View style={styles.ticketTag}>
-                              <MaterialIcons
-                                name={
-                                  bon.uniqueUse ? "looks-one" : "all-inclusive"
-                                }
-                                size={14}
-                                color="#0f766e"
-                              />
-                              <Text style={styles.ticketTagText}>
-                                {bon.uniqueUse ? "Usage unique" : "Multi-usage"}
-                              </Text>
-                            </View>
-                            <View style={styles.ticketArrowWrap}>
-                              <Text style={styles.ticketArrowText}>
-                                {isSelected ? "Sélectionné" : "Sélectionner"}
-                              </Text>
-                              <MaterialIcons
-                                name={
-                                  isSelected ? "check-circle" : "arrow-forward"
-                                }
-                                size={16}
-                                color="#0f766e"
-                              />
-                            </View>
-                          </View>
-                        </View>
-
-                        <View style={styles.ticketDivider}>
-                          <View style={styles.ticketPunchTop} />
-                          <View style={styles.ticketPunchBottom} />
-                        </View>
-
-                        <View style={styles.ticketRightPanel}>
-                          <View style={styles.ticketDot} />
-                          <MaterialIcons
-                            name="confirmation-number"
-                            size={44}
-                            color="#5b1d2c"
-                          />
-                          <View style={styles.ticketAmountPill}>
-                            <Text style={styles.ticketAmountText}>
-                              {formatAmount(bon.montantBa)}
-                            </Text>
-                          </View>
-                          <View style={styles.ticketExpiryBlock}>
-                            <Text style={styles.ticketExpiryLabel}>
-                              Validité
-                            </Text>
-                            <Text style={styles.ticketExpiryValue}>
-                              {bon.dateExpBa ? formatDate(bon.dateExpBa) : "—"}
-                            </Text>
-                          </View>
-                          <View style={styles.ticketMiniBadge}>
-                            <Text style={styles.ticketMiniBadgeText}>
-                              {bon.autreClientUse ? "Partageable" : "Personnel"}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-
-              {selectedBonData &&
-                (() => {
-                  const isExpired = isExpiredBon(selectedBonData);
-                  const statusLabel = isExpired
-                    ? "Expiré"
-                    : selectedBonData.etatBa === 1
-                      ? "Actif"
-                      : "Inactif";
-                  const statusColor = isExpired
-                    ? "#dc2626"
-                    : selectedBonData.etatBa === 1
-                      ? "#16a34a"
-                      : "#d97706";
-                  const bonAchatLines = selectedBonData.details ?? [];
-                  const totalAllocatedAmount = bonAchatLines.reduce(
-                    (sum, line) => sum + (line.montantRegDoc ?? 0),
-                    0,
-                  );
-                  const remainingAmount = Math.max(
-                    selectedBonData.montantBa - totalAllocatedAmount,
-                    0,
-                  );
-
-                  return (
-                    <>
-                      {isDetailLoading ? (
-                        <View
-                          style={[
-                            sharedStyles.loadingBanner,
-                            { backgroundColor: cardColor },
-                          ]}
-                        >
-                          <ActivityIndicator size="small" color={tintColor} />
-                          <Text
-                            style={[
-                              sharedStyles.loadingText,
-                              { color: mutedColor },
-                            ]}
-                          >
-                            Chargement du détail sélectionné...
-                          </Text>
-                        </View>
-                      ) : null}
-
-                      <View
-                        style={[
-                          detailStyles.summaryCard,
-                          { backgroundColor: "#fff8e1" },
-                        ]}
-                      >
-                        <View style={detailStyles.sectionHeader}>
-                          <MaterialIcons
-                            name="analytics"
-                            size={20}
-                            color="#5b1d2c"
-                          />
-                          <Text style={detailStyles.sectionTitle}>
-                            Synthèse du bon
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.summaryRow}>
-                          <Text
-                            style={[
-                              sharedStyles.summaryLabel,
-                              { color: mutedColor },
-                            ]}
-                          >
-                            Montant du bon
-                          </Text>
-                          <Text
-                            style={[
-                              detailStyles.summaryValueStrong,
-                              { color: "#5b1d2c" },
-                            ]}
-                          >
-                            {formatAmount(selectedBonData.montantBa)}
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.summaryRow}>
-                          <Text
-                            style={[
-                              sharedStyles.summaryLabel,
-                              { color: mutedColor },
-                            ]}
-                          >
-                            Montant réparti
-                          </Text>
-                          <Text
-                            style={[
-                              sharedStyles.summaryValue,
-                              { color: textColor },
-                            ]}
-                          >
-                            {formatAmount(totalAllocatedAmount)}
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.summaryRow}>
-                          <Text
-                            style={[
-                              sharedStyles.summaryLabel,
-                              { color: mutedColor },
-                            ]}
-                          >
-                            Nombre de lignes
-                          </Text>
-                          <Text
-                            style={[
-                              sharedStyles.summaryValue,
-                              { color: textColor },
-                            ]}
-                          >
-                            {bonAchatLines.length}
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.summaryRow}>
-                          <Text
-                            style={[
-                              sharedStyles.summaryLabel,
-                              { color: mutedColor },
-                            ]}
-                          >
-                            Montant restant
-                          </Text>
-                          <Text
-                            style={[
-                              detailStyles.summaryValueStrong,
-                              { color: "#0f766e" },
-                            ]}
-                          >
-                            {formatAmount(remainingAmount)}
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.separator} />
-                        <View style={sharedStyles.summaryRow}>
-                          <Text
-                            style={[
-                              sharedStyles.totalLabel,
-                              { color: textColor },
-                            ]}
-                          >
-                            Statut du bon
-                          </Text>
-                          <Text
-                            style={[
-                              sharedStyles.totalValue,
-                              { color: statusColor },
-                            ]}
-                          >
-                            {statusLabel}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View
-                        style={[
-                          detailStyles.linesCard,
-                          { backgroundColor: cardColor },
-                        ]}
-                      >
-                        <View style={detailStyles.sectionHeader}>
-                          <MaterialIcons
-                            name="receipt-long"
-                            size={20}
-                            color={tintColor}
-                          />
-                          <Text
-                            style={[
-                              sharedStyles.sectionTitle,
-                              { color: textColor },
-                            ]}
-                          >
-                            Répartition du bon
-                          </Text>
-                        </View>
-                        <View style={sharedStyles.linesBlock}>
-                          {bonAchatLines.length === 0 ? (
-                            <Text
-                              style={[
-                                sharedStyles.emptyText,
-                                { color: mutedColor },
-                              ]}
-                            >
-                              Aucune ligne de répartition n&apos;est disponible
-                              pour ce bon d&apos;achat.
-                            </Text>
-                          ) : (
-                            bonAchatLines.map((line) => (
-                              <View key={line.id} style={detailStyles.lineCard}>
-                                <View
-                                  style={[
-                                    sharedStyles.lineRow,
-                                    detailStyles.lineRowTight,
-                                  ]}
-                                >
-                                  <View style={sharedStyles.lineLeft}>
-                                    <View style={detailStyles.lineTitleRow}>
-                                      <MaterialIcons
-                                        name="description"
-                                        size={16}
-                                        color={tintColor}
-                                      />
-                                      <Text
-                                        style={[
-                                          sharedStyles.lineLabel,
-                                          { color: textColor },
-                                        ]}
-                                      >
-                                        {line.codeDoc || "Document sans code"}
-                                      </Text>
-                                    </View>
-                                    <Text
-                                      style={[
-                                        sharedStyles.lineMeta,
-                                        { color: mutedColor },
-                                      ]}
-                                    >
-                                      Type : {line.typeDoc}
-                                    </Text>
-                                    <Text
-                                      style={[
-                                        sharedStyles.lineMeta,
-                                        { color: mutedColor },
-                                      ]}
-                                    >
-                                      Date document : {formatDate(line.dateDoc)}
-                                    </Text>
-                                    {line.nomClient && (
-                                      <Text
-                                        style={[
-                                          sharedStyles.lineMeta,
-                                          { color: mutedColor },
-                                        ]}
-                                      >
-                                        Propriétaire : {line.nomClient}
-                                      </Text>
-                                    )}
-                                    <Text
-                                      style={[
-                                        sharedStyles.lineMeta,
-                                        { color: mutedColor },
-                                      ]}
-                                    >
-                                      Montant document :{" "}
-                                      {formatAmount(line.montantDoc)}
-                                    </Text>
-                                  </View>
-                                  <View style={detailStyles.lineAmountBadge}>
-                                    <Text style={detailStyles.lineAmountText}>
-                                      {formatAmount(line.montantRegDoc)}
-                                    </Text>
-                                  </View>
-                                </View>
-                              </View>
-                            ))
-                          )}
-                        </View>
-                      </View>
-
-                      <TouchableOpacity
-                        onPress={() =>
-                          router.push(
-                            `/bonsAchats/${selectedBonData.id}` as never,
-                          )
-                        }
-                        style={[
-                          sharedStyles.actionButton,
-                          detailStyles.bottomActionButton,
-                          { backgroundColor: `${tintColor}18` },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            sharedStyles.actionText,
-                            { color: tintColor },
-                          ]}
-                        >
-                          Ouvrir la fiche complète
-                        </Text>
-                      </TouchableOpacity>
-                    </>
-                  );
-                })()}
-            </>
-          )}
-        </View>
-      </ScrollView>
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }
-
-const detailStyles = StyleSheet.create({
-  detailMetaGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  detailMetaChip: {
-    backgroundColor: "rgba(255,255,255,0.14)",
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    minWidth: "31%",
-  },
-  detailMetaChipLabel: {
-    color: "#c7fffb",
-    fontSize: 10,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  detailMetaChipValue: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "800",
-    marginTop: 3,
-  },
-  summaryCard: {
-    borderRadius: 22,
-    padding: 18,
-    gap: 10,
-    shadowColor: "#000000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: "#5b1d2c",
-  },
-  summaryValueStrong: {
-    fontSize: 16,
-    fontWeight: "900",
-  },
-  linesCard: {
-    borderRadius: 22,
-    padding: 16,
-    gap: 12,
-    shadowColor: "#000000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  lineCard: {
-    borderRadius: 18,
-    padding: 14,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-  lineRowTight: {
-    alignItems: "flex-start",
-  },
-  lineTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  lineAmountBadge: {
-    marginLeft: 10,
-    backgroundColor: "#ecfeff",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#a5f3fc",
-  },
-  lineAmountText: {
-    color: "#0f766e",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  bottomActionButton: {
-    alignSelf: "flex-start",
-  },
-});

@@ -668,7 +668,7 @@ export default function HomeScreen() {
     }
 
     if (mouvement.libType === "Décaissement") {
-      router.push("/operations" as never);
+      router.push(`/operations/${mouvement.id}` as never);
       return;
     }
 

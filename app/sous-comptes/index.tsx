@@ -9,7 +9,7 @@ import { getfetchSousComptes } from "@/services/api-service";
 import { SOUS_COMPTES_LIST_CACHE_KEY } from "@/services/cache-service";
 import { listSousComptes } from "@/types/sousCompte.type.js";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -38,6 +38,10 @@ export default function SousComptesScreen() {
     borderColor,
   } = useAppTheme();
   const { userToken } = useAuthContext();
+  const fetchSousComptes = useCallback(
+    () => getfetchSousComptes(userToken ?? ""),
+    [userToken],
+  );
   const [query, setQuery] = useState("");
   const {
     data: sousComptes,
@@ -49,7 +53,7 @@ export default function SousComptesScreen() {
     cacheKey: SOUS_COMPTES_LIST_CACHE_KEY,
     initialData: initialSousComptes,
     enabled: Boolean(userToken),
-    fetcher: async () => getfetchSousComptes(userToken ?? ""),
+    fetcher: fetchSousComptes,
     hasUsableCachedData: (cachedData) =>
       Boolean(
         cachedData &&
