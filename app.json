@@ -19,8 +19,10 @@
               "NSTemporaryExceptionRequiresForwardSecrecy": false
             }
           }
-        }
-      }
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.gediscom.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +34,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.gediscom.app",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
