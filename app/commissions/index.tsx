@@ -156,9 +156,12 @@ export default function CommissionsScreen() {
                   {formatDate(commission.dateCom)}
                 </Text>
               </View>
+            </View>
+
+            <View style={sharedStyles.invoiceMetaRow}>
               <View>
                 <Text style={[sharedStyles.metaCaption, { color: mutedColor }]}>
-                  Code la vente
+                  Code de la vente
                 </Text>
                 <Text style={[sharedStyles.metaValue, { color: textColor }]}>
                   {commission.codeVente ?? "—"}
