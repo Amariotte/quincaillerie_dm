@@ -22,7 +22,8 @@
         },
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.gediscom.app"
+      "bundleIdentifier": "com.gediscom.client",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +33,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.gediscom.app",
+      "package": "com.gediscom.client",
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]
